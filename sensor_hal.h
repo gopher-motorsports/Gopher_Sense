@@ -11,20 +11,29 @@
 #include "GopherCAN_structs.h"
 #include "base_types.h"
 
-
+#ifndef NULL
+#define NULL ((void*)0)
+#endif
 
 typedef union
 {
-  U8_CAN_STRUCT;
-  U16_CAN_STRUCT;
-  U32_CAN_STRUCT;
-  U64_CAN_STRUCT;
-  S8_CAN_STRUCT;
-  S16_CAN_STRUCT;
-  S32_CAN_STRUCT;
-  S64_CAN_STRUCT;
-  FLOAT_CAN_STRUCT;
+  U8_CAN_STRUCT u8_struct;
+  U16_CAN_STRUCT u16_struct;
+  U32_CAN_STRUCT u32_struct;
+  U64_CAN_STRUCT u64_struct;
+  S8_CAN_STRUCT s8_struct;
+  S16_CAN_STRUCT s16_struct;
+  S32_CAN_STRUCT s32_struct;
+  S64_CAN_STRUCT s64_struct;
+  FLOAT_CAN_STRUCT float_struct;
 } PARAM_STRUCT;
+
+typedef enum
+{
+    CLEAN = 0,
+    DIRTY = 1,
+    LOCKED = 2
+}DATA_STATUS;
 
 
 typedef struct
@@ -108,12 +117,6 @@ typedef enum
     MSB = 1
 } BYTE_ORDER;
 
-typedef enum
-{
-    CLEAN = 0,
-    DIRTY = 1,
-    LOCKED = 2
-}DATA_STATUS;
 
 // how to turn raw data into useable measurments
 typedef struct

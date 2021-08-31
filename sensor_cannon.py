@@ -182,7 +182,7 @@ def main():
     print("Gopher Motorsports Sensor Cannon")
     sensorFile = open(SENSOR_CONFIG_FILE)
     configFile = open(argv[1])
-    configFileName = argv[1].split('/')[-1].replace(".yaml", "")
+    configFileName = argv[1].split('\\')[-1].replace(".yaml", "")
     sensor_raw = yaml.full_load(sensorFile)
     hwconfig_raw = yaml.full_load(configFile)
     hwconfig_munch = munch.Munch(hwconfig_raw)

@@ -46,13 +46,13 @@ void init_adc1_params (void) {
     
     
     // adc1_param1
-    adc1_param1_genparam.param = oil_cooler_pressure_in;
+    adc1_param1_genparam.param.float_struct = oil_cooler_pressure_in;
     adc1_param1.analog_sensor = honeywell_heavy_duty_pressure_transducer;
     
     adc1_param1.num_filtered_subparams = 1;
 
     
-    adc1_param1_filtered_1.filtered_param = oil_cooler_pressure_in_lowpass_1000;
+    adc1_param1_filtered_1.filtered_param.param.float_struct = oil_cooler_pressure_in_lowpass_1000;
     adc1_param1_filtered_1.filter_type = LOW_PASS;
     adc1_param1_filtered_1.filter_value = 1000;
     
@@ -70,13 +70,13 @@ void init_adc1_params (void) {
     
     
     // adc1_param2
-    adc1_param2_genparam.param = oil_cooler_pressure_out;
+    adc1_param2_genparam.param.float_struct = oil_cooler_pressure_out;
     adc1_param2.analog_sensor = honeywell_heavy_duty_pressure_transducer;
     
     adc1_param2.num_filtered_subparams = 1;
 
     
-    adc1_param2_filtered_1.filtered_param = oil_cooler_pressure_out_lowpass_1000;
+    adc1_param2_filtered_1.filtered_param.param.float_struct = oil_cooler_pressure_out_lowpass_1000;
     adc1_param2_filtered_1.filter_type = LOW_PASS;
     adc1_param2_filtered_1.filter_value = 1000;
     
@@ -104,7 +104,7 @@ void init_adc1_params (void) {
 
 
 
-ANALOG_SENSOR_PARAM* adc2_sensor_params = NULL;
+ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS];
 
 
 
@@ -143,7 +143,7 @@ void init_adc3_params (void) {
     
     
     // adc3_param1
-    adc3_param1_genparam.param = rad_water_temp_in;
+    adc3_param1_genparam.param.float_struct = rad_water_temp_in;
     adc3_param1.analog_sensor = bosch_temperature_sensor;
     
     adc3_param1.num_filtered_subparams = 0;
@@ -215,19 +215,19 @@ U16 can_param4_buffer[100];
 
 
 
-CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_PARAMS];
+CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS];
 
 
 void init_can_params (void) {
 
 
 // can_param1
-can_param1.can_param = lateral_acceleration;
+can_param1.can_param.param.float_struct = lateral_acceleration;
 
 can_param1.can_sensor = bosch_accelerometer;
 can_param1.message_idx = 3;
 
-can_param1.num_filtered_subparams = 0;
+can_param1.num_filtered_params = 0;
 
 
 can_param1.filtered_subparams = NULL;
@@ -242,12 +242,12 @@ can_param1.buffer = can_param1_u16buffer;
 
 
 // can_param2
-can_param2.can_param = longitudinal_acceleration;
+can_param2.can_param.param.float_struct = longitudinal_acceleration;
 
 can_param2.can_sensor = bosch_accelerometer;
 can_param2.message_idx = 1;
 
-can_param2.num_filtered_subparams = 0;
+can_param2.num_filtered_params = 0;
 
 
 can_param2.filtered_subparams = NULL;
@@ -262,12 +262,12 @@ can_param2.buffer = can_param2_u16buffer;
 
 
 // can_param3
-can_param3.can_param = yaw_rate;
+can_param3.can_param.param.float_struct = yaw_rate;
 
 can_param3.can_sensor = bosch_accelerometer;
 can_param3.message_idx = 0;
 
-can_param3.num_filtered_subparams = 0;
+can_param3.num_filtered_params = 0;
 
 
 can_param3.filtered_subparams = NULL;
@@ -282,12 +282,12 @@ can_param3.buffer = can_param3_u16buffer;
 
 
 // can_param4
-can_param4.can_param = back_left_tire_temp_channel_1;
+can_param4.can_param.param.float_struct = back_left_tire_temp_channel_1;
 
 can_param4.can_sensor = izze_infared_tire_temperature_sensor;
 can_param4.message_idx = 0;
 
-can_param4.num_filtered_subparams = 0;
+can_param4.num_filtered_params = 0;
 
 
 can_param4.filtered_subparams = NULL;
@@ -352,10 +352,10 @@ bucket_1.frequency = 10;
 bucket_1_bucket_param_list.len = 4;
 
 
-bucket_1_bucket_general_param_list[0] = oil_cooler_pressure_in;
-bucket_1_bucket_general_param_list[1] = oil_cooler_pressure_out;
-bucket_1_bucket_general_param_list[2] = oil_cooler_pressure_out_lowpass_1000;
-bucket_1_bucket_general_param_list[3] = oil_cooler_pressure_in_lowpass_1000;
+bucket_1_bucket_general_param_list[0].param.float_struct = oil_cooler_pressure_in;
+bucket_1_bucket_general_param_list[1].param.float_struct = oil_cooler_pressure_out;
+bucket_1_bucket_general_param_list[2].param.float_struct = oil_cooler_pressure_out_lowpass_1000;
+bucket_1_bucket_general_param_list[3].param.float_struct = oil_cooler_pressure_in_lowpass_1000;
 
 
 bucket_1_bucket_param_list.list = bucket_1_bucket_general_param_list;
@@ -367,8 +367,8 @@ bucket_2.frequency = 50;
 bucket_2_bucket_param_list.len = 2;
 
 
-bucket_2_bucket_general_param_list[0] = lateral_acceleration;
-bucket_2_bucket_general_param_list[1] = longitudinal_acceleration;
+bucket_2_bucket_general_param_list[0].param.float_struct = lateral_acceleration;
+bucket_2_bucket_general_param_list[1].param.float_struct = longitudinal_acceleration;
 
 
 bucket_2_bucket_param_list.list = bucket_2_bucket_general_param_list;
@@ -380,7 +380,7 @@ bucket_3.frequency = 1;
 bucket_3_bucket_param_list.len = 1;
 
 
-bucket_3_bucket_general_param_list[0] = back_left_tire_temp_channel_1;
+bucket_3_bucket_general_param_list[0].param.float_struct = back_left_tire_temp_channel_1;
 
 
 bucket_3_bucket_param_list.list = bucket_3_bucket_general_param_list;

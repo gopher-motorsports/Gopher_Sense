@@ -11,15 +11,15 @@
 #define NUM_ADC3_PARAMS 1
 
 // analog params must be in channel order
-extern ANALOG_SENSOR_PARAM* adc1_sensor_params;
-extern ANALOG_SENSOR_PARAM* adc2_sensor_params;
-extern ANALOG_SENSOR_PARAM* adc3_sensor_params;
+extern ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS];
+extern ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS];
+extern ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS];
 
 #define NUM_CAN_SENSOR_PARAMS 4
-extern CAN_SENSOR_PARAM* can_sensor_params;
+extern CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS];
 
 #define NUM_BUCKETS 3
-extern BUCKET* buckets;
+extern BUCKET buckets[NUM_BUCKETS];
 
 void init_adc1_params(void);
 void init_adc2_params(void);

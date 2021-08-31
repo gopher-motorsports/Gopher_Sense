@@ -51,27 +51,27 @@ void configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleType
 void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle){
     // stop the DMA and start the timer
     HAL_ADC_Stop_DMA(adc_handle);
+    U16_BUFFER* buf;
 
-
-    if (adc_handle == &hadc1) {
+    if (adc_handle == adc1) {
         HAL_TIM_Base_Start_IT(adc1_timer);
         for (U8 i = 0; i < NUM_ADC1_PARAMS; i++) {
-            buf = adc1_sensor_params[i].buffer;
-            add_to_buffer(&buf, adc1_sample_buffer[i]);
+            buf = &adc1_sensor_params[i].buffer;
+            add_to_buffer(buf, adc1_sample_buffer[i]);
         }
     }
-    else if (adc_handle == &adc2) {
+    else if (adc_handle == adc2) {
         HAL_TIM_Base_Start_IT(adc2_timer);
         for (U8 i = 0; i < NUM_ADC2_PARAMS; i++) {
-            buf = adc2_sensor_params[i].buffer;
-            add_to_buffer(&buf, adc2_sample_buffer[i]);
+            buf = &adc2_sensor_params[i].buffer;
+            add_to_buffer(buf, adc2_sample_buffer[i]);
         }
     }
-    else if (adc_handle == &adc3) {
+    else if (adc_handle == adc3) {
         HAL_TIM_Base_Start_IT(adc3_timer);
         for (U8 i = 0; i < NUM_ADC3_PARAMS; i++) {
-            buf = adc3_sensor_params[i].buffer;
-            add_to_buffer(&buf, adc3_sample_buffer[i]);
+            buf = &adc3_sensor_params[i].buffer;
+            add_to_buffer(buf, adc3_sample_buffer[i]);
         }
     }
 }
@@ -125,19 +125,19 @@ void stopTimers (void) {
 
 
 // Call this inside the period elapsed callback
-void TimerCallback (TIM_HandleTypeDef* timer) {
+void DAQ_TimerCallback (TIM_HandleTypeDef* timer) {
 
     HAL_TIM_Base_Stop_IT(timer);
     __HAL_TIM_SET_COUNTER(timer, 0);
 
     if (timer == adc1_timer) {
-        HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc1_sample_buffer, NUM_ADC1_PARAMS);
+        HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, NUM_ADC1_PARAMS);
     }
     else if (timer == adc2_timer) {
-        HAL_ADC_Start_DMA(&hadc2, (uint32_t*)adc2_sample_buffer, NUM_ADC2_PARAMS);
+        HAL_ADC_Start_DMA(adc2, (uint32_t*)adc2_sample_buffer, NUM_ADC2_PARAMS);
     }
     else if (timer == adc3_timer) {
-        HAL_ADC_Start_DMA(&hadc3, (uint32_t*)adc3_sample_buffer, NUM_ADC3_PARAMS);
+        HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, NUM_ADC3_PARAMS);
     }
 }
 
@@ -157,14 +157,14 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
         // Handle errors ?
         return;
     }
-    message->rtr_bit = rx_header.RTR;
-    message->id = rx_header.ExtId;
-    message->dlc = rx_header.DLC;
+    message.rtr_bit = rx_header.RTR;
+    message.id = rx_header.ExtId;
+    message.dlc = rx_header.DLC;
 
     // Check the CAN params for a match
     for (U8 i = 0; i < NUM_CAN_SENSOR_PARAMS; i++) {
 
-        CAN_SENSOR_PARAM param = can_sensor_params[i];
+        CAN_SENSOR_PARAM* param = &can_sensor_params[i];
         CAN_SENSOR sensor = param->can_sensor;
         SENSOR_CAN_MESSAGE can_info = sensor.messages[param->message_idx];
 
@@ -188,7 +188,7 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
                 }
             }
             // Add the data to the buffer
-            add_to_buffer(&param.buffer, data);
+            add_to_buffer(&param->buffer, data);
 
         }
     }
@@ -250,16 +250,18 @@ S8 average_buffer (U16_BUFFER* buffer, U16* avg) {
 S8 apply_can_sensor_conversion (CAN_SENSOR* sensor, U8 msg_idx, float data_in, float* data_out) {
     // TODO: Data conversion specifics
     *data_out = data_in;
+    return BUFFER_SUCCESS;
 }
 
 S8 apply_analog_sensor_conversion (ANALOG_SENSOR* sensor, float data_in, float* data_out) {
     // TODO: Data conversion specifics
     *data_out = data_in;
+    return BUFFER_SUCCESS;
 }
 
 S8 apply_filter (U16_BUFFER* buffer, FILTERED_PARAM* filter) {
     // TODO - figure out how to do software filtering
-    return;
+    return BUFFER_SUCCESS;
 }
 
 

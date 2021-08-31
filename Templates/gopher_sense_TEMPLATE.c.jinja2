@@ -28,7 +28,7 @@ float {{sensor.name}}_output_model_table_dependent_vars[{{sensor.numTableEntries
 
 void init_analog_sensors (void) {
     {% for sensor in analog_sensors %}
-    {{sensor.name}}.sensor_id = "{{sensor.sensorID}}";
+    //{{sensor.name}}.sensor_id = "{{sensor.sensorID}}";
     {{sensor.name}}.model.type = {{sensor.analog['output_model'].upper()}};
     {{sensor.name}}.model.measurement_unit = {{sensor.analog['measurement_unit'].upper()}};
     {{sensor.name}}.model.supply_voltage = {{sensor.analog['supply_voltage']}};
@@ -53,7 +53,7 @@ void init_analog_sensors (void) {
     {% endif %}
 
     {% for o in sensor.outputs -%}
-    {{sensor.name}}.output.output_name = "{{o}}";
+    //{{sensor.name}}.output.output_name = "{{o}}";
     {{sensor.name}}.output.scalar.quantization = {{sensor.outputs[o]['quantization']}}; //0 if continuous
     {{sensor.name}}.output.scalar.offset = {{sensor.outputs[o]['offset']}};
     {{sensor.name}}.output.data_size_bits = {{sensor.outputs[o]['data_size']}};
@@ -77,7 +77,7 @@ void init_can_sensors (void) {
     {% for sensor in can_sensors %}
     // Sensor definition {{sensor.name}}
     //CAN_SENSOR {{sensor.name}};
-    {{sensor.name}}.sensor_id = "{{sensor.sensorID}}";
+    //{{sensor.name}}.sensor_id = "{{sensor.sensorID}}";
     {{sensor.name}}.byte_order = {{sensor.byte_order}};
     {% set l = sensor.numMessages %}
     {{sensor.name}}.num_messages = {{l}};
@@ -87,7 +87,7 @@ void init_can_sensors (void) {
     {% set output = m['output_measured'] %}
     //SENSOR_CAN_MESSAGE {{sensor.name}}_message_{{loop.index}};
     {{sensor.name}}_message_{{loop.index}}.message_id = {{m['id']}};
-    {{sensor.name}}_message_{{loop.index}}.output.output_name = "{{output}}";
+    //{{sensor.name}}_message_{{loop.index}}.output.output_name = "{{output}}";
     {{sensor.name}}_message_{{loop.index}}.output.scalar.quantization = {{sensor.outputs[output]['quantization']}};
     {{sensor.name}}_message_{{loop.index}}.output.scalar.offset = {{sensor.outputs[output]['offset']}};
     {{sensor.name}}_message_{{loop.index}}.data_start = {{m['data_byte_start']}};

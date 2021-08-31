@@ -25,7 +25,7 @@ U16 adc1_param{{i}}_buffer[{{param.buffer_size}}];
 {% if l > 0 %}
 ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS];
 {% else %}
-ANALOG_SENSOR_PARAM* adc1_sensor_params = NULL;
+ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS];
 {% endif %}
 
 
@@ -36,14 +36,14 @@ void init_adc1_params (void) {
     {% for param in module.adc1_params %}
     {% set i = loop.index %}
     // adc1_param{{i}}
-    adc1_param{{i}}_genparam.param = {{param.param_name}};
+    adc1_param{{i}}_genparam.param.float_struct = {{param.param_name}};
     adc1_param{{i}}.analog_sensor = {{module.getSensorName(param.producer)}};
     {% set l = param.filtered_params|length %}
     adc1_param{{i}}.num_filtered_subparams = {{l}};
 
     {% if l > 0 %}
     {% for fparam in param.filtered_params -%}
-    adc1_param{{i}}_filtered_{{loop.index}}.filtered_param = {{fparam.param_name}};
+    adc1_param{{i}}_filtered_{{loop.index}}.filtered_param.param.float_struct = {{fparam.param_name}};
     adc1_param{{i}}_filtered_{{loop.index}}.filter_type = {{fparam.filter[0]}};
     adc1_param{{i}}_filtered_{{loop.index}}.filter_value = {{fparam.filter[1]}};
     {% endfor %}
@@ -89,7 +89,7 @@ U16 adc2_param{{i}}_buffer[{{param.buffer_size}}];
 {% if l > 0 %}
 ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS];
 {% else %}
-ANALOG_SENSOR_PARAM* adc2_sensor_params = NULL;
+ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS];
 {% endif %}
 
 
@@ -100,14 +100,14 @@ void init_adc2_params (void) {
     {% for param in module.adc2_params %}
     {% set i = loop.index %}
     // adc2_param{{i}}
-    adc2_param{{i}}_genparam.param = {{param.param_name}};
+    adc2_param{{i}}_genparam.param.float_struct = {{param.param_name}};
     adc2_param{{i}}.analog_sensor = {{module.getSensorName(param.producer)}};
     {% set l = param.filtered_params|length %}
     adc2_param{{i}}.num_filtered_subparams = {{l}};
 
     {% if l > 0 %}
     {% for fparam in param.filtered_params -%}
-    adc2_param{{i}}_filtered_{{loop.index}}.filtered_param = {{fparam.param_name}};
+    adc2_param{{i}}_filtered_{{loop.index}}.filtered_param.param.float_struct = {{fparam.param_name}};
     adc2_param{{i}}_filtered_{{loop.index}}.filter_type = {{fparam.filter[0]}};
     adc2_param{{i}}_filtered_{{loop.index}}.filter_value = {{fparam.filter[1]}};
     {% endfor %}
@@ -153,7 +153,7 @@ U16 adc3_param{{i}}_buffer[{{param.buffer_size}}];
 {% if l > 0 %}
 ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS];
 {% else %}
-ANALOG_SENSOR_PARAM* adc3_sensor_params = NULL;
+ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS];
 {% endif %}
 
 
@@ -164,14 +164,14 @@ void init_adc3_params (void) {
     {% for param in module.adc3_params %}
     {% set i = loop.index %}
     // adc3_param{{i}}
-    adc3_param{{i}}_genparam.param = {{param.param_name}};
+    adc3_param{{i}}_genparam.param.float_struct = {{param.param_name}};
     adc3_param{{i}}.analog_sensor = {{module.getSensorName(param.producer)}};
     {% set l = param.filtered_params|length %}
     adc3_param{{i}}.num_filtered_subparams = {{l}};
 
     {% if l > 0 %}
     {% for fparam in param.filtered_params -%}
-    adc3_param{{i}}_filtered_{{loop.index}}.filtered_param = {{fparam.param_name}};
+    adc3_param{{i}}_filtered_{{loop.index}}.filtered_param.param.float_struct = {{fparam.param_name}};
     adc3_param{{i}}_filtered_{{loop.index}}.filter_type = {{fparam.filter[0]}};
     adc3_param{{i}}_filtered_{{loop.index}}.filter_value = {{fparam.filter[1]}};
     {% endfor %}
@@ -219,25 +219,25 @@ U16 can_param{{i}}_buffer[{{param.buffer_size}}];
 
 {% set l = module.can_params|length%}
 {% if l > 0%}
-CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_PARAMS];
+CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS];
 {% else %}
-CAN_SENSOR_PARAM* can_sensor_params = NULL;
+CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS];
 {% endif %}
 
 void init_can_params (void) {
 {% for param in module.can_params %}
 {% set i = loop.index %}
 // can_param{{i}}
-can_param{{i}}.can_param = {{param.param_name}};
+can_param{{i}}.can_param.param.float_struct = {{param.param_name}};
 {% set name = module.getSensorName(param.producer) %}
 can_param{{i}}.can_sensor = {{name}};
 can_param{{i}}.message_idx = {{module.getDependencyMessageIndex(name, param.dependency)}};
 {% set l = param.filtered_params|length %}
-can_param{{i}}.num_filtered_subparams = {{l}};
+can_param{{i}}.num_filtered_params = {{l}};
 
 {% if l > 0%}
 {% for fparam in param.filtered_params -%}
-can_param{{i}}_filtered_{{loop.index}}.filtered_param = {{fparam.param_name}};
+can_param{{i}}_filtered_{{loop.index}}.filtered_param.param.float_struct = {{fparam.param_name}};
 can_param{{i}}_filtered_{{loop.index}}.filter_type = {{fparam.filter[0]}};
 can_param{{i}}_filtered_{{loop.index}}.filter_value = {{fparam.filter[1]}};
 {% endfor %}
@@ -282,7 +282,7 @@ GENERAL_PARAMETER {{bucket.name}}_bucket_general_param_list[{{bucket.params|leng
 {% endfor %}
 BUCKET buckets[NUM_BUCKETS];
 {% else %}
-BUCKET* buckets = NULL;
+BUCKET buckets[NUM_BUCKETS];
 {% endif %}
 
 // ************************************************
@@ -296,7 +296,7 @@ void init_buckets (void) {
 
 
 {% for param in bucket.params -%}
-{{bucket.name}}_bucket_general_param_list[{{loop.index - 1}}] = {{param}};
+{{bucket.name}}_bucket_general_param_list[{{loop.index - 1}}].param.float_struct = {{param}};
 {% endfor %}
 
 {{bucket.name}}_bucket_param_list.list = {{bucket.name}}_bucket_general_param_list;
