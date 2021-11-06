@@ -54,6 +54,7 @@ void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle){
     U16_BUFFER* buf;
 
     if (adc_handle == adc1) {
+        __HAL_TIM_SET_COUNTER(adc1_timer, 0);
         HAL_TIM_Base_Start_IT(adc1_timer);
         for (U8 i = 0; i < NUM_ADC1_PARAMS; i++) {
             buf = &adc1_sensor_params[i].buffer;
@@ -61,6 +62,7 @@ void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle){
         }
     }
     else if (adc_handle == adc2) {
+        __HAL_TIM_SET_COUNTER(adc2_timer, 0);
         HAL_TIM_Base_Start_IT(adc2_timer);
         for (U8 i = 0; i < NUM_ADC2_PARAMS; i++) {
             buf = &adc2_sensor_params[i].buffer;
@@ -68,6 +70,7 @@ void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle){
         }
     }
     else if (adc_handle == adc3) {
+        __HAL_TIM_SET_COUNTER(adc3_timer, 0);
         HAL_TIM_Base_Start_IT(adc3_timer);
         for (U8 i = 0; i < NUM_ADC3_PARAMS; i++) {
             buf = &adc3_sensor_params[i].buffer;
@@ -101,6 +104,7 @@ void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz) {
         psc *= 2;
     } while (reload > TIM_MAX_VAL);
 
+    psc /= 2;
     __HAL_TIM_SET_PRESCALER(timer, psc);
     __HAL_TIM_SET_AUTORELOAD(timer, reload);
     __HAL_TIM_ENABLE(timer);
@@ -126,17 +130,15 @@ void stopTimers (void) {
 
 // Call this inside the period elapsed callback
 void DAQ_TimerCallback (TIM_HandleTypeDef* timer) {
-
     HAL_TIM_Base_Stop_IT(timer);
-    __HAL_TIM_SET_COUNTER(timer, 0);
 
-    if (timer == adc1_timer) {
+    if (timer == adc1_timer && NUM_ADC1_PARAMS > 0) {
         HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, NUM_ADC1_PARAMS);
     }
-    else if (timer == adc2_timer) {
+    else if (timer == adc2_timer && NUM_ADC2_PARAMS > 0) {
         HAL_ADC_Start_DMA(adc2, (uint32_t*)adc2_sample_buffer, NUM_ADC2_PARAMS);
     }
-    else if (timer == adc3_timer) {
+    else if (timer == adc3_timer && NUM_ADC3_PARAMS > 0) {
         HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, NUM_ADC3_PARAMS);
     }
 }

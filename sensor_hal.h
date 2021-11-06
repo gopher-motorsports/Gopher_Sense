@@ -11,6 +11,7 @@
 #include "GopherCAN_structs.h"
 #include "base_types.h"
 
+
 #ifndef NULL
 #define NULL ((void*)0)
 #endif
@@ -115,7 +116,7 @@ typedef enum
 {
     LSB = 0,
     MSB = 1
-} BYTE_ORDER;
+} B_O;
 
 
 // how to turn raw data into useable measurments
@@ -154,7 +155,8 @@ typedef struct
 
 typedef enum {
     HIGH_PASS = 0,
-    LOW_PASS = 1
+    LOW_PASS = 1,
+	MOVING_AVERAGE = 2,
 } FILTER_TYPE;
 
 
@@ -191,7 +193,7 @@ typedef struct
 typedef struct
 {
     char                sensor_id[50];
-    BYTE_ORDER          byte_order;
+    B_O		            byte_order;
     SENSOR_CAN_MESSAGE* messages;
     U8                  num_messages;
 } CAN_SENSOR;
