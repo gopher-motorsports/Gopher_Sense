@@ -34,7 +34,7 @@ typedef enum
     CLEAN = 0,
     DIRTY = 1,
     LOCKED = 2
-}DATA_STATUS;
+} DATA_STATUS;
 
 
 typedef struct
