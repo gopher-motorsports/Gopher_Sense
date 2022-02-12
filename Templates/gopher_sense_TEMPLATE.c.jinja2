@@ -3,7 +3,7 @@
 #include "gopher_sense.h"
 #include "sensor_hal.h"
 
-#define continuous 0
+#define continuous 1
 
 //ANALOG_SENSORS
 {% for sensor in analog_sensors %}
@@ -32,7 +32,12 @@ void init_analog_sensors (void) {
     {{sensor.name}}.model.type = {{sensor.analog['output_model'].upper()}};
     {{sensor.name}}.model.measurement_unit = {{sensor.analog['measurement_unit'].upper()}};
     {{sensor.name}}.model.supply_voltage = {{sensor.analog['supply_voltage']}};
-    {{sensor.name}}.model.inline_resistance = {{sensor.analog['inline_resistance']}};
+    {{sensor.name}}.model.rin = {{sensor.analog['rin']}};
+    {{sensor.name}}.model.rdown = {{sensor.analog['rdown']}};
+    {{sensor.name}}.model.r3v = {{sensor.analog['r3v']}};
+    {{sensor.name}}.model.r5v = {{sensor.analog['r5v']}};
+    {{sensor.name}}.model.rfilt = {{sensor.analog['rfilt']}};
+    {{sensor.name}}.model.rdiv = {{sensor.analog['rdiv']}};
     {{sensor.name}}.model.low_bar = {{sensor.analog['low_bar']}};
     {{sensor.name}}.model.high_bar = {{sensor.analog['high_bar']}};
     {{sensor.name}}.model.low_bar_value = {{sensor.analog['low_bar_value']}};

@@ -7,12 +7,24 @@
 
 //ANALOG_SENSORS
 
-// Sensor definition honeywell_heavy_duty_pressure_transducer
-ANALOG_SENSOR honeywell_heavy_duty_pressure_transducer;
+// Sensor definition apb_honeywell_board_mount_pressure
+ANALOG_SENSOR apb_honeywell_board_mount_pressure;
+
+
+// Sensor definition px3_honeywell_heavy_duty_pressure_transducer
+ANALOG_SENSOR px3_honeywell_heavy_duty_pressure_transducer;
+
+
+// Sensor definition mlh_honeywell_heavy_duty_pressure_transducer_
+ANALOG_SENSOR mlh_honeywell_heavy_duty_pressure_transducer_;
 
 
 // Sensor definition banner_qx4_analog_laser_sensor
 ANALOG_SENSOR banner_qx4_analog_laser_sensor;
+
+
+// Sensor definition linear_shock_pot
+ANALOG_SENSOR linear_shock_pot;
 
 
 // Sensor definition bosch_temperature_sensor
@@ -20,18 +32,50 @@ ANALOG_SENSOR bosch_temperature_sensor;
 
 TABLE bosch_temperature_sensor_output_model_table;
 
-float bosch_temperature_sensor_output_model_table_independent_vars[4] = {
+float bosch_temperature_sensor_output_model_table_independent_vars[20] = {
  -40,
  -30,
  -20,
- -10
+ -10,
+ 0,
+ 10,
+ 20,
+ 30,
+ 40,
+ 50,
+ 60,
+ 70,
+ 80,
+ 90,
+ 100,
+ 110,
+ 120,
+ 130,
+ 140,
+ 150
  
 };
-float bosch_temperature_sensor_output_model_table_dependent_vars[4] = {
+float bosch_temperature_sensor_output_model_table_dependent_vars[20] = {
   45313,
   26144,
   15462,
-  9397
+  9397,
+  5896,
+  3792,
+  2500,
+  1707,
+  1175,
+  834,
+  596,
+  436,
+  323,
+  243,
+  187,
+  144,
+  113,
+  89,
+  71,
+  57
   
 };
 
@@ -40,24 +84,81 @@ float bosch_temperature_sensor_output_model_table_dependent_vars[4] = {
 
 void init_analog_sensors (void) {
     
-    //honeywell_heavy_duty_pressure_transducer.sensor_id = "32313757";
-    honeywell_heavy_duty_pressure_transducer.model.type = RATIOMETRIC_LINEAR;
-    honeywell_heavy_duty_pressure_transducer.model.measurement_unit = VOLTS;
-    honeywell_heavy_duty_pressure_transducer.model.supply_voltage = 5;
-    honeywell_heavy_duty_pressure_transducer.model.inline_resistance = 0;
-    honeywell_heavy_duty_pressure_transducer.model.low_bar = 10;
-    honeywell_heavy_duty_pressure_transducer.model.high_bar = 90;
-    honeywell_heavy_duty_pressure_transducer.model.low_bar_value = 0;
-    honeywell_heavy_duty_pressure_transducer.model.high_bar_value = 100;
+    //apb_honeywell_board_mount_pressure.sensor_id = "32305128";
+    apb_honeywell_board_mount_pressure.model.type = SPECIAL;
+    apb_honeywell_board_mount_pressure.model.measurement_unit = VOLTS;
+    apb_honeywell_board_mount_pressure.model.supply_voltage = 3.3;
+    apb_honeywell_board_mount_pressure.model.rin = 0;
+    apb_honeywell_board_mount_pressure.model.rdown = 0;
+    apb_honeywell_board_mount_pressure.model.r3v = 0;
+    apb_honeywell_board_mount_pressure.model.r5v = 0;
+    apb_honeywell_board_mount_pressure.model.rfilt = 10000;
+    apb_honeywell_board_mount_pressure.model.rdiv = 19100;
+    apb_honeywell_board_mount_pressure.model.low_bar = 10;
+    apb_honeywell_board_mount_pressure.model.high_bar = 90;
+    apb_honeywell_board_mount_pressure.model.low_bar_value = 0;
+    apb_honeywell_board_mount_pressure.model.high_bar_value = 100;
 
     
-    honeywell_heavy_duty_pressure_transducer.model.table = NULL;
+    apb_honeywell_board_mount_pressure.model.table = NULL;
     
 
-    //honeywell_heavy_duty_pressure_transducer.output.output_name = "pressure";
-    honeywell_heavy_duty_pressure_transducer.output.scalar.quantization = continuous; //0 if continuous
-    honeywell_heavy_duty_pressure_transducer.output.scalar.offset = 0;
-    honeywell_heavy_duty_pressure_transducer.output.data_size_bits = 12;
+    //apb_honeywell_board_mount_pressure.output.output_name = "pressure";
+    apb_honeywell_board_mount_pressure.output.scalar.quantization = continuous; //0 if continuous
+    apb_honeywell_board_mount_pressure.output.scalar.offset = 0;
+    apb_honeywell_board_mount_pressure.output.data_size_bits = 12;
+    
+
+    
+    //px3_honeywell_heavy_duty_pressure_transducer.sensor_id = "32313757";
+    px3_honeywell_heavy_duty_pressure_transducer.model.type = RATIOMETRIC_LINEAR;
+    px3_honeywell_heavy_duty_pressure_transducer.model.measurement_unit = VOLTS;
+    px3_honeywell_heavy_duty_pressure_transducer.model.supply_voltage = 3.3;
+    px3_honeywell_heavy_duty_pressure_transducer.model.rin = 0;
+    px3_honeywell_heavy_duty_pressure_transducer.model.rdown = 0;
+    px3_honeywell_heavy_duty_pressure_transducer.model.r3v = 0;
+    px3_honeywell_heavy_duty_pressure_transducer.model.r5v = 0;
+    px3_honeywell_heavy_duty_pressure_transducer.model.rfilt = 10000;
+    px3_honeywell_heavy_duty_pressure_transducer.model.rdiv = 19100;
+    px3_honeywell_heavy_duty_pressure_transducer.model.low_bar = 10;
+    px3_honeywell_heavy_duty_pressure_transducer.model.high_bar = 90;
+    px3_honeywell_heavy_duty_pressure_transducer.model.low_bar_value = 0;
+    px3_honeywell_heavy_duty_pressure_transducer.model.high_bar_value = 100;
+
+    
+    px3_honeywell_heavy_duty_pressure_transducer.model.table = NULL;
+    
+
+    //px3_honeywell_heavy_duty_pressure_transducer.output.output_name = "pressure";
+    px3_honeywell_heavy_duty_pressure_transducer.output.scalar.quantization = continuous; //0 if continuous
+    px3_honeywell_heavy_duty_pressure_transducer.output.scalar.offset = 0;
+    px3_honeywell_heavy_duty_pressure_transducer.output.data_size_bits = 12;
+    
+
+    
+    //mlh_honeywell_heavy_duty_pressure_transducer_.sensor_id = "32328895";
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.type = RATIOMETRIC_LINEAR;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.measurement_unit = MILLIAMPS;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.supply_voltage = 12;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.rin = 0;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.rdown = 0;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.r3v = 0;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.r5v = 0;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.rfilt = 10000;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.rdiv = 19100;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.low_bar = 4;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.high_bar = 20;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.low_bar_value = 50;
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.high_bar_value = 8000;
+
+    
+    mlh_honeywell_heavy_duty_pressure_transducer_.model.table = NULL;
+    
+
+    //mlh_honeywell_heavy_duty_pressure_transducer_.output.output_name = "pressure";
+    mlh_honeywell_heavy_duty_pressure_transducer_.output.scalar.quantization = continuous; //0 if continuous
+    mlh_honeywell_heavy_duty_pressure_transducer_.output.scalar.offset = 0;
+    mlh_honeywell_heavy_duty_pressure_transducer_.output.data_size_bits = 12;
     
 
     
@@ -65,7 +166,12 @@ void init_analog_sensors (void) {
     banner_qx4_analog_laser_sensor.model.type = ABSOLUTE_LINEAR;
     banner_qx4_analog_laser_sensor.model.measurement_unit = MILLIAMPS;
     banner_qx4_analog_laser_sensor.model.supply_voltage = 5;
-    banner_qx4_analog_laser_sensor.model.inline_resistance = 0;
+    banner_qx4_analog_laser_sensor.model.rin = 0;
+    banner_qx4_analog_laser_sensor.model.rdown = 0;
+    banner_qx4_analog_laser_sensor.model.r3v = 0;
+    banner_qx4_analog_laser_sensor.model.r5v = 0;
+    banner_qx4_analog_laser_sensor.model.rfilt = 10000;
+    banner_qx4_analog_laser_sensor.model.rdiv = 19100;
     banner_qx4_analog_laser_sensor.model.low_bar = 4;
     banner_qx4_analog_laser_sensor.model.high_bar = 20;
     banner_qx4_analog_laser_sensor.model.low_bar_value = 5;
@@ -82,11 +188,42 @@ void init_analog_sensors (void) {
     
 
     
+    //linear_shock_pot.sensor_id = "RSL-50";
+    linear_shock_pot.model.type = ABSOLUTE_LINEAR;
+    linear_shock_pot.model.measurement_unit = VOLTS;
+    linear_shock_pot.model.supply_voltage = 5;
+    linear_shock_pot.model.rin = 0;
+    linear_shock_pot.model.rdown = 0;
+    linear_shock_pot.model.r3v = 0;
+    linear_shock_pot.model.r5v = 0;
+    linear_shock_pot.model.rfilt = 10000;
+    linear_shock_pot.model.rdiv = 19100;
+    linear_shock_pot.model.low_bar = 0;
+    linear_shock_pot.model.high_bar = 5;
+    linear_shock_pot.model.low_bar_value = 0;
+    linear_shock_pot.model.high_bar_value = 50;
+
+    
+    linear_shock_pot.model.table = NULL;
+    
+
+    //linear_shock_pot.output.output_name = "distance";
+    linear_shock_pot.output.scalar.quantization = continuous; //0 if continuous
+    linear_shock_pot.output.scalar.offset = 0;
+    linear_shock_pot.output.data_size_bits = 12;
+    
+
+    
     //bosch_temperature_sensor.sensor_id = "NTC M12-H";
     bosch_temperature_sensor.model.type = TABULAR;
     bosch_temperature_sensor.model.measurement_unit = OHMS;
     bosch_temperature_sensor.model.supply_voltage = 5;
-    bosch_temperature_sensor.model.inline_resistance = 0;
+    bosch_temperature_sensor.model.rin = 0;
+    bosch_temperature_sensor.model.rdown = 0;
+    bosch_temperature_sensor.model.r3v = 0;
+    bosch_temperature_sensor.model.r5v = 0;
+    bosch_temperature_sensor.model.rfilt = 10000;
+    bosch_temperature_sensor.model.rdiv = 19100;
     bosch_temperature_sensor.model.low_bar = 0;
     bosch_temperature_sensor.model.high_bar = 0;
     bosch_temperature_sensor.model.low_bar_value = 0;
@@ -95,7 +232,7 @@ void init_analog_sensors (void) {
     
     
     //TABLE bosch_temperature_sensor_output_model_table;
-    bosch_temperature_sensor_output_model_table.num_entries = 4;
+    bosch_temperature_sensor_output_model_table.num_entries = 20;
     bosch_temperature_sensor_output_model_table.independent_unit = DEGREES_C;
     bosch_temperature_sensor_output_model_table.dependent_unit = OHMS;
     bosch_temperature_sensor_output_model_table.independent_vars = bosch_temperature_sensor_output_model_table_independent_vars;

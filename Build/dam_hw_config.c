@@ -11,9 +11,6 @@ ANALOG_SENSOR_PARAM adc1_param1;
 GENERAL_PARAMETER adc1_param1_genparam;
 
 
-FILTERED_PARAM adc1_param1_filtered_1;
-
-FILTERED_PARAM adc1_param1_fparam_list[1];
 
 
 U16_BUFFER adc1_param1_u16buffer;
@@ -25,9 +22,6 @@ ANALOG_SENSOR_PARAM adc1_param2;
 GENERAL_PARAMETER adc1_param2_genparam;
 
 
-FILTERED_PARAM adc1_param2_filtered_1;
-
-FILTERED_PARAM adc1_param2_fparam_list[1];
 
 
 U16_BUFFER adc1_param2_u16buffer;
@@ -47,20 +41,12 @@ void init_adc1_params (void) {
     
     // adc1_param1
     adc1_param1_genparam.param.float_struct = oil_cooler_pressure_in;
-    adc1_param1.analog_sensor = honeywell_heavy_duty_pressure_transducer;
+    adc1_param1.analog_sensor = px3_honeywell_heavy_duty_pressure_transducer;
     
-    adc1_param1.num_filtered_subparams = 1;
+    adc1_param1.num_filtered_subparams = 0;
 
     
-    adc1_param1_filtered_1.filtered_param.param.float_struct = oil_cooler_pressure_in_lowpass_1000;
-    adc1_param1_filtered_1.filter_type = LOW_PASS;
-    adc1_param1_filtered_1.filter_value = 1000;
-    
-    
-    adc1_param1_fparam_list[0] = adc1_param1_filtered_1;
-    
-    adc1_param1.filtered_subparams = adc1_param1_fparam_list;
-
+    adc1_param1.filtered_subparams = NULL;
     
 
     adc1_param1_u16buffer.buffer = adc1_param1_buffer;
@@ -71,20 +57,12 @@ void init_adc1_params (void) {
     
     // adc1_param2
     adc1_param2_genparam.param.float_struct = oil_cooler_pressure_out;
-    adc1_param2.analog_sensor = honeywell_heavy_duty_pressure_transducer;
+    adc1_param2.analog_sensor = px3_honeywell_heavy_duty_pressure_transducer;
     
-    adc1_param2.num_filtered_subparams = 1;
+    adc1_param2.num_filtered_subparams = 0;
 
     
-    adc1_param2_filtered_1.filtered_param.param.float_struct = oil_cooler_pressure_out_lowpass_1000;
-    adc1_param2_filtered_1.filter_type = LOW_PASS;
-    adc1_param2_filtered_1.filter_value = 1000;
-    
-    
-    adc1_param2_fparam_list[0] = adc1_param2_filtered_1;
-    
-    adc1_param2.filtered_subparams = adc1_param2_fparam_list;
-
+    adc1_param2.filtered_subparams = NULL;
     
 
     adc1_param2_u16buffer.buffer = adc1_param2_buffer;

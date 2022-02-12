@@ -81,7 +81,8 @@ typedef enum
 {
     RATIOMETRIC_LINEAR = 0,
     ABSOLUTE_LINEAR = 1,
-    TABULAR = 2
+    TABULAR = 2,
+	SPECIAL = 3,
 } OUTPUT_MODEL_TYPE;
 
 typedef enum
@@ -129,7 +130,12 @@ typedef struct
     float               low_bar_value;
     float               high_bar_value;
     float               supply_voltage;
-    float               inline_resistance;
+    float 				rin;
+    float 				rdown;
+    float				r3v;
+    float 				r5v;
+    float				rfilt;
+    float				rdiv;
     TABLE*              table;
 } OUTPUT_MODEL;
 

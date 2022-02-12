@@ -1,30 +1,35 @@
 sensors:
     "32305128":
-    	name_english: "APB Honeywell Board Mount Pressure"
-    	outputs:
-    		pressure:
-    			unit: psi
-    			quantization: continuous
-    			offset: 0
-    			data_size: 12
-    	sensor_type:
-    		analog:
-    		
-				MODEL SPECS    		
-				Output (V) = 0.8 x Vsupply/
-							Pmax. – Pmin.  x (Pressureapplied – Pmin.) +0.10 x Vsupply
-			
-    			measurement_unit: Volts
-                supply_voltage: 3.3
-                inline_resistance: 0
-                low_bar: 10
-                high_bar: 90
-                low_bar_value: 0
-                high_bar_value: 100
-    
+      name_english: "APB Honeywell Board Mount Pressure"
+      outputs:
+          pressure:
+              unit: psi
+              quantization: continuous
+              offset: 0
+              data_size: 12
+      sensor_type:
+        analog:
+           measurement_unit: Volts
+           output_model: special
+           table:
+           supply_voltage: 3.3
+           rin: 0
+           rdown: 0
+           r3v: 0
+           r5v: 0
+           rfilt: 10000
+           rdiv: 19100
+           low_bar: 10
+           high_bar: 90
+           low_bar_value: 0
+           high_bar_value: 100
+#MODEL SPECS
+#	Output (V) = 0.8 x Vsupply/
+#				Pmax. – Pmin.  x (Pressureapplied – Pmin.) +0.10 x Vsupply
+
     "32313757":
         name_english: "PX3 Honeywell Heavy Duty Pressure Transducer"
-        outputs: 
+        outputs:
             pressure:
                 unit: psi
                 quantization: continuous
@@ -37,15 +42,21 @@ sensors:
                 table:
                 measurement_unit: Volts
                 supply_voltage: 3.3
-                inline_resistance: 0
+                rin: 0
+                rdown: 0
+                r3v: 0
+                r5v: 0
+                rfilt: 10000
+                rdiv: 19100
                 low_bar: 10
                 high_bar: 90
                 low_bar_value: 0
                 high_bar_value: 100
-    
+
+
     "32328895":
         name_english: "MLH Honeywell Heavy Duty Pressure Transducer "
-        outputs: 
+        outputs:
             pressure:
                 unit: psi
                 quantization: continuous
@@ -58,15 +69,20 @@ sensors:
                 table:
                 measurement_unit: milliamps
                 supply_voltage: 12
-                inline_resistance: 100
+                rin: 0
+                rdown: 0
+                r3v: 0
+                r5v: 0
+                rfilt: 10000
+                rdiv: 19100
                 low_bar: 4
                 high_bar: 20
                 low_bar_value: 50
                 high_bar_value: 8000
-                    
-    "MM5.10-R":    
+
+    "MM5.10-R":
         name_english: "Bosch Accelerometer"
-        outputs: 
+        outputs:
             yaw_rate:
                 unit: degrees_per_sec
                 quantization: .005
@@ -121,7 +137,7 @@ sensors:
                         id: 0x17C
                         data_byte_start: 4
                         data_byte_end: 5
-                    
+
     "185624":
         name_english: "Banner QX4 Analog Laser Sensor"
         outputs:
@@ -136,13 +152,44 @@ sensors:
                 output_model: absolute_linear
                 table:
                 measurement_unit: milliamps
-                inline_resistance: 0
+                rin: 0
+                rdown: 0
+                r3v: 0
+                r5v: 0
+                rfilt: 10000
+                rdiv: 19100
                 supply_voltage: 5
                 low_bar: 4
                 high_bar: 20
                 low_bar_value: 5
                 high_bar_value: 50
-                
+
+    "RSL-50":
+        name_english: "Linear Shock Pot"
+        outputs:
+            distance:
+                unit: millimeters
+                quantization: continuous
+                offset: 0
+                data_size: 12
+        sensor_type:
+            analog:
+                output_measured: distance
+                output_model: absolute_linear
+                table:
+                measurement_unit: ohms
+                rin: 0
+                rdown: 0
+                r3v: 0
+                r5v: 0
+                rfilt: 10000
+                rdiv: 19100
+                supply_voltage: 5
+                low_bar: 0
+                high_bar: 5
+                low_bar_value: 0
+                high_bar_value: 50
+
     "NTC M12-H":
         name_english: "Bosch Temperature Sensor"
         outputs:
@@ -156,78 +203,83 @@ sensors:
                 output_measured: temperature
                 output_model: tabular
                 table:
-                    independent_unit: degrees_c 
+                    independent_unit: degrees_c
                     dependent_unit: ohms
                     entries:
                         independent1: -40
                         dependent1: 45313
-                        
+
                         independent2: -30
                         dependent2: 26144
-                        
+
                         independent3: -20
                         dependent3: 15462
-                        
+
                         independent4: -10
                         dependent4: 9397
-                        
+
                         independent5: 0
                         dependent5: 5896
-                        
+
                         independent6: 10
                         dependent6: 3792
-           				
-           				independent7: 20    
+
+                        independent7: 20
                         dependent7: 2500
-                        
-                        independent8: 30              
+
+                        independent8: 30
                         dependent8: 1707
-                        
-                        independent9: 40          
+
+                        independent9: 40
                         dependent9:  1175
-                        
-                        independent10: 50               
+
+                        independent10: 50
                         dependent10: 834
-                        
-                        independent11: 60 
+
+                        independent11: 60
                         dependent11: 596
-                        
-                        independent12: 70             
+
+                        independent12: 70
                         dependent12: 436
-                        
-                        independent13: 80 
-                        dependent13: 323         
-                        
+
+                        independent13: 80
+                        dependent13: 323
+
                         independent14: 90
-                        dependent14: 243           
-                        
-                        independent15: 100 
-                        dependent15: 187   
-                        
-						independent16: 110    
+                        dependent14: 243
+
+                        independent15: 100
+                        dependent15: 187
+
+                        independent16: 110
                         dependent16: 144
-                        
+
                         independent17: 120
                         dependent17: 113
-                        
-                        independent18: 130 
+
+                        independent18: 130
                         dependent18: 89
-                        
-                        independent19:140              
+
+                        independent19: 140
                         dependent19: 71
-                        
-						independent20: 150 
+
+                        independent20: 150
                         dependent20: 57
-                        
-                          
+
+
                 measurement_unit: ohms
                 supply_voltage: 5
-                inline_resistance: 0
+                rin: 0
+                rdown: 0
+                r3v: 0
+                r5v: 0
+                rfilt: 10000
+                rdiv: 19100
                 low_bar: 0
                 high_bar: 0
                 low_bar_value: 0
                 high_bar_value: 0
-            
+
     "IRTS-V2":
         name_english: "IZZE Infared Tire Temperature sensor"
         outputs:
@@ -395,6 +447,3 @@ sensors:
                         id: 0x4B3
                         data_byte_start: 6
                         data_byte_end: 7
-
-            
-        

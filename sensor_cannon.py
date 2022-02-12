@@ -20,7 +20,7 @@ SENSOR_C_FILE = 'gopher_sense_TEMPLATE.c.jinja2'
 HWCONFIG_C_FILE = 'hwconfig_TEMPLATE.c.jinja2'
 HWCONFIG_H_FILE = 'hwconfig_TEMPLATE.h.jinja2'
 
-# C:\\Users\\ian\\STM32CubeIDE\\workspace_1.3.0\\data-acquisition-module\\Core\\Resources\\dam_hw_config.yaml
+# C:\\Users\\admin\\STM32CubeIDE\\workspace_1.8.0\\DAM\\Resources\\dam_hw_config.yaml
 
 def C_ize_Name(name):
     return name.replace(' ', '_').lower()
