@@ -1,4 +1,115 @@
 sensors:
+# this is the name it will be referenced in the config files
+    "test_analog_sensor":
+# this is the name for the code
+        name_english: "Basic Voltage Sensor for Testing"
+# all of the outputs this sensor can produce. Analog sensors will probably be only 1
+        outputs:
+# what kind of data this sensor will produce. This can be any name but will be refrenced when attaching a sensor
+            voltage:
+# what kind of unit output this will provide. This is only for refrence and does not do anything in code
+                unit: Volts_out
+# what one bit of input coresponds to when going on the table. Is usually continuous(1) for analog sensors. 'm' in y = mx + b
+                quantization: continuous
+# what a value of zero means when going on the table. Usually 0 for analog sensors. 'b' in y = mx + b
+                offset: 0
+# the size of one data packet. Usually 12 for analog sensors
+                data_size: 12
+        sensor_type:
+# type of sensor. This is an analog sensor
+            analog:
+# Input measurement. This can be Volts, Amps, or Ohms depending on the type of sensor
+# TODO change to analog_subtype with Voltage, Current, or Resistive
+                measurement_unit: Volts
+# TODO make every voltage sensor a tabular sensor and remove this
+                output_model: tabular
+                table:
+# lookup table for converting the output of the sensor (in Volts, Ohms, or milliamps) to the units
+# the output
+# TODO the independent_unit should always be the same as the measurement_unit. Possibly delete one
+                    independent_unit: Volts
+# output. This unit is for refrence only and is not used in code
+# TODO change this in code to be a name of some sort and not a macro as it is not useful
+                    dependent_unit: Volts
+                    entries:
+# entries for the table
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 2.5
+                        dependent2: 0.5
+                        independent3: 5.0
+                        dependent3: 1.0
+# supply voltage. This should be removed as all sensors will be tabular
+# TODO remove supply voltage
+                supply_voltage: 5
+# resistor values. These are the same name as on the PCB and are needed so the math going
+# to the ADC can be abstracted away and the table can be directly from the sensor
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+# TODO remove the bars because all analog sensors will be tabular
+                low_bar: 0
+                high_bar: 0
+                low_bar_value: 0
+                high_bar_value: 0
+                
+
+    "test_can_sensor":
+        name_english: "CAN Sensor for Testing"
+# CAN sensors will often have multiple outputs with many differences
+        outputs:
+            d16_fixed:
+                unit: 0_to_1
+# convert 0-65535 to 0-1
+                quantization: 0.0000015259
+                offset: 0
+                data_size: 16
+            u16_raw:
+                unit: raw_input
+                quantization: continuous
+                offset: 0
+                data_size: 16
+            float_1_raw:
+                unit: float
+                quantization: continuous
+                offset: 0
+                data_size: 32
+            float_2_scaled:
+                unit: scaled_float
+                quantization: 0.001
+                offset: 10
+                data_size: 32
+        sensor_type:
+            CAN:
+                byte_order: LSB
+                messages:
+                    message1:
+# link to what output this message is measuring
+                        output_measured: d16_fixed
+# CAN message ID for this data. There can be multiple outputs with different ids per sensor
+                        id: 0x137
+# Which data bytes are associated with this output. Make sure this matches the size
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message2:
+                        output_measured: u16_raw
+                        id: 0x137
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message3:
+                        output_measured: float_1_raw
+                        id: 0x138
+                        data_byte_start: 0
+                        data_byte_end: 3
+                    message4:
+                        output_measured: float_2_scaled
+                        id: 0x138
+                        data_byte_start: 4
+                        data_byte_end: 7
+
     "32305128":
       name_english: "APB Honeywell Board Mount Pressure"
       outputs:

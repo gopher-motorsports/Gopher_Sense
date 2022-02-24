@@ -555,24 +555,24 @@ S8 interpolate_table_linear (TABLE* table, float data_in, float* data_out) {
 		return CONV_ERR;
 	}
 
-	if (data_in < table->dependent_vars[0]) {
+	if (data_in < table->independent_vars[0]) {
 		// if off bottom edge return bottom val
-		*data_out = table->independent_vars[0];
+		*data_out = table->dependent_vars[0];
 		return CONV_SUCCESS;
 	}
 
-	if (data_in < table->dependent_vars[entries-1]) {
+	if (data_in < table->independent_vars[entries-1]) {
 		// if off top edge return top val
-		*data_out = table->independent_vars[entries-1];
+		*data_out = table->dependent_vars[entries-1];
 		return CONV_SUCCESS;
 	}
 
 
 	for (U16 i = 0; i < entries-1; i++) {
-		float x0 = table->dependent_vars[i];
-		float y0 = table->independent_vars[i];
-		float x1 = table->dependent_vars[i+1];
-		float y1 = table->independent_vars[i+1];
+		float x0 = table->independent_vars[i];
+		float y0 = table->dependent_vars[i];
+		float x1 = table->independent_vars[i+1];
+		float y1 = table->dependent_vars[i+1];
 
 		if (data_in >= x0 && data_in <= x1) {
 			*data_out = interpolate(x0, y0, x1, y1, data_in);

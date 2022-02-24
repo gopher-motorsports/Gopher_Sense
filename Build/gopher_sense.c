@@ -3,9 +3,28 @@
 #include "gopher_sense.h"
 #include "sensor_hal.h"
 
-#define continuous 0
+#define continuous 1
 
 //ANALOG_SENSORS
+
+// Sensor definition basic_voltage_sensor_for_testing
+ANALOG_SENSOR basic_voltage_sensor_for_testing;
+
+TABLE basic_voltage_sensor_for_testing_output_model_table;
+
+float basic_voltage_sensor_for_testing_output_model_table_independent_vars[3] = {
+ 0,
+ 0.5,
+ 1.0
+ 
+};
+float basic_voltage_sensor_for_testing_output_model_table_dependent_vars[3] = {
+  0,
+  2.5,
+  5
+  
+};
+
 
 // Sensor definition apb_honeywell_board_mount_pressure
 ANALOG_SENSOR apb_honeywell_board_mount_pressure;
@@ -83,6 +102,40 @@ float bosch_temperature_sensor_output_model_table_dependent_vars[20] = {
 
 
 void init_analog_sensors (void) {
+    
+    //basic_voltage_sensor_for_testing.sensor_id = "test_analog_sensor";
+    basic_voltage_sensor_for_testing.model.type = TABULAR;
+    basic_voltage_sensor_for_testing.model.measurement_unit = VOLTS;
+    basic_voltage_sensor_for_testing.model.supply_voltage = 5;
+    basic_voltage_sensor_for_testing.model.rin = 0;
+    basic_voltage_sensor_for_testing.model.rdown = RES_OPEN;
+    basic_voltage_sensor_for_testing.model.r3v = RES_OPEN;
+    basic_voltage_sensor_for_testing.model.r5v = RES_OPEN;
+    basic_voltage_sensor_for_testing.model.rfilt = 10000;
+    basic_voltage_sensor_for_testing.model.rdiv = 19100;
+    basic_voltage_sensor_for_testing.model.low_bar = 0;
+    basic_voltage_sensor_for_testing.model.high_bar = 0;
+    basic_voltage_sensor_for_testing.model.low_bar_value = 0;
+    basic_voltage_sensor_for_testing.model.high_bar_value = 0;
+
+    
+    
+    //TABLE basic_voltage_sensor_for_testing_output_model_table;
+    basic_voltage_sensor_for_testing_output_model_table.num_entries = 3;
+    basic_voltage_sensor_for_testing_output_model_table.independent_unit = VOLTS;
+    basic_voltage_sensor_for_testing_output_model_table.dependent_unit = VOLTS;
+    basic_voltage_sensor_for_testing_output_model_table.independent_vars = basic_voltage_sensor_for_testing_output_model_table_independent_vars;
+    basic_voltage_sensor_for_testing_output_model_table.dependent_vars = basic_voltage_sensor_for_testing_output_model_table_dependent_vars;
+    basic_voltage_sensor_for_testing.model.table = &basic_voltage_sensor_for_testing_output_model_table;
+
+    
+
+    //basic_voltage_sensor_for_testing.output.output_name = "voltage";
+    basic_voltage_sensor_for_testing.output.scalar.quantization = continuous; //0 if continuous
+    basic_voltage_sensor_for_testing.output.scalar.offset = 0;
+    basic_voltage_sensor_for_testing.output.data_size_bits = 12;
+    
+
     
     //apb_honeywell_board_mount_pressure.sensor_id = "32305128";
     apb_honeywell_board_mount_pressure.model.type = SPECIAL;
@@ -190,7 +243,7 @@ void init_analog_sensors (void) {
     
     //linear_shock_pot.sensor_id = "RSL-50";
     linear_shock_pot.model.type = ABSOLUTE_LINEAR;
-    linear_shock_pot.model.measurement_unit = VOLTS;
+    linear_shock_pot.model.measurement_unit = OHMS;
     linear_shock_pot.model.supply_voltage = 5;
     linear_shock_pot.model.rin = 0;
     linear_shock_pot.model.rdown = 0;
@@ -251,6 +304,16 @@ void init_analog_sensors (void) {
 }
 
 
+// Sensor definition can_sensor_for_testing
+CAN_SENSOR can_sensor_for_testing;
+
+SENSOR_CAN_MESSAGE can_sensor_for_testing_message_1;
+SENSOR_CAN_MESSAGE can_sensor_for_testing_message_2;
+SENSOR_CAN_MESSAGE can_sensor_for_testing_message_3;
+SENSOR_CAN_MESSAGE can_sensor_for_testing_message_4;
+
+SENSOR_CAN_MESSAGE can_sensor_for_testing_messages[4];
+
 // Sensor definition bosch_accelerometer
 CAN_SENSOR bosch_accelerometer;
 
@@ -287,6 +350,59 @@ SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_messages[16];
 
 // CAN sensors
 void init_can_sensors (void) {
+    
+    // Sensor definition can_sensor_for_testing
+    //CAN_SENSOR can_sensor_for_testing;
+    //can_sensor_for_testing.sensor_id = "test_can_sensor";
+    can_sensor_for_testing.byte_order = LSB;
+    
+    can_sensor_for_testing.num_messages = 4;
+
+    
+    
+    //SENSOR_CAN_MESSAGE can_sensor_for_testing_message_1;
+    can_sensor_for_testing_message_1.message_id = 311;
+    //can_sensor_for_testing_message_1.output.output_name = "d16_fixed";
+    can_sensor_for_testing_message_1.output.scalar.quantization = 1.5259e-06;
+    can_sensor_for_testing_message_1.output.scalar.offset = 0;
+    can_sensor_for_testing_message_1.data_start = 0;
+    can_sensor_for_testing_message_1.data_end = 1;
+    
+    
+    //SENSOR_CAN_MESSAGE can_sensor_for_testing_message_2;
+    can_sensor_for_testing_message_2.message_id = 311;
+    //can_sensor_for_testing_message_2.output.output_name = "u16_raw";
+    can_sensor_for_testing_message_2.output.scalar.quantization = continuous;
+    can_sensor_for_testing_message_2.output.scalar.offset = 0;
+    can_sensor_for_testing_message_2.data_start = 2;
+    can_sensor_for_testing_message_2.data_end = 3;
+    
+    
+    //SENSOR_CAN_MESSAGE can_sensor_for_testing_message_3;
+    can_sensor_for_testing_message_3.message_id = 312;
+    //can_sensor_for_testing_message_3.output.output_name = "float_1_raw";
+    can_sensor_for_testing_message_3.output.scalar.quantization = continuous;
+    can_sensor_for_testing_message_3.output.scalar.offset = 0;
+    can_sensor_for_testing_message_3.data_start = 0;
+    can_sensor_for_testing_message_3.data_end = 3;
+    
+    
+    //SENSOR_CAN_MESSAGE can_sensor_for_testing_message_4;
+    can_sensor_for_testing_message_4.message_id = 312;
+    //can_sensor_for_testing_message_4.output.output_name = "float_2_scaled";
+    can_sensor_for_testing_message_4.output.scalar.quantization = 0.001;
+    can_sensor_for_testing_message_4.output.scalar.offset = 10;
+    can_sensor_for_testing_message_4.data_start = 4;
+    can_sensor_for_testing_message_4.data_end = 7;
+    
+    can_sensor_for_testing_messages[0] = can_sensor_for_testing_message_1;
+    can_sensor_for_testing_messages[1] = can_sensor_for_testing_message_2;
+    can_sensor_for_testing_messages[2] = can_sensor_for_testing_message_3;
+    can_sensor_for_testing_messages[3] = can_sensor_for_testing_message_4;
+    
+    can_sensor_for_testing.messages = can_sensor_for_testing_messages;
+
+
     
     // Sensor definition bosch_accelerometer
     //CAN_SENSOR bosch_accelerometer;
