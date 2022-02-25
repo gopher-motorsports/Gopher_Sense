@@ -4,22 +4,15 @@
 
 #include "sensor_hal.h"
 
-#define NUM_ANALOG_SENSORS 7
-#define NUM_CAN_SENSORS 3
+#define NUM_ANALOG_SENSORS 2
+#define NUM_CAN_SENSORS 1
 
 
 extern ANALOG_SENSOR basic_voltage_sensor_for_testing;
-extern ANALOG_SENSOR apb_honeywell_board_mount_pressure;
-extern ANALOG_SENSOR px3_honeywell_heavy_duty_pressure_transducer;
-extern ANALOG_SENSOR mlh_honeywell_heavy_duty_pressure_transducer_;
-extern ANALOG_SENSOR banner_qx4_analog_laser_sensor;
-extern ANALOG_SENSOR linear_shock_pot;
-extern ANALOG_SENSOR bosch_temperature_sensor;
+extern ANALOG_SENSOR basic_resistive_sensor_for_testing;
 
 
 extern CAN_SENSOR can_sensor_for_testing;
-extern CAN_SENSOR bosch_accelerometer;
-extern CAN_SENSOR izze_infared_tire_temperature_sensor;
 
 
 #define RES_OPEN -1.0

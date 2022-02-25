@@ -188,7 +188,6 @@ def main():
     sensors_munch = munch.Munch(sensor_raw)
     sensors = sensors_munch.sensors
 
-
     # define sensor objects
     analog_sensors = []
     can_sensors = []

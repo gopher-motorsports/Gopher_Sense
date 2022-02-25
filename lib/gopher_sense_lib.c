@@ -30,9 +30,8 @@ static volatile U16 adc3_sample_buffer[NUM_ADC3_PARAMS];
 
 
 //************ Initialize the library ****************
-void init_sensor_hal (void) {
-    init_analog_sensors();
-    init_can_sensors();
+void init_sensor_hal (void)
+{
     init_adc1_params();
     init_adc2_params();
     init_adc3_params();
@@ -48,7 +47,8 @@ void configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleType
     adc3 = ad3;
 }
 
-void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle){
+void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle)
+{
     // stop the DMA and start the timer
     HAL_ADC_Stop_DMA(adc_handle);
     U16_BUFFER* buf;
@@ -97,7 +97,7 @@ void configLibTIM(TIM_HandleTypeDef* t1, U16 t1_freq,
 void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz) {
     __HAL_TIM_DISABLE(timer);
     __HAL_TIM_SET_COUNTER(timer, 0);
-    // Maybe look at this?
+    // TODO Maybe look at this?
     U32 reload;
     do {
         reload = (TIM_CLOCK_BASE_FREQ/psc) / timer_int_freq_hz;
@@ -253,32 +253,28 @@ S8 apply_can_sensor_conversion (CAN_SENSOR* sensor, U8 msg_idx, float data_in, f
 	if (!sensor || !data_out) return CONV_ERR;
 
 	DATA_SCALAR scalar = sensor->messages[msg_idx].output.scalar;
-	*data_out = (data_in + scalar.offset) * scalar.quantization; // Verify this is the case for all sensors
+	*data_out = (data_in + scalar.offset) * scalar.quantization; // TODO Verify this is the case for all sensors
     return CONV_SUCCESS;
 }
 
 
 
-S8 apply_analog_sensor_conversion (ANALOG_SENSOR* sensor, float data_in, float* data_out) {
+S8 apply_analog_sensor_conversion (ANALOG_SENSOR* sensor, float data_in, float* data_out)
+{
 	if (!sensor || !data_out) return CONV_ERR;
 
-	if (sensor->model.type == SPECIAL) {
-		// take care of any fucky cases
-		return apply_special_conversions(sensor, data_in, data_out);
-    }
-    switch (sensor->model.measurement_unit) {
-		case VOLTS:
+    switch (sensor->model.input_type)
+    {
+		case VOLTAGE:
 			return convert_voltage_load(sensor, data_in, data_out);
-		case OHMS:
+		case RESISTIVE:
 			return convert_resistive_load(sensor, data_in, data_out);
-		case MILLIAMPS:
+		case CURRENT:
 			return convert_current_load(sensor, data_in, data_out);
 		default:
 			// apply no conversion
 			*data_out = data_in;
-
     }
-
 
     return CONV_ERR;
 }
@@ -333,6 +329,7 @@ S8 convert_voltage_load (ANALOG_SENSOR* sensor, float data_in, float* data_out) 
 	}
 
 	// calculate the voltage sourced by the sensor
+	// TODO resistor math
 	float v_read = adc_to_volts(data_in, sensor->output.data_size_bits);
 	float div1 = get_voltage_div1_scalar(sensor);
 	float div2 = get_voltage_div2_scalar(sensor);
@@ -342,73 +339,15 @@ S8 convert_voltage_load (ANALOG_SENSOR* sensor, float data_in, float* data_out) 
 		*data_out = data_in;
 		return CONV_ERR;
 	}
-
-
 	float v_sensor = v_read / (div1 * div2);
 
-// now convert voltage to useful units according to the model
-	switch (model.type) {
-		case RATIOMETRIC_LINEAR:// uses a percentage of supply
-		{
-			float x0 = model.supply_voltage * model.low_bar/100;
-			float y0 = model.low_bar_value;
-			float x1 = model.supply_voltage * model.high_bar/100;
-			float y1 = model.high_bar_value;
-
-			if (v_sensor < x0) {//use low bar as percent if ratiometric
-				//Might indicate a sensor error....
-				//handle_DAM_error(SENSOR_ERR);
-				*data_out = y0;
-			}
-			else if (v_sensor > x1) {
-				*data_out = y1;
-			}
-			else {//interpolate
-				*data_out = interpolate(x0, y0, x1, y1 ,v_sensor);
-			}
-
-			return CONV_SUCCESS;
-		}
-
-
-		case ABSOLUTE_LINEAR:
-		{
-			float x0 = model.low_bar;
-			float y0 = model.low_bar_value;
-			float x1 = model.high_bar;
-			float y1 = model.high_bar_value;
-
-			if (v_sensor < x0) {
-				*data_out = y1;
-			}
-			else if (v_sensor > x1) {
-				*data_out = model.high_bar_value;
-			}
-			else {//interpolate
-				*data_out = interpolate(x0, y0, x1, y1 ,v_sensor);
-			}
-
-			return CONV_SUCCESS;
-		}
-
-		case TABULAR:
-		{
-			if (sensor->model.table == NULL) { // config error
-				*data_out = data_in;
-				return CONV_ERR;
-			}
-
-			return interpolate_table_linear(sensor->model.table, v_sensor, data_out);
-		}
-		default:
-		{
-			*data_out = data_in;
-			return CONV_ERR;
-		}
-
-
+	// now convert voltage to useful units according to the model
+	if (sensor->model.table == NULL) { // config error
+		*data_out = data_in;
+		return CONV_ERR;
 	}
 
+	return interpolate_table_linear(sensor->model.table, v_sensor, data_out);
 }
 
 
@@ -430,6 +369,7 @@ S8 convert_resistive_load (ANALOG_SENSOR* sensor, float data_in, float* data_out
 	}
 
 	float v_read = adc_to_volts(data_in, sensor->output.data_size_bits);
+	// TODO resistor math
 	float div1 = get_voltage_div1_scalar(sensor);
 	float div2 = get_voltage_div2_scalar(sensor);
 
@@ -445,40 +385,10 @@ S8 convert_resistive_load (ANALOG_SENSOR* sensor, float data_in, float* data_out
 	// using supply_voltage here is assumming config correct
 	// scale =  R_sense/ (r2 + R_sense),
 	// supply_voltage * R_sense/(r2 + r_sense)= vsensor
-	float r_sensor = ((v_sensor / model.supply_voltage) * r2) / ((v_sensor / model.supply_voltage) - 1);
+	// TODO Resistor math
+	float r_sensor = ((v_sensor / 5.0) * r2) / ((v_sensor / 5.0) - 1);
 
-	switch (model.type) {
-		case RATIOMETRIC_LINEAR:
-		case ABSOLUTE_LINEAR: // maybe these are different???
-		{
-			float x0 = model.low_bar;
-			float y0 = model.low_bar_value;
-			float x1 = model.high_bar;
-			float y1 = model.high_bar_value;
-
-			if (r_sensor < x0) {
-				*data_out = y0;
-			}
-			else if (r_sensor > x1) {
-				*data_out = y1;
-			}
-			else {//interpolate
-				*data_out = interpolate(x0, y0, x1, y1 ,r_sensor);
-			}
-
-			return CONV_SUCCESS;
-		}
-		case TABULAR:
-		{
-			return interpolate_table_linear(sensor->model.table, r_sensor, data_out);
-		}
-		default:
-		{
-			*data_out = data_in;
-			return CONV_ERR;
-		}
-
-	}
+	return interpolate_table_linear(sensor->model.table, r_sensor, data_out);
 }
 
 
@@ -492,6 +402,7 @@ S8 convert_current_load (ANALOG_SENSOR* sensor, float data_in, float* data_out) 
 	}
 
 	// calculate the voltage sourced by the sensor
+	// TODO resistor math
 	float v_read = adc_to_volts(data_in, sensor->output.data_size_bits);
 	float div1 = get_voltage_div1_scalar(sensor);
 	float div2 = get_voltage_div2_scalar(sensor);
@@ -506,39 +417,7 @@ S8 convert_current_load (ANALOG_SENSOR* sensor, float data_in, float* data_out) 
 	//now convert voltage to mA using V/R = R
 	float ma_sensor = (v_sensor/model.rdown)  * 1000;
 
-	switch (model.type) {
-		case RATIOMETRIC_LINEAR:// uses a percentage of supply
-		case ABSOLUTE_LINEAR: // Drop through for now
-		{
-
-			float x0 = model.low_bar;
-			float y0 = model.low_bar_value;
-			float x1 = model.high_bar;
-			float y1 = model.high_bar_value;
-
-			if (ma_sensor < x0) {
-				*data_out = y0;
-			}
-			else if (ma_sensor > x1) {
-				*data_out = y1;
-			}
-			else {//interpolate
-				*data_out = interpolate(x0, y0, x1, y1 , ma_sensor);
-			}
-
-			return CONV_SUCCESS;
-		}
-		case TABULAR:
-		{
-			// does this exist?
-			return interpolate_table_linear(sensor->model.table, ma_sensor, data_out);
-		}
-		default:
-		{
-			*data_out = data_in;
-			return CONV_ERR;
-		}
-	}
+	return interpolate_table_linear(sensor->model.table, ma_sensor, data_out);
 
 }
 

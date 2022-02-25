@@ -5,643 +5,203 @@
 
 #define continuous 1
 
-//ANALOG_SENSORS
+// ********** ANALOG_SENSORS **********
 
 // Sensor definition basic_voltage_sensor_for_testing
-ANALOG_SENSOR basic_voltage_sensor_for_testing;
-
-TABLE basic_voltage_sensor_for_testing_output_model_table;
 
 float basic_voltage_sensor_for_testing_output_model_table_independent_vars[3] = {
- 0,
- 0.5,
- 1.0
- 
+    0,
+    2.5,
+    5.0
+    
 };
 float basic_voltage_sensor_for_testing_output_model_table_dependent_vars[3] = {
-  0,
-  2.5,
-  5
-  
+    0,
+    0.5,
+    1.0
+    
+};
+TABLE basic_voltage_sensor_for_testing_output_model_table = 
+{
+    .num_entries = 3,
+    .independent_vars = basic_voltage_sensor_for_testing_output_model_table_independent_vars,
+    .dependent_vars = basic_voltage_sensor_for_testing_output_model_table_dependent_vars
+};
+ANALOG_SENSOR basic_voltage_sensor_for_testing = 
+{
+    .sensor_id = "test_analog_sensor",
+    .model =
+    {
+        .input_type = VOLTAGE,
+        .rin = 0,
+        .rdown = RES_OPEN,
+        .r3v = RES_OPEN,
+        .r5v = RES_OPEN,
+        .rfilt = 10000,
+        .rdiv = 19100,
+        .table = &basic_voltage_sensor_for_testing_output_model_table
+    },
+    .output = 
+    {
+        .output_name = "voltage",
+        .output_unit = "Float_0-1",
+        .data_size_bits = 12,
+        .scalar = 
+        {
+            .quantization = continuous, //1 if continuous
+            .offset = 0
+        }
+    }
+    
 };
 
 
-// Sensor definition apb_honeywell_board_mount_pressure
-ANALOG_SENSOR apb_honeywell_board_mount_pressure;
+// Sensor definition basic_resistive_sensor_for_testing
 
-
-// Sensor definition px3_honeywell_heavy_duty_pressure_transducer
-ANALOG_SENSOR px3_honeywell_heavy_duty_pressure_transducer;
-
-
-// Sensor definition mlh_honeywell_heavy_duty_pressure_transducer_
-ANALOG_SENSOR mlh_honeywell_heavy_duty_pressure_transducer_;
-
-
-// Sensor definition banner_qx4_analog_laser_sensor
-ANALOG_SENSOR banner_qx4_analog_laser_sensor;
-
-
-// Sensor definition linear_shock_pot
-ANALOG_SENSOR linear_shock_pot;
-
-
-// Sensor definition bosch_temperature_sensor
-ANALOG_SENSOR bosch_temperature_sensor;
-
-TABLE bosch_temperature_sensor_output_model_table;
-
-float bosch_temperature_sensor_output_model_table_independent_vars[20] = {
- -40,
- -30,
- -20,
- -10,
- 0,
- 10,
- 20,
- 30,
- 40,
- 50,
- 60,
- 70,
- 80,
- 90,
- 100,
- 110,
- 120,
- 130,
- 140,
- 150
- 
+float basic_resistive_sensor_for_testing_output_model_table_independent_vars[3] = {
+    0,
+    5000,
+    10000
+    
 };
-float bosch_temperature_sensor_output_model_table_dependent_vars[20] = {
-  45313,
-  26144,
-  15462,
-  9397,
-  5896,
-  3792,
-  2500,
-  1707,
-  1175,
-  834,
-  596,
-  436,
-  323,
-  243,
-  187,
-  144,
-  113,
-  89,
-  71,
-  57
-  
+float basic_resistive_sensor_for_testing_output_model_table_dependent_vars[3] = {
+    0,
+    0.5,
+    1.0
+    
+};
+TABLE basic_resistive_sensor_for_testing_output_model_table = 
+{
+    .num_entries = 3,
+    .independent_vars = basic_resistive_sensor_for_testing_output_model_table_independent_vars,
+    .dependent_vars = basic_resistive_sensor_for_testing_output_model_table_dependent_vars
+};
+ANALOG_SENSOR basic_resistive_sensor_for_testing = 
+{
+    .sensor_id = "test_resistive_sensor",
+    .model =
+    {
+        .input_type = RESISTIVE,
+        .rin = 0,
+        .rdown = RES_OPEN,
+        .r3v = RES_OPEN,
+        .r5v = 10000,
+        .rfilt = 10000,
+        .rdiv = 19100,
+        .table = &basic_resistive_sensor_for_testing_output_model_table
+    },
+    .output = 
+    {
+        .output_name = "current",
+        .output_unit = "Float_0-1",
+        .data_size_bits = 12,
+        .scalar = 
+        {
+            .quantization = continuous, //1 if continuous
+            .offset = 0
+        }
+    }
+    
 };
 
 
 
+// ********** CAN SENSORS **********
 
-void init_analog_sensors (void) {
-    
-    //basic_voltage_sensor_for_testing.sensor_id = "test_analog_sensor";
-    basic_voltage_sensor_for_testing.model.type = TABULAR;
-    basic_voltage_sensor_for_testing.model.measurement_unit = VOLTS;
-    basic_voltage_sensor_for_testing.model.supply_voltage = 5;
-    basic_voltage_sensor_for_testing.model.rin = 0;
-    basic_voltage_sensor_for_testing.model.rdown = RES_OPEN;
-    basic_voltage_sensor_for_testing.model.r3v = RES_OPEN;
-    basic_voltage_sensor_for_testing.model.r5v = RES_OPEN;
-    basic_voltage_sensor_for_testing.model.rfilt = 10000;
-    basic_voltage_sensor_for_testing.model.rdiv = 19100;
-    basic_voltage_sensor_for_testing.model.low_bar = 0;
-    basic_voltage_sensor_for_testing.model.high_bar = 0;
-    basic_voltage_sensor_for_testing.model.low_bar_value = 0;
-    basic_voltage_sensor_for_testing.model.high_bar_value = 0;
+// Sensor definition for: can_sensor_for_testing
 
-    
-    
-    //TABLE basic_voltage_sensor_for_testing_output_model_table;
-    basic_voltage_sensor_for_testing_output_model_table.num_entries = 3;
-    basic_voltage_sensor_for_testing_output_model_table.independent_unit = VOLTS;
-    basic_voltage_sensor_for_testing_output_model_table.dependent_unit = VOLTS;
-    basic_voltage_sensor_for_testing_output_model_table.independent_vars = basic_voltage_sensor_for_testing_output_model_table_independent_vars;
-    basic_voltage_sensor_for_testing_output_model_table.dependent_vars = basic_voltage_sensor_for_testing_output_model_table_dependent_vars;
-    basic_voltage_sensor_for_testing.model.table = &basic_voltage_sensor_for_testing_output_model_table;
-
-    
-
-    //basic_voltage_sensor_for_testing.output.output_name = "voltage";
-    basic_voltage_sensor_for_testing.output.scalar.quantization = continuous; //0 if continuous
-    basic_voltage_sensor_for_testing.output.scalar.offset = 0;
-    basic_voltage_sensor_for_testing.output.data_size_bits = 12;
-    
-
-    
-    //apb_honeywell_board_mount_pressure.sensor_id = "32305128";
-    apb_honeywell_board_mount_pressure.model.type = SPECIAL;
-    apb_honeywell_board_mount_pressure.model.measurement_unit = VOLTS;
-    apb_honeywell_board_mount_pressure.model.supply_voltage = 3.3;
-    apb_honeywell_board_mount_pressure.model.rin = 0;
-    apb_honeywell_board_mount_pressure.model.rdown = 0;
-    apb_honeywell_board_mount_pressure.model.r3v = 0;
-    apb_honeywell_board_mount_pressure.model.r5v = 0;
-    apb_honeywell_board_mount_pressure.model.rfilt = 10000;
-    apb_honeywell_board_mount_pressure.model.rdiv = 19100;
-    apb_honeywell_board_mount_pressure.model.low_bar = 10;
-    apb_honeywell_board_mount_pressure.model.high_bar = 90;
-    apb_honeywell_board_mount_pressure.model.low_bar_value = 0;
-    apb_honeywell_board_mount_pressure.model.high_bar_value = 100;
-
-    
-    apb_honeywell_board_mount_pressure.model.table = NULL;
-    
-
-    //apb_honeywell_board_mount_pressure.output.output_name = "pressure";
-    apb_honeywell_board_mount_pressure.output.scalar.quantization = continuous; //0 if continuous
-    apb_honeywell_board_mount_pressure.output.scalar.offset = 0;
-    apb_honeywell_board_mount_pressure.output.data_size_bits = 12;
-    
-
-    
-    //px3_honeywell_heavy_duty_pressure_transducer.sensor_id = "32313757";
-    px3_honeywell_heavy_duty_pressure_transducer.model.type = RATIOMETRIC_LINEAR;
-    px3_honeywell_heavy_duty_pressure_transducer.model.measurement_unit = VOLTS;
-    px3_honeywell_heavy_duty_pressure_transducer.model.supply_voltage = 3.3;
-    px3_honeywell_heavy_duty_pressure_transducer.model.rin = 0;
-    px3_honeywell_heavy_duty_pressure_transducer.model.rdown = 0;
-    px3_honeywell_heavy_duty_pressure_transducer.model.r3v = 0;
-    px3_honeywell_heavy_duty_pressure_transducer.model.r5v = 0;
-    px3_honeywell_heavy_duty_pressure_transducer.model.rfilt = 10000;
-    px3_honeywell_heavy_duty_pressure_transducer.model.rdiv = 19100;
-    px3_honeywell_heavy_duty_pressure_transducer.model.low_bar = 10;
-    px3_honeywell_heavy_duty_pressure_transducer.model.high_bar = 90;
-    px3_honeywell_heavy_duty_pressure_transducer.model.low_bar_value = 0;
-    px3_honeywell_heavy_duty_pressure_transducer.model.high_bar_value = 100;
-
-    
-    px3_honeywell_heavy_duty_pressure_transducer.model.table = NULL;
-    
-
-    //px3_honeywell_heavy_duty_pressure_transducer.output.output_name = "pressure";
-    px3_honeywell_heavy_duty_pressure_transducer.output.scalar.quantization = continuous; //0 if continuous
-    px3_honeywell_heavy_duty_pressure_transducer.output.scalar.offset = 0;
-    px3_honeywell_heavy_duty_pressure_transducer.output.data_size_bits = 12;
-    
-
-    
-    //mlh_honeywell_heavy_duty_pressure_transducer_.sensor_id = "32328895";
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.type = RATIOMETRIC_LINEAR;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.measurement_unit = MILLIAMPS;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.supply_voltage = 12;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.rin = 0;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.rdown = 0;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.r3v = 0;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.r5v = 0;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.rfilt = 10000;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.rdiv = 19100;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.low_bar = 4;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.high_bar = 20;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.low_bar_value = 50;
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.high_bar_value = 8000;
-
-    
-    mlh_honeywell_heavy_duty_pressure_transducer_.model.table = NULL;
-    
-
-    //mlh_honeywell_heavy_duty_pressure_transducer_.output.output_name = "pressure";
-    mlh_honeywell_heavy_duty_pressure_transducer_.output.scalar.quantization = continuous; //0 if continuous
-    mlh_honeywell_heavy_duty_pressure_transducer_.output.scalar.offset = 0;
-    mlh_honeywell_heavy_duty_pressure_transducer_.output.data_size_bits = 12;
-    
-
-    
-    //banner_qx4_analog_laser_sensor.sensor_id = "185624";
-    banner_qx4_analog_laser_sensor.model.type = ABSOLUTE_LINEAR;
-    banner_qx4_analog_laser_sensor.model.measurement_unit = MILLIAMPS;
-    banner_qx4_analog_laser_sensor.model.supply_voltage = 5;
-    banner_qx4_analog_laser_sensor.model.rin = 0;
-    banner_qx4_analog_laser_sensor.model.rdown = 0;
-    banner_qx4_analog_laser_sensor.model.r3v = 0;
-    banner_qx4_analog_laser_sensor.model.r5v = 0;
-    banner_qx4_analog_laser_sensor.model.rfilt = 10000;
-    banner_qx4_analog_laser_sensor.model.rdiv = 19100;
-    banner_qx4_analog_laser_sensor.model.low_bar = 4;
-    banner_qx4_analog_laser_sensor.model.high_bar = 20;
-    banner_qx4_analog_laser_sensor.model.low_bar_value = 5;
-    banner_qx4_analog_laser_sensor.model.high_bar_value = 50;
-
-    
-    banner_qx4_analog_laser_sensor.model.table = NULL;
-    
-
-    //banner_qx4_analog_laser_sensor.output.output_name = "height";
-    banner_qx4_analog_laser_sensor.output.scalar.quantization = continuous; //0 if continuous
-    banner_qx4_analog_laser_sensor.output.scalar.offset = 0;
-    banner_qx4_analog_laser_sensor.output.data_size_bits = 12;
-    
-
-    
-    //linear_shock_pot.sensor_id = "RSL-50";
-    linear_shock_pot.model.type = ABSOLUTE_LINEAR;
-    linear_shock_pot.model.measurement_unit = OHMS;
-    linear_shock_pot.model.supply_voltage = 5;
-    linear_shock_pot.model.rin = 0;
-    linear_shock_pot.model.rdown = 0;
-    linear_shock_pot.model.r3v = 0;
-    linear_shock_pot.model.r5v = 0;
-    linear_shock_pot.model.rfilt = 10000;
-    linear_shock_pot.model.rdiv = 19100;
-    linear_shock_pot.model.low_bar = 0;
-    linear_shock_pot.model.high_bar = 5;
-    linear_shock_pot.model.low_bar_value = 0;
-    linear_shock_pot.model.high_bar_value = 50;
-
-    
-    linear_shock_pot.model.table = NULL;
-    
-
-    //linear_shock_pot.output.output_name = "distance";
-    linear_shock_pot.output.scalar.quantization = continuous; //0 if continuous
-    linear_shock_pot.output.scalar.offset = 0;
-    linear_shock_pot.output.data_size_bits = 12;
-    
-
-    
-    //bosch_temperature_sensor.sensor_id = "NTC M12-H";
-    bosch_temperature_sensor.model.type = TABULAR;
-    bosch_temperature_sensor.model.measurement_unit = OHMS;
-    bosch_temperature_sensor.model.supply_voltage = 5;
-    bosch_temperature_sensor.model.rin = 0;
-    bosch_temperature_sensor.model.rdown = 0;
-    bosch_temperature_sensor.model.r3v = 0;
-    bosch_temperature_sensor.model.r5v = 0;
-    bosch_temperature_sensor.model.rfilt = 10000;
-    bosch_temperature_sensor.model.rdiv = 19100;
-    bosch_temperature_sensor.model.low_bar = 0;
-    bosch_temperature_sensor.model.high_bar = 0;
-    bosch_temperature_sensor.model.low_bar_value = 0;
-    bosch_temperature_sensor.model.high_bar_value = 0;
-
-    
-    
-    //TABLE bosch_temperature_sensor_output_model_table;
-    bosch_temperature_sensor_output_model_table.num_entries = 20;
-    bosch_temperature_sensor_output_model_table.independent_unit = DEGREES_C;
-    bosch_temperature_sensor_output_model_table.dependent_unit = OHMS;
-    bosch_temperature_sensor_output_model_table.independent_vars = bosch_temperature_sensor_output_model_table_independent_vars;
-    bosch_temperature_sensor_output_model_table.dependent_vars = bosch_temperature_sensor_output_model_table_dependent_vars;
-    bosch_temperature_sensor.model.table = &bosch_temperature_sensor_output_model_table;
-
-    
-
-    //bosch_temperature_sensor.output.output_name = "temperature";
-    bosch_temperature_sensor.output.scalar.quantization = continuous; //0 if continuous
-    bosch_temperature_sensor.output.scalar.offset = 0;
-    bosch_temperature_sensor.output.data_size_bits = 12;
-    
-
-    
-}
+SENSOR_CAN_MESSAGE can_sensor_for_testing_messages[4] =
+{
 
 
-// Sensor definition can_sensor_for_testing
-CAN_SENSOR can_sensor_for_testing;
+    // Details for message: d16_fixed
+    {
+        .message_id = 311,
+        .output =
+        {
+            .output_name = "d16_fixed",
+			.output_unit = "0_to_1",
+            .scalar =
+            {
+                .quantization = 1.5259e-06,
+                .offset = 0
+            }
+        },
+        .data_start = 0,
+        .data_end = 1
+		// HI MARA
+    },
+    
 
-SENSOR_CAN_MESSAGE can_sensor_for_testing_message_1;
-SENSOR_CAN_MESSAGE can_sensor_for_testing_message_2;
-SENSOR_CAN_MESSAGE can_sensor_for_testing_message_3;
-SENSOR_CAN_MESSAGE can_sensor_for_testing_message_4;
+    // Details for message: u16_raw
+    {
+        .message_id = 311,
+        .output =
+        {
+            .output_name = "u16_raw",
+			.output_unit = "raw_input",
+            .scalar =
+            {
+                .quantization = continuous,
+                .offset = 0
+            }
+        },
+        .data_start = 2,
+        .data_end = 3
+		// HI MARA
+    },
+    
 
-SENSOR_CAN_MESSAGE can_sensor_for_testing_messages[4];
+    // Details for message: float_1_raw
+    {
+        .message_id = 312,
+        .output =
+        {
+            .output_name = "float_1_raw",
+			.output_unit = "float",
+            .scalar =
+            {
+                .quantization = continuous,
+                .offset = 0
+            }
+        },
+        .data_start = 0,
+        .data_end = 3
+		// HI MARA
+    },
+    
 
-// Sensor definition bosch_accelerometer
-CAN_SENSOR bosch_accelerometer;
+    // Details for message: float_2_scaled
+    {
+        .message_id = 312,
+        .output =
+        {
+            .output_name = "float_2_scaled",
+			.output_unit = "scaled_float",
+            .scalar =
+            {
+                .quantization = 0.001,
+                .offset = 10
+            }
+        },
+        .data_start = 4,
+        .data_end = 7
+		// HI MARA
+    },
+    
+};
 
-SENSOR_CAN_MESSAGE bosch_accelerometer_message_1;
-SENSOR_CAN_MESSAGE bosch_accelerometer_message_2;
-SENSOR_CAN_MESSAGE bosch_accelerometer_message_3;
-SENSOR_CAN_MESSAGE bosch_accelerometer_message_4;
-SENSOR_CAN_MESSAGE bosch_accelerometer_message_5;
-
-SENSOR_CAN_MESSAGE bosch_accelerometer_messages[5];
-
-// Sensor definition izze_infared_tire_temperature_sensor
-CAN_SENSOR izze_infared_tire_temperature_sensor;
-
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_1;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_2;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_3;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_4;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_5;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_6;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_7;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_8;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_9;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_10;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_11;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_12;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_13;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_14;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_15;
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_16;
-
-SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_messages[16];
-
-
-// CAN sensors
-void init_can_sensors (void) {
+CAN_SENSOR can_sensor_for_testing = 
+{
+    .sensor_id = "test_can_sensor",
+    .byte_order = LSB,
     
-    // Sensor definition can_sensor_for_testing
-    //CAN_SENSOR can_sensor_for_testing;
-    //can_sensor_for_testing.sensor_id = "test_can_sensor";
-    can_sensor_for_testing.byte_order = LSB;
-    
-    can_sensor_for_testing.num_messages = 4;
-
-    
-    
-    //SENSOR_CAN_MESSAGE can_sensor_for_testing_message_1;
-    can_sensor_for_testing_message_1.message_id = 311;
-    //can_sensor_for_testing_message_1.output.output_name = "d16_fixed";
-    can_sensor_for_testing_message_1.output.scalar.quantization = 1.5259e-06;
-    can_sensor_for_testing_message_1.output.scalar.offset = 0;
-    can_sensor_for_testing_message_1.data_start = 0;
-    can_sensor_for_testing_message_1.data_end = 1;
-    
-    
-    //SENSOR_CAN_MESSAGE can_sensor_for_testing_message_2;
-    can_sensor_for_testing_message_2.message_id = 311;
-    //can_sensor_for_testing_message_2.output.output_name = "u16_raw";
-    can_sensor_for_testing_message_2.output.scalar.quantization = continuous;
-    can_sensor_for_testing_message_2.output.scalar.offset = 0;
-    can_sensor_for_testing_message_2.data_start = 2;
-    can_sensor_for_testing_message_2.data_end = 3;
-    
-    
-    //SENSOR_CAN_MESSAGE can_sensor_for_testing_message_3;
-    can_sensor_for_testing_message_3.message_id = 312;
-    //can_sensor_for_testing_message_3.output.output_name = "float_1_raw";
-    can_sensor_for_testing_message_3.output.scalar.quantization = continuous;
-    can_sensor_for_testing_message_3.output.scalar.offset = 0;
-    can_sensor_for_testing_message_3.data_start = 0;
-    can_sensor_for_testing_message_3.data_end = 3;
-    
-    
-    //SENSOR_CAN_MESSAGE can_sensor_for_testing_message_4;
-    can_sensor_for_testing_message_4.message_id = 312;
-    //can_sensor_for_testing_message_4.output.output_name = "float_2_scaled";
-    can_sensor_for_testing_message_4.output.scalar.quantization = 0.001;
-    can_sensor_for_testing_message_4.output.scalar.offset = 10;
-    can_sensor_for_testing_message_4.data_start = 4;
-    can_sensor_for_testing_message_4.data_end = 7;
-    
-    can_sensor_for_testing_messages[0] = can_sensor_for_testing_message_1;
-    can_sensor_for_testing_messages[1] = can_sensor_for_testing_message_2;
-    can_sensor_for_testing_messages[2] = can_sensor_for_testing_message_3;
-    can_sensor_for_testing_messages[3] = can_sensor_for_testing_message_4;
-    
-    can_sensor_for_testing.messages = can_sensor_for_testing_messages;
+    .num_messages = 4,
+    .messages = can_sensor_for_testing_messages
+};
 
 
-    
-    // Sensor definition bosch_accelerometer
-    //CAN_SENSOR bosch_accelerometer;
-    //bosch_accelerometer.sensor_id = "MM5.10-R";
-    bosch_accelerometer.byte_order = LSB;
-    
-    bosch_accelerometer.num_messages = 5;
 
-    
-    
-    //SENSOR_CAN_MESSAGE bosch_accelerometer_message_1;
-    bosch_accelerometer_message_1.message_id = 372;
-    //bosch_accelerometer_message_1.output.output_name = "yaw_rate";
-    bosch_accelerometer_message_1.output.scalar.quantization = 0.005;
-    bosch_accelerometer_message_1.output.scalar.offset = 32768;
-    bosch_accelerometer_message_1.data_start = 0;
-    bosch_accelerometer_message_1.data_end = 0;
-    
-    
-    //SENSOR_CAN_MESSAGE bosch_accelerometer_message_2;
-    bosch_accelerometer_message_2.message_id = 372;
-    //bosch_accelerometer_message_2.output.output_name = "y_acceleration";
-    bosch_accelerometer_message_2.output.scalar.quantization = 0.0001274;
-    bosch_accelerometer_message_2.output.scalar.offset = 32768;
-    bosch_accelerometer_message_2.data_start = 4;
-    bosch_accelerometer_message_2.data_end = 5;
-    
-    
-    //SENSOR_CAN_MESSAGE bosch_accelerometer_message_3;
-    bosch_accelerometer_message_3.message_id = 376;
-    //bosch_accelerometer_message_3.output.output_name = "roll_rate";
-    bosch_accelerometer_message_3.output.scalar.quantization = 0.005;
-    bosch_accelerometer_message_3.output.scalar.offset = 32768;
-    bosch_accelerometer_message_3.data_start = 0;
-    bosch_accelerometer_message_3.data_end = 0;
-    
-    
-    //SENSOR_CAN_MESSAGE bosch_accelerometer_message_4;
-    bosch_accelerometer_message_4.message_id = 376;
-    //bosch_accelerometer_message_4.output.output_name = "x_acceleration";
-    bosch_accelerometer_message_4.output.scalar.quantization = 0.0001274;
-    bosch_accelerometer_message_4.output.scalar.offset = 32768;
-    bosch_accelerometer_message_4.data_start = 4;
-    bosch_accelerometer_message_4.data_end = 5;
-    
-    
-    //SENSOR_CAN_MESSAGE bosch_accelerometer_message_5;
-    bosch_accelerometer_message_5.message_id = 380;
-    //bosch_accelerometer_message_5.output.output_name = "z_acceleration";
-    bosch_accelerometer_message_5.output.scalar.quantization = 0.0001274;
-    bosch_accelerometer_message_5.output.scalar.offset = 32768;
-    bosch_accelerometer_message_5.data_start = 4;
-    bosch_accelerometer_message_5.data_end = 5;
-    
-    bosch_accelerometer_messages[0] = bosch_accelerometer_message_1;
-    bosch_accelerometer_messages[1] = bosch_accelerometer_message_2;
-    bosch_accelerometer_messages[2] = bosch_accelerometer_message_3;
-    bosch_accelerometer_messages[3] = bosch_accelerometer_message_4;
-    bosch_accelerometer_messages[4] = bosch_accelerometer_message_5;
-    
-    bosch_accelerometer.messages = bosch_accelerometer_messages;
-
-
-    
-    // Sensor definition izze_infared_tire_temperature_sensor
-    //CAN_SENSOR izze_infared_tire_temperature_sensor;
-    //izze_infared_tire_temperature_sensor.sensor_id = "IRTS-V2";
-    izze_infared_tire_temperature_sensor.byte_order = MSB;
-    
-    izze_infared_tire_temperature_sensor.num_messages = 16;
-
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_1;
-    izze_infared_tire_temperature_sensor_message_1.message_id = 1200;
-    //izze_infared_tire_temperature_sensor_message_1.output.output_name = "channel_1_temp";
-    izze_infared_tire_temperature_sensor_message_1.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_1.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_1.data_start = 0;
-    izze_infared_tire_temperature_sensor_message_1.data_end = 1;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_2;
-    izze_infared_tire_temperature_sensor_message_2.message_id = 1200;
-    //izze_infared_tire_temperature_sensor_message_2.output.output_name = "channel_2_temp";
-    izze_infared_tire_temperature_sensor_message_2.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_2.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_2.data_start = 2;
-    izze_infared_tire_temperature_sensor_message_2.data_end = 3;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_3;
-    izze_infared_tire_temperature_sensor_message_3.message_id = 1200;
-    //izze_infared_tire_temperature_sensor_message_3.output.output_name = "channel_3_temp";
-    izze_infared_tire_temperature_sensor_message_3.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_3.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_3.data_start = 4;
-    izze_infared_tire_temperature_sensor_message_3.data_end = 5;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_4;
-    izze_infared_tire_temperature_sensor_message_4.message_id = 1200;
-    //izze_infared_tire_temperature_sensor_message_4.output.output_name = "channel_4_temp";
-    izze_infared_tire_temperature_sensor_message_4.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_4.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_4.data_start = 6;
-    izze_infared_tire_temperature_sensor_message_4.data_end = 7;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_5;
-    izze_infared_tire_temperature_sensor_message_5.message_id = 1201;
-    //izze_infared_tire_temperature_sensor_message_5.output.output_name = "channel_5_temp";
-    izze_infared_tire_temperature_sensor_message_5.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_5.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_5.data_start = 0;
-    izze_infared_tire_temperature_sensor_message_5.data_end = 1;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_6;
-    izze_infared_tire_temperature_sensor_message_6.message_id = 1201;
-    //izze_infared_tire_temperature_sensor_message_6.output.output_name = "channel_6_temp";
-    izze_infared_tire_temperature_sensor_message_6.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_6.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_6.data_start = 2;
-    izze_infared_tire_temperature_sensor_message_6.data_end = 3;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_7;
-    izze_infared_tire_temperature_sensor_message_7.message_id = 1201;
-    //izze_infared_tire_temperature_sensor_message_7.output.output_name = "channel_7_temp";
-    izze_infared_tire_temperature_sensor_message_7.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_7.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_7.data_start = 4;
-    izze_infared_tire_temperature_sensor_message_7.data_end = 5;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_8;
-    izze_infared_tire_temperature_sensor_message_8.message_id = 1201;
-    //izze_infared_tire_temperature_sensor_message_8.output.output_name = "channel_8_temp";
-    izze_infared_tire_temperature_sensor_message_8.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_8.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_8.data_start = 6;
-    izze_infared_tire_temperature_sensor_message_8.data_end = 7;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_9;
-    izze_infared_tire_temperature_sensor_message_9.message_id = 1202;
-    //izze_infared_tire_temperature_sensor_message_9.output.output_name = "channel_9_temp";
-    izze_infared_tire_temperature_sensor_message_9.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_9.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_9.data_start = 0;
-    izze_infared_tire_temperature_sensor_message_9.data_end = 1;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_10;
-    izze_infared_tire_temperature_sensor_message_10.message_id = 1202;
-    //izze_infared_tire_temperature_sensor_message_10.output.output_name = "channel_10_temp";
-    izze_infared_tire_temperature_sensor_message_10.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_10.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_10.data_start = 2;
-    izze_infared_tire_temperature_sensor_message_10.data_end = 3;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_11;
-    izze_infared_tire_temperature_sensor_message_11.message_id = 1202;
-    //izze_infared_tire_temperature_sensor_message_11.output.output_name = "channel_11_temp";
-    izze_infared_tire_temperature_sensor_message_11.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_11.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_11.data_start = 4;
-    izze_infared_tire_temperature_sensor_message_11.data_end = 5;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_12;
-    izze_infared_tire_temperature_sensor_message_12.message_id = 1202;
-    //izze_infared_tire_temperature_sensor_message_12.output.output_name = "channel_12_temp";
-    izze_infared_tire_temperature_sensor_message_12.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_12.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_12.data_start = 6;
-    izze_infared_tire_temperature_sensor_message_12.data_end = 7;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_13;
-    izze_infared_tire_temperature_sensor_message_13.message_id = 1203;
-    //izze_infared_tire_temperature_sensor_message_13.output.output_name = "channel_13_temp";
-    izze_infared_tire_temperature_sensor_message_13.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_13.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_13.data_start = 0;
-    izze_infared_tire_temperature_sensor_message_13.data_end = 1;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_14;
-    izze_infared_tire_temperature_sensor_message_14.message_id = 1203;
-    //izze_infared_tire_temperature_sensor_message_14.output.output_name = "channel_14_temp";
-    izze_infared_tire_temperature_sensor_message_14.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_14.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_14.data_start = 2;
-    izze_infared_tire_temperature_sensor_message_14.data_end = 3;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_15;
-    izze_infared_tire_temperature_sensor_message_15.message_id = 1203;
-    //izze_infared_tire_temperature_sensor_message_15.output.output_name = "channel_15_temp";
-    izze_infared_tire_temperature_sensor_message_15.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_15.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_15.data_start = 4;
-    izze_infared_tire_temperature_sensor_message_15.data_end = 5;
-    
-    
-    //SENSOR_CAN_MESSAGE izze_infared_tire_temperature_sensor_message_16;
-    izze_infared_tire_temperature_sensor_message_16.message_id = 1203;
-    //izze_infared_tire_temperature_sensor_message_16.output.output_name = "channel_16_temp";
-    izze_infared_tire_temperature_sensor_message_16.output.scalar.quantization = 0.1;
-    izze_infared_tire_temperature_sensor_message_16.output.scalar.offset = -100;
-    izze_infared_tire_temperature_sensor_message_16.data_start = 6;
-    izze_infared_tire_temperature_sensor_message_16.data_end = 7;
-    
-    izze_infared_tire_temperature_sensor_messages[0] = izze_infared_tire_temperature_sensor_message_1;
-    izze_infared_tire_temperature_sensor_messages[1] = izze_infared_tire_temperature_sensor_message_2;
-    izze_infared_tire_temperature_sensor_messages[2] = izze_infared_tire_temperature_sensor_message_3;
-    izze_infared_tire_temperature_sensor_messages[3] = izze_infared_tire_temperature_sensor_message_4;
-    izze_infared_tire_temperature_sensor_messages[4] = izze_infared_tire_temperature_sensor_message_5;
-    izze_infared_tire_temperature_sensor_messages[5] = izze_infared_tire_temperature_sensor_message_6;
-    izze_infared_tire_temperature_sensor_messages[6] = izze_infared_tire_temperature_sensor_message_7;
-    izze_infared_tire_temperature_sensor_messages[7] = izze_infared_tire_temperature_sensor_message_8;
-    izze_infared_tire_temperature_sensor_messages[8] = izze_infared_tire_temperature_sensor_message_9;
-    izze_infared_tire_temperature_sensor_messages[9] = izze_infared_tire_temperature_sensor_message_10;
-    izze_infared_tire_temperature_sensor_messages[10] = izze_infared_tire_temperature_sensor_message_11;
-    izze_infared_tire_temperature_sensor_messages[11] = izze_infared_tire_temperature_sensor_message_12;
-    izze_infared_tire_temperature_sensor_messages[12] = izze_infared_tire_temperature_sensor_message_13;
-    izze_infared_tire_temperature_sensor_messages[13] = izze_infared_tire_temperature_sensor_message_14;
-    izze_infared_tire_temperature_sensor_messages[14] = izze_infared_tire_temperature_sensor_message_15;
-    izze_infared_tire_temperature_sensor_messages[15] = izze_infared_tire_temperature_sensor_message_16;
-    
-    izze_infared_tire_temperature_sensor.messages = izze_infared_tire_temperature_sensor_messages;
-
-
-    
-}
 #undef continuous
-
 
 // END autogenerated file
