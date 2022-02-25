@@ -51,7 +51,7 @@ void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle)
 {
     // stop the DMA and start the timer
     HAL_ADC_Stop_DMA(adc_handle);
-    U16_BUFFER* buf;
+    U32_BUFFER* buf;
 
     if (adc_handle == adc1) {
         __HAL_TIM_SET_COUNTER(adc1_timer, 0);
@@ -203,14 +203,14 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
 
 // Note: Semaphore probably not needed for buffer interaction because reset is atomic
 
-S8 buffer_full (U16_BUFFER* buffer) {
+S8 buffer_full (U32_BUFFER* buffer) {
     if (buffer == NULL) {
         return BUFFER_ERR;
     }
     return buffer->fill_level == buffer->buffer_size;
 }
 
-S8 add_to_buffer (U16_BUFFER* buffer, U16 toadd) {
+S8 add_to_buffer (U32_BUFFER* buffer, U16 toadd) {
     if (buffer == NULL) {
         return BUFFER_ERR;
     }
@@ -224,7 +224,7 @@ S8 add_to_buffer (U16_BUFFER* buffer, U16 toadd) {
     return BUFFER_SUCCESS;
 }
 
-S8 reset_buffer (U16_BUFFER* buffer) {
+S8 reset_buffer (U32_BUFFER* buffer) {
     if (buffer == NULL) {
         return BUFFER_ERR;
     }
@@ -234,7 +234,7 @@ S8 reset_buffer (U16_BUFFER* buffer) {
 }
 
 // Could average up to the fill level, returns error for now
-S8 average_buffer (U16_BUFFER* buffer, U16* avg) {
+S8 average_buffer (U32_BUFFER* buffer, U16* avg) {
     if (buffer == NULL || !buffer_full(buffer)) {
         return BUFFER_ERR;
     }
@@ -474,7 +474,7 @@ S8 apply_special_conversions (ANALOG_SENSOR* sensor, float data_in, float* data_
 
 
 
-S8 apply_filter (U16_BUFFER* buffer, FILTERED_PARAM* filter)
+S8 apply_filter (U32_BUFFER* buffer, FILTERED_PARAM* filter)
 {
     // TODO - implement filtering
     return BUFFER_SUCCESS;

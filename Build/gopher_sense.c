@@ -129,7 +129,6 @@ SENSOR_CAN_MESSAGE can_sensor_for_testing_messages[4] =
         },
         .data_start = 0,
         .data_end = 1
-		// HI MARA
     },
     
 
@@ -148,7 +147,6 @@ SENSOR_CAN_MESSAGE can_sensor_for_testing_messages[4] =
         },
         .data_start = 2,
         .data_end = 3
-		// HI MARA
     },
     
 
@@ -167,7 +165,6 @@ SENSOR_CAN_MESSAGE can_sensor_for_testing_messages[4] =
         },
         .data_start = 0,
         .data_end = 3
-		// HI MARA
     },
     
 
@@ -186,7 +183,6 @@ SENSOR_CAN_MESSAGE can_sensor_for_testing_messages[4] =
         },
         .data_start = 4,
         .data_end = 7
-		// HI MARA
     },
     
 };

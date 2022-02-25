@@ -40,7 +40,7 @@ typedef enum
 
 typedef struct
 {
-    PARAM_STRUCT param;
+	CAN_INFO_STRUCT* can_param;
     DATA_STATUS  status;
 } GENERAL_PARAMETER;
 
@@ -75,7 +75,7 @@ typedef struct
     U8           bucket_id;
     U16          frequency;
     BUCKET_STATE state;
-    PARAM_LIST   bucket;
+    PARAM_LIST   param_list;
 } BUCKET;
 
 typedef enum
@@ -159,7 +159,7 @@ typedef struct
 typedef struct
 {
     GENERAL_PARAMETER   analog_param; // raw data
-    ANALOG_SENSOR       analog_sensor;
+    ANALOG_SENSOR*      analog_sensor;
     FILTERED_PARAM*     filtered_subparams;
     U8                  num_filtered_subparams;
     U32_BUFFER          buffer;
@@ -189,8 +189,8 @@ typedef struct
 typedef struct
 {
     GENERAL_PARAMETER can_param; // raw data
-    CAN_SENSOR        can_sensor;
-    U8                message_idx; // which message from the can sensor?
+    CAN_SENSOR*       can_sensor;
+    U32               message_idx; // which message from the can sensor? (index)
     FILTERED_PARAM*   filtered_subparams;
     U8                num_filtered_params;
     U32_BUFFER        buffer;
