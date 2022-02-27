@@ -40,7 +40,8 @@ typedef enum
 
 typedef struct
 {
-	CAN_INFO_STRUCT* can_param;
+	//CAN_INFO_STRUCT* can_param; // TODO implement all CAN params, not just floats
+	FLOAT_CAN_STRUCT* can_param;
     DATA_STATUS  status;
 } GENERAL_PARAMETER;
 
@@ -192,7 +193,7 @@ typedef struct
     CAN_SENSOR*       can_sensor;
     U32               message_idx; // which message from the can sensor? (index)
     FILTERED_PARAM*   filtered_subparams;
-    U8                num_filtered_params;
+    U8                num_filtered_subparams;
     U32_BUFFER        buffer;
 } CAN_SENSOR_PARAM;
 

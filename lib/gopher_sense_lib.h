@@ -30,9 +30,9 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox);
 
 
 S8 buffer_full (U32_BUFFER* buffer);
-S8 add_to_buffer (U32_BUFFER* buffer, U16 toadd);
+S8 add_to_buffer (U32_BUFFER* buffer, U32 toadd);
 S8 reset_buffer (U32_BUFFER* buffer);
-S8 average_buffer (U32_BUFFER* buffer, U16* avg);
+S8 average_buffer (U32_BUFFER* buffer, U32* avg);
 S8 apply_can_sensor_conversion(CAN_SENSOR* sensor, U8 msg_idx, float data_in, float* data_out);
 S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor, float data_in, float* data_out);
 
