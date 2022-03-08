@@ -25,7 +25,9 @@ static volatile U16 adc2_sample_buffer[NUM_ADC2_PARAMS];
 static volatile U16 adc3_sample_buffer[NUM_ADC3_PARAMS];
 
 #define ADC_VOLTAGE 3.3
-#define TIM_CLOCK_BASE_FREQ 16000000 // TODO check the HAL for this
+#define VOLTAGE_3V3 3.3
+#define VOLTAGE_5V  5.0
+#define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetSysClockFreq())
 #define TIM_MAX_VAL 65536
 
 
@@ -37,25 +39,18 @@ void configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleType
     adc3 = ad3;
 }
 
+
 void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle)
 {
-	// TODO pointer zooming here (3times)
-	// TODO try to make this one function
-
     // stop the DMA and start the timer
     HAL_ADC_Stop_DMA(adc_handle);
-    U32_BUFFER* buf;
 
 #if NUM_ADC1_PARAMS > 0
     if (adc_handle == adc1)
     {
         __HAL_TIM_SET_COUNTER(adc1_timer, 0);
         HAL_TIM_Base_Start_IT(adc1_timer);
-        for (U8 i = 0; i < NUM_ADC1_PARAMS; i++)
-        {
-            buf = &adc1_sensor_params[i].buffer;
-            add_to_buffer(buf, adc1_sample_buffer[i]);
-        }
+        add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
     }
 #endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
@@ -63,11 +58,7 @@ void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle)
     {
         __HAL_TIM_SET_COUNTER(adc2_timer, 0);
         HAL_TIM_Base_Start_IT(adc2_timer);
-        for (U8 i = 0; i < NUM_ADC2_PARAMS; i++)
-        {
-            buf = &adc2_sensor_params[i].buffer;
-            add_to_buffer(buf, adc2_sample_buffer[i]);
-        }
+        add_data_to_buffer(adc2_sensor_params, adc2_sample_buffer, NUM_ADC2_PARAMS);
     }
 #endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
@@ -75,13 +66,24 @@ void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle)
     {
         __HAL_TIM_SET_COUNTER(adc3_timer, 0);
         HAL_TIM_Base_Start_IT(adc3_timer);
-        for (U8 i = 0; i < NUM_ADC3_PARAMS; i++)
-        {
-            buf = &adc3_sensor_params[i].buffer;
-            add_to_buffer(buf, adc3_sample_buffer[i]);
-        }
+        add_data_to_buffer(adc3_sensor_params, adc3_sample_buffer, NUM_ADC3_PARAMS);
     }
 #endif // NUM_ADC3_PARAMS > 0
+}
+
+
+// for each parameter in this array, transfer the data from the
+void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_buffer, U32 num_params)
+{
+	ANALOG_SENSOR_PARAM* param = param_array;
+	volatile U16* buffer = sample_buffer;
+
+	while(param - param_array < num_params)
+	{
+		add_to_buffer(&param->buffer, (U32)*buffer);
+		param++;
+		buffer++;
+	}
 }
 
 
@@ -165,6 +167,9 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
 {
     CAN_RxHeaderTypeDef rx_header;
     CAN_MSG message;
+    CAN_SENSOR_PARAM* param = can_sensor_params;
+    CAN_SENSOR* sensor;
+    SENSOR_CAN_MESSAGE* can_info;
 
     // Get the message
     if (HAL_CAN_GetRxMessage(hcan, rx_mailbox, &rx_header, message.data) != HAL_OK)
@@ -173,17 +178,16 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
         return;
     }
     message.rtr_bit = rx_header.RTR;
-    message.id = rx_header.ExtId;
     message.dlc = rx_header.DLC;
+    message.id = (rx_header.IDE ? rx_header.ExtId : rx_header.StdId);
 
     // Check the CAN params for a match
-    // TODO pointer zooming
-    for (U8 i = 0; i < NUM_CAN_SENSOR_PARAMS; i++)
+    while (param - can_sensor_params < NUM_CAN_SENSOR_PARAMS)
     {
-        CAN_SENSOR_PARAM* param = &can_sensor_params[i];
-        CAN_SENSOR* sensor = param->can_sensor;
-        SENSOR_CAN_MESSAGE* can_info = &sensor->messages[param->message_idx];
+        sensor = param->can_sensor;
+        can_info = &sensor->messages[param->message_idx];
 
+        // TODO support floating point numbers in CAN messages
         // check for ID match between this param message id and the message id
         if (can_info->message_id == message.id)
         {
@@ -209,8 +213,9 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
             }
             // Add the data to the buffer
             add_to_buffer(&param->buffer, data);
-
         }
+
+        param++;
     }
 }
 
@@ -265,12 +270,14 @@ S8 average_buffer (U32_BUFFER* buffer, U32* avg)
     {
         return BUFFER_ERR;
     }
-    U16 calc_avg = 0;
 
-    // TODO pointer zooming
-    for (U16 i = 0; i < buffer->buffer_size; i++)
+    U32 calc_avg = 0;
+    U32* curr_buf = buffer->buffer;
+
+    while (curr_buf - buffer->buffer > buffer->buffer_size)
     {
-        calc_avg += buffer->buffer[i];
+        calc_avg += *curr_buf;
+        curr_buf++;
     }
 
     *avg = calc_avg / buffer->buffer_size;
@@ -287,7 +294,6 @@ S8 apply_can_sensor_conversion (CAN_SENSOR* sensor, U8 msg_idx, float data_in, f
 	*data_out = (data_in + scalar.offset) * scalar.quantization; // TODO Verify this is the case for all sensors
     return CONV_SUCCESS;
 }
-
 
 
 S8 apply_analog_sensor_conversion (ANALOG_SENSOR* sensor, float data_in, float* data_out)
@@ -310,129 +316,75 @@ S8 apply_analog_sensor_conversion (ANALOG_SENSOR* sensor, float data_in, float* 
     return CONV_ERR;
 }
 
-// gets the first possible voltage divider scalar
-// TODO fix this
-float get_voltage_div1_scalar(ANALOG_SENSOR* sensor)
-{
-	OUTPUT_MODEL model = sensor->model;
-	if (model.rin == 0) // float comparison to 0 should be ok....
-	{
-		return 1;
-	}
-
-	if (model.rdown == 0)
-	{
-		// this config sinks current straight to ground???
-		return 0;
-	}
-
-	return model.rdown/ (model.rin + model.rdown);
-}
-
-
-
-// gets the
-// TODO fix this
-float get_voltage_div2_scalar(ANALOG_SENSOR* sensor)
-{
-	OUTPUT_MODEL model = sensor->model;
-	if (model.rfilt == 0) // float comparison to 0 should be ok....
-	{
-		return 1;
-	}
-
-	if (model.rdiv == 0) {
-		// this config sinks current straight to ground???
-		return 0;
-	}
-
-	return model.rdiv / (model.rfilt + model.rdiv);
-}
-
-
-inline float adc_to_volts(U16 adc_reading, U8 resolution_bits)
-{
-	return adc_reading >= ADC_VOLTAGE ? ADC_VOLTAGE : (adc_reading * ADC_VOLTAGE) / (1 << resolution_bits);
-}
-
 
 S8 convert_voltage_load (ANALOG_SENSOR* sensor, float data_in, float* data_out)
 {
 	OUTPUT_MODEL model = sensor->model;
+	float v_sensor;
 
-	// TODO fix this
-	if (model.r3v != 0 || model.r5v != 0)
+	// Convert the ADC reading to a voltage value
+	v_sensor = adc_to_volts(data_in, sensor->output.data_size_bits);
+
+	// Convert the voltage read by the ADC to the voltage read at the pin
+
+	// check to make sure there are no pull-ups. There should not be on a voltage sensor
+	if (model.r3v != RES_OPEN || model.r5v != RES_OPEN) return RESISTOR_ERR;
+
+	// check if there is a voltage divider after the amp. If so, modify the voltage
+	if (model.rdiv != RES_OPEN && model.rdiv != 0)
 	{
-		// pullups engaged = bad
-		*data_out = data_in;
-		return CONV_ERR;
+		v_sensor = (v_sensor * (model.rfilt + model.rdiv)) / model.rdiv;
 	}
 
-	// calculate the voltage sourced by the sensor
-	// TODO resistor math
-	float v_read = adc_to_volts(data_in, sensor->output.data_size_bits);
-	float div1 = get_voltage_div1_scalar(sensor);
-	float div2 = get_voltage_div2_scalar(sensor);
-
-	// configuration error i think
-	if (div1 == 0 || div2 == 0)
+	// check if there is voltage divider before the amp. If so, modify the voltage
+	if (model.rdown != RES_OPEN && model.rdown != 0)
 	{
-		*data_out = data_in;
-		return CONV_ERR;
-	}
-	float v_sensor = v_read / (div1 * div2);
-
-	// now convert voltage to useful units according to the model
-	if (sensor->model.table == NULL) // config error
-	{
-		*data_out = data_in;
-		return CONV_ERR;
+		v_sensor = (v_sensor * (model.rin + model.rdown)) / model.rdown;
 	}
 
+	// find what the sensor read to give that input
 	return interpolate_table_linear(sensor->model.table, v_sensor, data_out);
 }
-
-
-
 
 
 S8 convert_resistive_load (ANALOG_SENSOR* sensor, float data_in, float* data_out)
 {
 	OUTPUT_MODEL model = sensor->model;
+	float r_sensor;
+	float v_amp;
 
-	if (model.r3v == 0 && model.r5v == 0)
+	// Convert the ADC reading to a voltage value
+	v_amp = adc_to_volts(data_in, sensor->output.data_size_bits);
+
+	// Convert the voltage read at the ADC to a resistance read in line with the pin
+
+	// check to make sure there is only one pullup and no rdown
+	if (model.rdown != RES_OPEN ||
+			(model.r3v != RES_OPEN && model.r5v != RES_OPEN) ||
+			(model.r3v == RES_OPEN && model.r5v == RES_OPEN))
 	{
-		// pullups NOT engaged = bad
-		*data_out = data_in;
-		return CONV_ERR;
-	}
-	if (model.r3v != 0 && model.r5v != 0)
-	{
-		// both pullups engaged is also bad
-		*data_out = data_in;
-		return CONV_ERR;
-	}
-
-	float v_read = adc_to_volts(data_in, sensor->output.data_size_bits);
-	// TODO resistor math
-	float div1 = get_voltage_div1_scalar(sensor);
-	float div2 = get_voltage_div2_scalar(sensor);
-
-	float r2 = model.r3v != 0 ? model.r3v : model.r5v; //get the other resistor
-	float v_sensor = v_read / div2;
-
-	// config error
-	if (div1 != 1 || div2 == 0)
-	{
-		*data_out = data_in;
-		return CONV_ERR;
+		return RESISTOR_ERR;
 	}
 
-	// using supply_voltage here is assumming config correct
-	// scale =  R_sense/ (r2 + R_sense),
-	// supply_voltage * R_sense/(r2 + r_sense)= vsensor
-	// TODO Resistor math
-	float r_sensor = ((v_sensor / 5.0) * r2) / ((v_sensor / 5.0) - 1);
+	// check if there is a voltage divider after the amp. If so, modify the voltage
+	if (model.rdiv != RES_OPEN && model.rdiv != 0)
+	{
+		v_amp = (v_amp * (model.rfilt + model.rdiv)) / model.rdiv;
+	}
+
+	// calculate the resistance that creates this voltage at the amp
+	if (model.r3v != RES_OPEN)
+	{
+		r_sensor = ((v_amp * model.r3v) / (VOLTAGE_3V3 - v_amp)) - model.rin;
+	}
+	else if (model.r5v != RES_OPEN)
+	{
+		r_sensor = ((v_amp * model.r5v) / (VOLTAGE_5V - v_amp)) - model.rin;
+	}
+	else
+	{
+		return RESISTOR_ERR;
+	}
 
 	return interpolate_table_linear(sensor->model.table, r_sensor, data_out);
 }
@@ -441,40 +393,39 @@ S8 convert_resistive_load (ANALOG_SENSOR* sensor, float data_in, float* data_out
 S8 convert_current_load (ANALOG_SENSOR* sensor, float data_in, float* data_out)
 {
 	OUTPUT_MODEL model = sensor->model;
+	float ma_sensor;
+	float v_amp;
 
-	if (model.r3v != 0 || model.r5v != 0)
+	// Convert the ADC reading to a voltage value
+	v_amp = adc_to_volts(data_in, sensor->output.data_size_bits);
+
+	// Convert the voltage read at the ADC to a current sunk into the pin
+
+	// check to make sure there are no pullups and rdown is not open
+	if (model.r3v != RES_OPEN || model.r5v != RES_OPEN ||
+			model.rdown == RES_OPEN || model.rdown == 0)
 	{
-		// pullups engaged = bad
-		*data_out = data_in;
-		return CONV_ERR;
+		return RESISTOR_ERR;
 	}
 
-	// calculate the voltage sourced by the sensor
-	// TODO resistor math
-	float v_read = adc_to_volts(data_in, sensor->output.data_size_bits);
-	float div1 = get_voltage_div1_scalar(sensor);
-	float div2 = get_voltage_div2_scalar(sensor);
-
-	// rin should be 0, using rdn as shunt
-	if (div1 != 1 || div2 == 0)
+	// check if there is a voltage divider after the amp. If so, modify the voltage
+	if (model.rdiv != RES_OPEN && model.rdiv != 0)
 	{
-		*data_out = data_in;
-		return CONV_ERR;
+		v_amp = (v_amp * (model.rfilt + model.rdiv)) / model.rdiv;
 	}
 
-	float v_sensor = v_read / div2;
-	//now convert voltage to mA using V/R = R
-	float ma_sensor = (v_sensor/model.rdown) * 1000;
+	// convert the voltage at the amp to a current through rdown
+	ma_sensor = v_amp / model.rdown;
 
 	return interpolate_table_linear(sensor->model.table, ma_sensor, data_out);
 }
 
 
-
-inline float interpolate(float x0, float y0, float x1, float y1, float x)
+inline float adc_to_volts(U16 adc_reading, U8 resolution_bits)
 {
-	return ((y0 * (x1 - x)) + (y1 * (x-x0))) / (x1-x0);
+	return ((float)adc_reading / (1 << resolution_bits)) * ADC_VOLTAGE;
 }
+
 
 S8 interpolate_table_linear (TABLE* table, float data_in, float* data_out)
 {
@@ -499,8 +450,8 @@ S8 interpolate_table_linear (TABLE* table, float data_in, float* data_out)
 		return CONV_SUCCESS;
 	}
 
-	// TODO pointer zooming
-	for (U16 i = 0; i < entries-1; i++) {
+	for (U16 i = 0; i < entries-1; i++)
+	{
 		float x0 = table->independent_vars[i];
 		float y0 = table->dependent_vars[i];
 		float x1 = table->independent_vars[i+1];
@@ -518,6 +469,11 @@ S8 interpolate_table_linear (TABLE* table, float data_in, float* data_out)
 }
 
 
+inline float interpolate(float x0, float y0, float x1, float y1, float x)
+{
+	return ((y0 * (x1 - x)) + (y1 * (x - x0))) / (x1 - x0);
+}
+
 
 // TODO not implemented
 S8 apply_special_conversions (ANALOG_SENSOR* sensor, float data_in, float* data_out)
@@ -527,10 +483,9 @@ S8 apply_special_conversions (ANALOG_SENSOR* sensor, float data_in, float* data_
 }
 
 
-
+// TODO not implemented
 S8 apply_filter (U32_BUFFER* buffer, FILTERED_PARAM* filter)
 {
-    // TODO - implement filtering
     return BUFFER_SUCCESS;
 }
 
