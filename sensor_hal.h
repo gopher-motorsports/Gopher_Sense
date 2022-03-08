@@ -11,10 +11,11 @@
 #include "GopherCAN_structs.h"
 #include "base_types.h"
 
-
 #ifndef NULL
 #define NULL ((void*)0)
 #endif
+
+#define STR_LEN 50
 
 typedef union
 {
@@ -39,7 +40,8 @@ typedef enum
 
 typedef struct
 {
-    PARAM_STRUCT param;
+	//CAN_INFO_STRUCT* can_param; // TODO implement all CAN params, not just floats
+	FLOAT_CAN_STRUCT* can_param;
     DATA_STATUS  status;
 } GENERAL_PARAMETER;
 
@@ -74,44 +76,28 @@ typedef struct
     U8           bucket_id;
     U16          frequency;
     BUCKET_STATE state;
-    PARAM_LIST  bucket;
+    PARAM_LIST   param_list;
 } BUCKET;
 
 typedef enum
 {
-    RATIOMETRIC_LINEAR = 0,
-    ABSOLUTE_LINEAR = 1,
-    TABULAR = 2,
-	SPECIAL = 3,
-} OUTPUT_MODEL_TYPE;
-
-typedef enum
-{
-    PSI = 0,
-    VOLTS = 1,
-    MILLIAMPS = 2,
-    DEGREES_C = 3,
-    DEGREES_F = 4,
-    DEGREES_PER_SEC = 5,
-    G = 6,
-    MILLIMETERS = 7,
-    OHMS = 8
-} UNIT;
+    VOLTAGE = 0,
+    CURRENT = 1,
+    RESISTIVE = 2
+} ANALOG_SUBTYPE;
 
 typedef struct {
-    U16* buffer;
+    U32* buffer;
     U16  buffer_size;
     U16  fill_level;
-} U16_BUFFER;
+} U32_BUFFER;
 
 typedef struct
 {
-    UNIT    independent_unit;
-    UNIT    dependent_unit;
     float*  independent_vars;
     float*  dependent_vars;
     U16     num_entries;
-}TABLE;
+} TABLE;
 
 typedef enum
 {
@@ -123,13 +109,7 @@ typedef enum
 // how to turn raw data into useable measurments
 typedef struct
 {
-    OUTPUT_MODEL_TYPE   type;
-    UNIT                measurement_unit;
-    float               low_bar;
-    float               high_bar;
-    float               low_bar_value;
-    float               high_bar_value;
-    float               supply_voltage;
+	ANALOG_SUBTYPE      input_type;
     float 				rin;
     float 				rdown;
     float				r3v;
@@ -142,7 +122,8 @@ typedef struct
 // what is this data?
 typedef struct
 {
-    char         output_name[50];
+    char         output_name[STR_LEN];
+    char	     output_unit[STR_LEN];
     DATA_SCALAR  scalar;
     U8           data_size_bits;
 } OUTPUT;
@@ -152,7 +133,7 @@ typedef struct
 // assumed that there is only 1 output
 typedef struct
 {
-    char            sensor_id[50];
+    char            sensor_id[STR_LEN];
     OUTPUT_MODEL    model;
     OUTPUT          output;
 } ANALOG_SENSOR;
@@ -179,10 +160,10 @@ typedef struct
 typedef struct
 {
     GENERAL_PARAMETER   analog_param; // raw data
-    ANALOG_SENSOR       analog_sensor;
+    ANALOG_SENSOR*      analog_sensor;
     FILTERED_PARAM*     filtered_subparams;
     U8                  num_filtered_subparams;
-    U16_BUFFER          buffer;
+    U32_BUFFER          buffer;
 } ANALOG_SENSOR_PARAM;
 
 
@@ -209,11 +190,11 @@ typedef struct
 typedef struct
 {
     GENERAL_PARAMETER can_param; // raw data
-    CAN_SENSOR        can_sensor;
-    U8                message_idx; // which message from the can sensor?
+    CAN_SENSOR*       can_sensor;
+    U32               message_idx; // which message from the can sensor? (index)
     FILTERED_PARAM*   filtered_subparams;
-    U8                num_filtered_params;
-    U16_BUFFER        buffer;
+    U8                num_filtered_subparams;
+    U32_BUFFER        buffer;
 } CAN_SENSOR_PARAM;
 
 

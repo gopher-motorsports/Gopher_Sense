@@ -39,9 +39,8 @@ def getSensorNameFromID(id, sensors):
 
 
 class Param():
-    def __init__(self, param_name, id, filtered_params, buffer_size, producer, filter, dependency):
+    def __init__(self, param_name, filtered_params, buffer_size, producer, filter, dependency):
         self.param_name = param_name
-        self.id = id
         self.filtered_params = filtered_params
         self.buffer_size = buffer_size
         self.producer = producer
@@ -74,9 +73,9 @@ class Module():
             if param['filter_subparams']:
                 for f_p in param['filter_subparams']:
                     fp = param['filter_subparams'][f_p]
-                    filteredP = Param(f_p, fp['gophercan_id'] , [], 0, producer, (fp['filter_type'].upper(),fp['filter_value']), None)
+                    filteredP = Param(f_p, [], 0, producer, (fp['filter_type'].upper(),fp['filter_value']), None)
                     filtered_params.append(filteredP)
-            p = Param(p, param['gophercan_id'], filtered_params, param['buffering']['num_samples_buffered'], producer, None, param['depends_on'] )
+            p = Param(p, filtered_params, param['buffering']['num_samples_buffered'], producer, None, param['sensor_output'] )
             if ("ADC1" in producer):
                 self.adc1_params.append(p)
             elif ("ADC2" in producer):
@@ -189,7 +188,6 @@ def main():
     sensors_munch = munch.Munch(sensor_raw)
     sensors = sensors_munch.sensors
 
-
     # define sensor objects
     analog_sensors = []
     can_sensors = []
@@ -202,6 +200,7 @@ def main():
             c = CANSensor(s, sensor['name_english'], sensor['outputs'] , \
                           sensor['sensor_type']['CAN']['byte_order'], sensor['sensor_type']['CAN']['messages'])
             can_sensors.append(c)
+        # more sensors can be added here
 
 
     # write the sensor templates

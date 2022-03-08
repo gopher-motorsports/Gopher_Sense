@@ -12,6 +12,7 @@
 #define BUFFER_ERR -1
 #define BUFFER_SUCCESS 1
 #define CONV_ERR -2
+#define RESISTOR_ERR -3
 #define CONV_SUCCESS 2
 
 
@@ -26,13 +27,14 @@ void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz);
 void startTimers(void);
 void stopTimers(void);
 void DAQ_TimerCallback(TIM_HandleTypeDef* timer);
+void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_buffer, U32 num_params);
 void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox);
 
 
-S8 buffer_full (U16_BUFFER* buffer);
-S8 add_to_buffer (U16_BUFFER* buffer, U16 toadd);
-S8 reset_buffer (U16_BUFFER* buffer);
-S8 average_buffer (U16_BUFFER* buffer, U16* avg);
+S8 buffer_full (U32_BUFFER* buffer);
+S8 add_to_buffer (U32_BUFFER* buffer, U32 toadd);
+S8 reset_buffer (U32_BUFFER* buffer);
+S8 average_buffer (U32_BUFFER* buffer, U32* avg);
 S8 apply_can_sensor_conversion(CAN_SENSOR* sensor, U8 msg_idx, float data_in, float* data_out);
 S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor, float data_in, float* data_out);
 
@@ -44,11 +46,8 @@ S8 apply_special_conversions (ANALOG_SENSOR* sensor, float data_in, float* data_
 S8 interpolate_table_linear (TABLE* table, float data_in, float* data_out);
 float interpolate(float x0, float y0, float x1, float y1, float x);
 float adc_to_volts(U16 adc_reading, U8 resolution_bits);
-float get_voltage_div1_scalar(ANALOG_SENSOR* sensor);
-float get_voltage_div2_scalar(ANALOG_SENSOR* sensor);
 
-
-S8 apply_filter (U16_BUFFER* buffer, FILTERED_PARAM* filter);
+S8 apply_filter (U32_BUFFER* buffer, FILTERED_PARAM* filter);
 
 
 

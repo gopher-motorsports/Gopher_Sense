@@ -1,449 +1,122 @@
 sensors:
-    "32305128":
-      name_english: "APB Honeywell Board Mount Pressure"
-      outputs:
-          pressure:
-              unit: psi
-              quantization: continuous
-              offset: 0
-              data_size: 12
-      sensor_type:
-        analog:
-           measurement_unit: Volts
-           output_model: special
-           table:
-           supply_voltage: 3.3
-           rin: 0
-           rdown: 0
-           r3v: 0
-           r5v: 0
-           rfilt: 10000
-           rdiv: 19100
-           low_bar: 10
-           high_bar: 90
-           low_bar_value: 0
-           high_bar_value: 100
-#MODEL SPECS
-#	Output (V) = 0.8 x Vsupply/
-#				Pmax. – Pmin.  x (Pressureapplied – Pmin.) +0.10 x Vsupply
-
-    "32313757":
-        name_english: "PX3 Honeywell Heavy Duty Pressure Transducer"
+# this is the name it will be referenced in the config files
+    "test_analog_sensor":
+# this is the name for the code
+        name_english: "Basic Voltage Sensor for Testing"
+# all of the outputs this sensor can produce. Analog sensors will probably be only 1
         outputs:
-            pressure:
-                unit: psi
+# name for the output. This is only used for refrence
+            voltage:
+# what kind of unit output this will provide. This is only for refrence and does not do anything in code
+                unit: Float_0-1
+# what one bit of input coresponds to when going on the table. Is usually continuous(1) for analog sensors. 'm' in y = mx + b
+                quantization: continuous
+# what a value of zero means when going on the table. Usually 0 for analog sensors. 'b' in y = mx + b
+                offset: 0
+# the size of one data packet. Usually 12 for analog sensors
+                data_size: 12
+        sensor_type:
+# type of sensor. This is an analog sensor
+            analog:
+# Input measurement. This can be Voltage, Current, or Resistive depending on the type of sensor
+                analog_subtype: Voltage
+                table:
+# lookup table for converting the output of the sensor (in Volts, Ohms, or milliamps) to the units
+# the output
+                    entries:
+# entries for the table
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 2.5
+                        dependent2: 0.5
+                        independent3: 5.0
+                        dependent3: 1.0
+# resistor values. These are the same name as on the PCB and are needed so the math going
+# to the ADC can be abstracted away and the table can be directly from the sensor
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+                
+                
+    "test_resistive_sensor":
+        name_english: "Basic Resistive Sensor for Testing"
+        outputs:
+            current:
+                unit: Float_0-1
                 quantization: continuous
                 offset: 0
                 data_size: 12
         sensor_type:
             analog:
-                output_measured: pressure
-                output_model: ratiometric_linear
+                analog_subtype: Resistive
                 table:
-                measurement_unit: Volts
-                supply_voltage: 3.3
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 5000
+                        dependent2: 0.5
+                        independent3: 10000
+                        dependent3: 1.0
                 rin: 0
-                rdown: 0
-                r3v: 0
-                r5v: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: 10000
                 rfilt: 10000
                 rdiv: 19100
-                low_bar: 10
-                high_bar: 90
-                low_bar_value: 0
-                high_bar_value: 100
 
 
-    "32328895":
-        name_english: "MLH Honeywell Heavy Duty Pressure Transducer "
+    "test_can_sensor":
+        name_english: "CAN Sensor for Testing"
+# CAN sensors will often have multiple outputs with many differences
         outputs:
-            pressure:
-                unit: psi
+            d16_fixed:
+                unit: 0_to_1
+# convert 0-65535 to 0-1
+                quantization: 0.0000015259
+                offset: 0
+                data_size: 16
+            u16_raw:
+                unit: raw_input
                 quantization: continuous
                 offset: 0
-                data_size: 12
-        sensor_type:
-            analog:
-                output_measured: pressure
-                output_model: ratiometric_linear
-                table:
-                measurement_unit: milliamps
-                supply_voltage: 12
-                rin: 0
-                rdown: 0
-                r3v: 0
-                r5v: 0
-                rfilt: 10000
-                rdiv: 19100
-                low_bar: 4
-                high_bar: 20
-                low_bar_value: 50
-                high_bar_value: 8000
-
-    "MM5.10-R":
-        name_english: "Bosch Accelerometer"
-        outputs:
-            yaw_rate:
-                unit: degrees_per_sec
-                quantization: .005
-                offset: 0x8000
                 data_size: 16
-            roll_rate:
-                unit: degrees_per_sec
-                quantization: .005
-                offset: 0x8000
-                data_size: 16
-            y_acceleration:
-                unit: g
-                quantization: 0.0001274
-                offset: 0x8000
-                data_size: 16
-            x_acceleration:
-                unit: g
-                quantization: 0.0001274
-                offset: 0x8000
-                data_size: 16
-            z_acceleration:
-                unit: g
-                quantization: 0.0001274
-                offset: 0x8000
-                data_size: 16
+            float_1_raw:
+                unit: float
+                quantization: continuous
+                offset: 0
+                data_size: 32
+            float_2_scaled:
+                unit: scaled_float
+                quantization: 0.001
+                offset: 10
+                data_size: 32
         sensor_type:
             CAN:
                 byte_order: LSB
                 messages:
                     message1:
-                        output_measured: yaw_rate
-                        id: 0x174
-                        data_byte_start: 0
-                        data_byte_end: 0
-                    message2:
-                        output_measured: y_acceleration
-                        id: 0x174
-                        data_byte_start: 4
-                        data_byte_end: 5
-                    message3:
-                        output_measured: roll_rate
-                        id: 0x178
-                        data_byte_start: 0
-                        data_byte_end: 0
-                    message4:
-                        output_measured: x_acceleration
-                        id: 0x178
-                        data_byte_start: 4
-                        data_byte_end: 5
-                    message5:
-                        output_measured: z_acceleration
-                        id: 0x17C
-                        data_byte_start: 4
-                        data_byte_end: 5
-
-    "185624":
-        name_english: "Banner QX4 Analog Laser Sensor"
-        outputs:
-            height:
-                unit: millimeters
-                quantization: continuous
-                offset: 0
-                data_size: 12
-        sensor_type:
-            analog:
-                output_measured: height
-                output_model: absolute_linear
-                table:
-                measurement_unit: milliamps
-                rin: 0
-                rdown: 0
-                r3v: 0
-                r5v: 0
-                rfilt: 10000
-                rdiv: 19100
-                supply_voltage: 5
-                low_bar: 4
-                high_bar: 20
-                low_bar_value: 5
-                high_bar_value: 50
-
-    "RSL-50":
-        name_english: "Linear Shock Pot"
-        outputs:
-            distance:
-                unit: millimeters
-                quantization: continuous
-                offset: 0
-                data_size: 12
-        sensor_type:
-            analog:
-                output_measured: distance
-                output_model: absolute_linear
-                table:
-                measurement_unit: ohms
-                rin: 0
-                rdown: 0
-                r3v: 0
-                r5v: 0
-                rfilt: 10000
-                rdiv: 19100
-                supply_voltage: 5
-                low_bar: 0
-                high_bar: 5
-                low_bar_value: 0
-                high_bar_value: 50
-
-    "NTC M12-H":
-        name_english: "Bosch Temperature Sensor"
-        outputs:
-            temperature:
-                unit: degrees_c
-                quantization: continuous
-                offset: 0
-                data_size: 12
-        sensor_type:
-            analog:
-                output_measured: temperature
-                output_model: tabular
-                table:
-                    independent_unit: degrees_c
-                    dependent_unit: ohms
-                    entries:
-                        independent1: -40
-                        dependent1: 45313
-
-                        independent2: -30
-                        dependent2: 26144
-
-                        independent3: -20
-                        dependent3: 15462
-
-                        independent4: -10
-                        dependent4: 9397
-
-                        independent5: 0
-                        dependent5: 5896
-
-                        independent6: 10
-                        dependent6: 3792
-
-                        independent7: 20
-                        dependent7: 2500
-
-                        independent8: 30
-                        dependent8: 1707
-
-                        independent9: 40
-                        dependent9:  1175
-
-                        independent10: 50
-                        dependent10: 834
-
-                        independent11: 60
-                        dependent11: 596
-
-                        independent12: 70
-                        dependent12: 436
-
-                        independent13: 80
-                        dependent13: 323
-
-                        independent14: 90
-                        dependent14: 243
-
-                        independent15: 100
-                        dependent15: 187
-
-                        independent16: 110
-                        dependent16: 144
-
-                        independent17: 120
-                        dependent17: 113
-
-                        independent18: 130
-                        dependent18: 89
-
-                        independent19: 140
-                        dependent19: 71
-
-                        independent20: 150
-                        dependent20: 57
-
-
-                measurement_unit: ohms
-                supply_voltage: 5
-                rin: 0
-                rdown: 0
-                r3v: 0
-                r5v: 0
-                rfilt: 10000
-                rdiv: 19100
-                low_bar: 0
-                high_bar: 0
-                low_bar_value: 0
-                high_bar_value: 0
-
-    "IRTS-V2":
-        name_english: "IZZE Infared Tire Temperature sensor"
-        outputs:
-            channel_1_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_2_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_3_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_4_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_5_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_6_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_7_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_8_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_9_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_10_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_11_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_12_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_13_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_14_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_15_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-            channel_16_temp:
-                unit: degrees_c
-                quantization: 0.1
-                offset: -100
-                data_size: 16
-        sensor_type:
-            CAN:
-                byte_order: MSB
-                messages:
-                    message1:
-                        output_measured: channel_1_temp
-                        id: 0x4B0
+# link to what output this message is measuring
+                        output_measured: d16_fixed
+# CAN message ID for this data. There can be multiple outputs with different ids per sensor
+                        id: 0x137
+# Which data bytes are associated with this output. Make sure this matches the size
                         data_byte_start: 0
                         data_byte_end: 1
                     message2:
-                        output_measured: channel_2_temp
-                        id: 0x4B0
+                        output_measured: u16_raw
+                        id: 0x137
                         data_byte_start: 2
                         data_byte_end: 3
                     message3:
-                        output_measured: channel_3_temp
-                        id: 0x4B0
-                        data_byte_start: 4
-                        data_byte_end: 5
+                        output_measured: float_1_raw
+                        id: 0x138
+                        data_byte_start: 0
+                        data_byte_end: 3
                     message4:
-                        output_measured: channel_4_temp
-                        id: 0x4B0
-                        data_byte_start: 6
-                        data_byte_end: 7
-                    message5:
-                        output_measured: channel_5_temp
-                        id: 0x4B1
-                        data_byte_start: 0
-                        data_byte_end: 1
-                    message6:
-                        output_measured: channel_6_temp
-                        id: 0x4B1
-                        data_byte_start: 2
-                        data_byte_end: 3
-                    message7:
-                        output_measured: channel_7_temp
-                        id: 0x4B1
+                        output_measured: float_2_scaled
+                        id: 0x138
                         data_byte_start: 4
-                        data_byte_end: 5
-                    message8:
-                        output_measured: channel_8_temp
-                        id: 0x4B1
-                        data_byte_start: 6
-                        data_byte_end: 7
-                    message9:
-                        output_measured: channel_9_temp
-                        id: 0x4B2
-                        data_byte_start: 0
-                        data_byte_end: 1
-                    message10:
-                        output_measured: channel_10_temp
-                        id: 0x4B2
-                        data_byte_start: 2
-                        data_byte_end: 3
-                    message11:
-                        output_measured: channel_11_temp
-                        id: 0x4B2
-                        data_byte_start: 4
-                        data_byte_end: 5
-                    message12:
-                        output_measured: channel_12_temp
-                        id: 0x4B2
-                        data_byte_start: 6
-                        data_byte_end: 7
-                    message13:
-                        output_measured: channel_13_temp
-                        id: 0x4B3
-                        data_byte_start: 0
-                        data_byte_end: 1
-                    message14:
-                        output_measured: channel_14_temp
-                        id: 0x4B3
-                        data_byte_start: 2
-                        data_byte_end: 3
-                    message15:
-                        output_measured: channel_15_temp
-                        id: 0x4B3
-                        data_byte_start: 4
-                        data_byte_end: 5
-                    message16:
-                        output_measured: channel_16_temp
-                        id: 0x4B3
-                        data_byte_start: 6
                         data_byte_end: 7

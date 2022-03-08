@@ -16,6 +16,8 @@ extern ANALOG_SENSOR {{sensor.name}};
 extern CAN_SENSOR {{sensor.name}};
 {% endfor %}
 
+#define RES_OPEN -1.0
+
 void init_analog_sensors(void);
 void init_can_sensors(void);
 
