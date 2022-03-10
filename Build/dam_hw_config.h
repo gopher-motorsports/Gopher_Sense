@@ -7,11 +7,11 @@
 #include "sensor_hal.h"
 
 
-#define NUM_ADC1_PARAMS {{module.adc1_params | length}}
-#define NUM_ADC2_PARAMS {{module.adc2_params | length}}
-#define NUM_ADC3_PARAMS {{module.adc3_params | length}}
-#define NUM_CAN_SENSOR_PARAMS {{module.can_params | length}}
-#define NUM_BUCKETS {{buckets|length}}
+#define NUM_ADC1_PARAMS 1
+#define NUM_ADC2_PARAMS 1
+#define NUM_ADC3_PARAMS 1
+#define NUM_CAN_SENSOR_PARAMS 4
+#define NUM_BUCKETS 3
 
 // analog params must be in channel order
 #if NUM_ADC1_PARAMS > 0

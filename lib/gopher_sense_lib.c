@@ -3,8 +3,6 @@
 #include "GopherCAN.h"
 #include "base_types.h"
 #include "main.h"
-
-// INCLUDE YOUR HW CONFIG FILE HERE
 #include "dam_hw_config.h"
 
 
@@ -27,7 +25,7 @@ static volatile U16 adc3_sample_buffer[NUM_ADC3_PARAMS];
 #define ADC_VOLTAGE 3.3
 #define VOLTAGE_3V3 3.3
 #define VOLTAGE_5V  5.0
-#define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetSysClockFreq())
+#define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetSysClockFreq()) // TODO this may be the wrong function, not sure what clock source these timers specifically pull from
 #define TIM_MAX_VAL 65536
 
 
@@ -191,7 +189,7 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
         // check for ID match between this param message id and the message id
         if (can_info->message_id == message.id)
         {
-            U16 data = 0;
+            U32 data = 0;
             U8 shift = 0;
             // Get correct data based on byte order
             if (sensor->byte_order == LSB)
@@ -414,8 +412,8 @@ S8 convert_current_load (ANALOG_SENSOR* sensor, float data_in, float* data_out)
 		v_amp = (v_amp * (model.rfilt + model.rdiv)) / model.rdiv;
 	}
 
-	// convert the voltage at the amp to a current through rdown
-	ma_sensor = v_amp / model.rdown;
+	// convert the voltage at the amp to a current through rdown (in mA)
+	ma_sensor = 1000 * (v_amp / model.rdown);
 
 	return interpolate_table_linear(sensor->model.table, ma_sensor, data_out);
 }

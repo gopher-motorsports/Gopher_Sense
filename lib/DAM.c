@@ -29,7 +29,7 @@ TIM_HandleTypeDef* tim10_ptr;
 TIM_HandleTypeDef* tim11_ptr;
 TIM_HandleTypeDef* tim14_ptr;
 
-// TODO Move this to a config file. Maybe auto generate?
+// TODO Move this to a config file. Maybe auto generate? Maybe just fix at 10k
 #define TIMER_PSC 16
 #define ADC1_SCHEDULING_FREQUENCY_HZ 100
 #define ADC2_SCHEDULING_FREQUENCY_HZ 100
@@ -44,16 +44,7 @@ TIM_HandleTypeDef* tim14_ptr;
 
 #define INIT_TX_DELAY_TIME_ms 10
 
-
-typedef enum
-{
-    WAITING = 0,
-    CONFIG = 1,
-    NORMAL = 2
-} DAM_STATE;
-
 static U64 error_count;
-static DAM_STATE dam_state = WAITING;
 static DAM_ERROR_STATE latched_error_state = NO_ERRORS;
 static boolean hasInitialized = FALSE;
 
@@ -62,11 +53,11 @@ void change_led_state(U8 sender, void* parameter, U8 remote_param, U8 UNUSED1, U
 {
     // this function will set the LED to high or low, depending on remote_param
     // the LED to change is dependent on the parameter stored on this module (*((U16*)parameter))
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, !!remote_param);
 }
 
 
-// TODO: Error state behavior
+// TODO: Error state behavior. Possibly give control of this to outsize the library
 void handle_DAM_error (DAM_ERROR_STATE error_state)
 {
     latched_error_state = error_state;
@@ -75,21 +66,30 @@ void handle_DAM_error (DAM_ERROR_STATE error_state)
         // log the error?
         case INITIALIZATION_ERROR:
         {
+        	// DEBUG
+        	while (1);
             NVIC_SystemReset();
             break;
         }
         case CRITICAL_ERROR:
         {
+        	// DEBUG
+        	while (1);
             NVIC_SystemReset();
             break;
         }
         case CONVERSION_ERROR:
         {
+        	// DEBUG
+        	while (1);
+
         	//send can error???
         	break;
         }
         default:
         {
+        	// DEBUG
+        	while (1);
             error_count++;
             break;
         }
@@ -115,6 +115,7 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
     	tim14_ptr = tim14;
 
         // Run once initialization code
+    	// TODO should this be here or somewhere else?
         if (init_can(gcan_ptr, this_module_id, BXTYPE_MASTER))
         {
             handle_DAM_error(INITIALIZATION_ERROR);
@@ -135,6 +136,9 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
 
     DAM_reset();
 }
+
+
+// TODO add some easy way to set a parameter to the LOCKED_SEND state
 
 
 // DAM_reset
@@ -176,12 +180,12 @@ void DAM_reset(void)
 	GENERAL_PARAMETER* param;
 	while (bucket - bucket_list < NUM_BUCKETS)
 	{
-		bucket->state = BUCKET_INIT;
+		bucket->state = BUCKET_CONFIG_INIT;
 
 		param = bucket->param_list.list;
 		while (param - bucket->param_list.list < bucket->param_list.len)
 		{
-			param->status = CLEAN;
+			if (param->status != LOCKED_SEND) param->status = CLEAN;
 			param->can_param->update_enabled = TRUE;
 			param->can_param->data = INITIAL_DATA; // Set some initial value
 			param++;
@@ -202,67 +206,10 @@ void DAM_reset(void)
 		bucket++;
 	}
 
+	// start collecting data through the timers
+	startTimers();
 	hasInitialized = TRUE;
 }
-
-
-// complete_DLM_handshake
-//  This function should get called in its own task and will loop through all of the buckets
-//  attempting to get the correct configuration details until each bucket has been sent and
-//  acked by the DLM
-// TODO change this so each bucket is completely independent for more robust code
-void complete_DLM_handshake (void)
-{
-    boolean all_buckets_ok = FALSE;
-
-    while (!all_buckets_ok)
-    {
-        boolean check_buckets_ok = TRUE;
-        BUCKET* bucket = bucket_list;
-
-        while (bucket - bucket_list < NUM_BUCKETS)
-        {
-            if (bucket->state == BUCKET_DLM_OK)
-            {
-                continue; // if bucket ok dont do anything
-            }
-            check_buckets_ok = FALSE;
-            send_can_command(PRIO_HIGH, DLM_ID, SET_BUCKET_SIZE, bucket->bucket_id, (U8)bucket->param_list.len, 0, 0);
-
-            GENERAL_PARAMETER* param = bucket->param_list.list;
-            while (param - bucket->param_list.list < bucket->param_list.len)
-            {
-                send_can_command(PRIO_HIGH, DLM_ID, ADD_PARAM_TO_BUCKET, bucket->bucket_id,
-                                 GET_U16_MSB(param->can_param->param_id),
-								 GET_U16_LSB(param->can_param->param_id), 0);
-                param++;
-            }
-
-            bucket++;
-            osDelay(INIT_TX_DELAY_TIME_ms); // Delay to avoid flooding the TX_queue
-        }
-        all_buckets_ok = check_buckets_ok;
-    }
-
-    // Assign the buckets to the correct frequencies after all buckets OK
-    BUCKET* bucket = bucket_list;
-    while (bucket - bucket_list < NUM_BUCKETS)
-    {
-        send_can_command(PRIO_HIGH, DLM_ID, ASSIGN_BUCKET_TO_FRQ,
-                         bucket->bucket_id,
-						 GET_U16_MSB(bucket->frequency),
-						 GET_U16_LSB(bucket->frequency), 0);
-        bucket->state = BUCKET_GETTING_DATA;
-        bucket++;
-    }
-
-    // TODO add an ack in the interaction to make sure the bucket frequency is sent
-
-    // DLM handshake is complete. Start acquiring data
-    startTimers();
-    dam_state = NORMAL;
-}
-
 
 
 BUCKET* get_bucket_by_id (U8 bucket_id)
@@ -378,40 +325,79 @@ void fill_analog_subparams (ANALOG_SENSOR_PARAM* param, float newdata)
 }
 
 
-
 // send_bucket_task
-//  one task for each bucket. This will loop through and send each bucket parameter when the bucket is
-//  requested and bucket->state is changed
+//  one task for each bucket. This will handle the interaction with the
+//  DLM through init and bucket requests
 void send_bucket_task (void* pvParameters)
 {
     BUCKET* bucket = (BUCKET*) pvParameters;
+    GENERAL_PARAMETER* param;
 
     while(1)
     {
-    	while (bucket->state != BUCKET_REQUESTED) taskYIELD();
+    	switch (bucket->state)
+    	{
+    	case BUCKET_CONFIG_INIT:
+    	case BUCKET_CONFIG_SENDING_PARAMS:
+    		// sent the size of this bucket and all the params in it
+    		send_can_command(PRIO_HIGH, DLM_ID, SET_BUCKET_SIZE, bucket->bucket_id,
+							 (U8)bucket->param_list.len, 0, 0);
 
-		// send the bucket parameters
-    	GENERAL_PARAMETER* param = bucket->param_list.list;
-    	while (param - bucket->param_list.list < bucket->param_list.len)
-		{
-			if (param->status < DIRTY)
+			param = bucket->param_list.list;
+			while (param - bucket->param_list.list < bucket->param_list.len)
 			{
-				U16 err_count = 0;
-				while (send_parameter(PRIO_HIGH, DLM_ID, param->can_param->param_id) != CAN_SUCCESS)
-				{
-					if (++err_count > BUCKET_SEND_MAX_ATTEMPTS)
-					{
-						handle_DAM_error(TBD_ERROR);
-						break;
-					}
-					osDelay(1); // Delay due to error
-				}
-				param->status = CLEAN;
-		   }
-			param++;
-		}
+				send_can_command(PRIO_HIGH, DLM_ID, ADD_PARAM_TO_BUCKET, bucket->bucket_id,
+								 GET_U16_MSB(param->can_param->param_id),
+								 GET_U16_LSB(param->can_param->param_id), 0);
+				param++;
+			}
 
-		bucket->state = BUCKET_GETTING_DATA;
+			osDelay(INIT_TX_DELAY_TIME_ms); // Delay to avoid flooding the TX_queue
+    		break;
+
+    	case BUCKET_CONFIG_SENDING_FRQ:
+    		// Send the frequency until this bucket is requested the first time
+    		send_can_command(PRIO_HIGH, DLM_ID, ASSIGN_BUCKET_TO_FRQ,
+							 bucket->bucket_id,
+							 GET_U16_MSB(bucket->frequency),
+							 GET_U16_LSB(bucket->frequency), 0);
+
+    		osDelay(INIT_TX_DELAY_TIME_ms); // Delay to avoid flooding the TX_queue
+    		break;
+
+    	case BUCKET_GETTING_DATA:
+    		// yield the sending task when not requested
+    		taskYIELD();
+    		break;
+
+    	case BUCKET_REQUESTED:
+    		// send the bucket parameters
+			param = bucket->param_list.list;
+			while (param - bucket->param_list.list < bucket->param_list.len)
+			{
+				if (param->status == DIRTY || param->status == LOCKED_SEND)
+				{
+					U16 err_count = 0;
+					while (send_parameter(PRIO_HIGH, DLM_ID, param->can_param->param_id) != CAN_SUCCESS)
+					{
+						if (++err_count > BUCKET_SEND_MAX_ATTEMPTS)
+						{
+							handle_DAM_error(TBD_ERROR);
+							break;
+						}
+						osDelay(1); // Delay due to error
+					}
+
+					// set this parameter to clean if it is ok too
+					if (param->status != LOCKED_SEND) param->status = CLEAN;
+			   }
+				param++;
+			}
+
+			bucket->state = BUCKET_GETTING_DATA;
+			taskYIELD();
+    		break;
+    	}
     }
 
     // this should never be reached
@@ -427,31 +413,17 @@ void DAM_main_task (void)
     // Must have started buffer service task and tx task
     while (1)
     {
-        switch (dam_state)
-        {
-            case WAITING:
-            {
-            	osDelay(1);
-            	break;
-            }
-            case CONFIG:
-            {
-                DAM_reset(); // reset the DAM process if the DLM sends this request
-                complete_DLM_handshake();
-                break;
-            }
-            case NORMAL:
-            {
-                ADC_sensor_service();
-                sensorCAN_service();
-                break;
-            }
-            default:
-            {
-                handle_DAM_error(TBD_ERROR);
-            }
-        }
-
+    	if (!hasInitialized) // waiting for initialization
+    	{
+    		osDelay(1);
+    	}
+    	else
+    	{
+    		// TODO add some check for if all of the buckets are done configuring
+    		// and give some sort of external ok for devs to look at
+    		ADC_sensor_service();
+    		sensorCAN_service();
+    	}
     }
 }
 
@@ -459,19 +431,26 @@ void DAM_main_task (void)
 //*************** GopherCAN callbacks *****************
 /* send_bucket_params
  * Handler for the SEND_BUCKET_PARAMS gopherCAN command
- * sets the DAM into configuration state
+ * sets each bucket into configuration state
  */
 void send_bucket_params (U8 sender, void* param, U8 U1, U8 U2, U8 U3, U8 U4)
 {
     if (sender != DLM_ID) return;
 
-    dam_state = CONFIG;
+    // set the state of all buckets to BUCKET_CONFIG_SENDING_PARAMS
+    BUCKET* bucket = bucket_list;
+	while (bucket - bucket_list < NUM_BUCKETS)
+	{
+		bucket->state = BUCKET_CONFIG_SENDING_PARAMS;
+		bucket++;
+	}
 }
 
 
 /* bucket_ok
  * Handler for the BUCKET_OK gopherCAN command
- * sets the passed bucket state to OK
+ * sets the passed bucket state to start sending the
+ * frequency of this bucket
  */
 void bucket_ok(MODULE_ID sender, void* parameter,
                U8 bucket_id, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
@@ -479,10 +458,10 @@ void bucket_ok(MODULE_ID sender, void* parameter,
     if (sender != DLM_ID) return;
 
     BUCKET* bucket = get_bucket_by_id(bucket_id);
-    if (bucket != NULL && bucket->state <= BUCKET_DLM_OK )
+    if (bucket != NULL && bucket->state <= BUCKET_CONFIG_SENDING_FRQ )
     {
     	// dont reset the state of bucket getting data/sending
-        bucket->state = BUCKET_DLM_OK;
+        bucket->state = BUCKET_CONFIG_SENDING_FRQ;
     }
     else
     {
@@ -493,13 +472,16 @@ void bucket_ok(MODULE_ID sender, void* parameter,
 
 /* bucket_requested
  * Handler for the RequestBucket gopherCAN command
- * Creates rtos task to handle sending the bucket
+ * Sets the state for this bucket to requested, regardless
+ * of what state it was in before. The DLM will not request
+ * the bucket until it is configured on the DLM, so to make
+ * it here everything is ok
  */
 void bucket_requested (MODULE_ID sender, void* parameter,
                        U8 bucket_id, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
 {
     BUCKET* bucket = get_bucket_by_id(bucket_id);
-    if (bucket == NULL || bucket->state < BUCKET_GETTING_DATA)
+    if (bucket == NULL)
     {
         handle_DAM_error(TBD_ERROR);
         return;

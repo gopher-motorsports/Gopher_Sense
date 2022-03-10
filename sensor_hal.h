@@ -17,24 +17,11 @@
 
 #define STR_LEN 50
 
-typedef union
-{
-  U8_CAN_STRUCT u8_struct;
-  U16_CAN_STRUCT u16_struct;
-  U32_CAN_STRUCT u32_struct;
-  U64_CAN_STRUCT u64_struct;
-  S8_CAN_STRUCT s8_struct;
-  S16_CAN_STRUCT s16_struct;
-  S32_CAN_STRUCT s32_struct;
-  S64_CAN_STRUCT s64_struct;
-  FLOAT_CAN_STRUCT float_struct;
-} PARAM_STRUCT;
-
 typedef enum
 {
     CLEAN = 0,
     DIRTY = 1,
-    LOCKED = 2
+    LOCKED_SEND = 2
 } DATA_STATUS;
 
 
@@ -63,11 +50,11 @@ typedef struct
 
 
 typedef enum {
-    BUCKET_INIT = 0,
-    BUCKET_DLM_OK = 1,
-    BUCKET_GETTING_DATA = 2,
-    BUCKET_REQUESTED = 3,
-    BUCKET_SENDING = 4
+    BUCKET_CONFIG_INIT = 0,
+    BUCKET_CONFIG_SENDING_PARAMS = 1,
+	BUCKET_CONFIG_SENDING_FRQ = 2,
+    BUCKET_GETTING_DATA = 3,
+    BUCKET_REQUESTED = 4
 } BUCKET_STATE;
 
 // describes a bucket of parameters
