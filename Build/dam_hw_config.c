@@ -23,7 +23,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   {
     .analog_param =
     {
-      .can_param = &float_tester,
+      .can_param = (CAN_INFO_STRUCT*)(&float_tester),
       .status = CLEAN,
     },
     .analog_sensor = &basic_voltage_sensor_for_testing,
@@ -33,7 +33,8 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
     {
       .buffer = adc1_param1_buffer_mem,
       .buffer_size = ADC1_PARAM1_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
   },
   #undef ADC1_PARAM1_BUF_SIZE
@@ -61,7 +62,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   {
     .analog_param =
     {
-      .can_param = &float_tester_2,
+      .can_param = (CAN_INFO_STRUCT*)(&float_tester_2),
       .status = CLEAN,
     },
     .analog_sensor = &basic_resistive_sensor_for_testing,
@@ -71,7 +72,8 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
     {
       .buffer = adc2_param1_buffer_mem,
       .buffer_size = ADC2_PARAM1_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
   },
   #undef ADC2_PARAM1_BUF_SIZE
@@ -99,7 +101,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   {
     .analog_param =
     {
-      .can_param = &float_tester_3,
+      .can_param = (CAN_INFO_STRUCT*)(&float_tester_3),
       .status = CLEAN,
     },
     .analog_sensor = &basic_420ma_sensor_for_testing,
@@ -109,7 +111,8 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
     {
       .buffer = adc3_param1_buffer_mem,
       .buffer_size = ADC3_PARAM1_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
   },
   #undef ADC3_PARAM1_BUF_SIZE
@@ -150,7 +153,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
 
     .can_param =
     {
-      .can_param = &float_tester_4,
+      .can_param = (CAN_INFO_STRUCT*)(&float_tester_4),
       .status = CLEAN,
     },
     .can_sensor = &can_sensor_for_testing,
@@ -161,7 +164,8 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
     {
       .buffer = can_param1_buffer_mem,
       .buffer_size = CAN_PARAM1_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
 
   },
@@ -174,7 +178,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
 
     .can_param =
     {
-      .can_param = &float_tester_5,
+      .can_param = (CAN_INFO_STRUCT*)(&float_tester_5),
       .status = CLEAN,
     },
     .can_sensor = &can_sensor_for_testing,
@@ -185,7 +189,8 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
     {
       .buffer = can_param2_buffer_mem,
       .buffer_size = CAN_PARAM2_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
 
   },
@@ -198,7 +203,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
 
     .can_param =
     {
-      .can_param = &float_tester_6,
+      .can_param = (CAN_INFO_STRUCT*)(&float_tester_6),
       .status = CLEAN,
     },
     .can_sensor = &can_sensor_for_testing,
@@ -209,7 +214,8 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
     {
       .buffer = can_param3_buffer_mem,
       .buffer_size = CAN_PARAM3_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
 
   },
@@ -222,7 +228,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
 
     .can_param =
     {
-      .can_param = &float_tester_7,
+      .can_param = (CAN_INFO_STRUCT*)(&float_tester_7),
       .status = CLEAN,
     },
     .can_sensor = &can_sensor_for_testing,
@@ -233,7 +239,8 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
     {
       .buffer = can_param4_buffer_mem,
       .buffer_size = CAN_PARAM4_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
 
   },
@@ -246,14 +253,18 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
 // BUCKETS
 // setup the param lists for each bucket
 
-GENERAL_PARAMETER bucket_1_bucket_general_param_list[2] =
+GENERAL_PARAMETER bucket_1_bucket_general_param_list[3] =
 {
   {
-    .can_param = &float_tester,
+    .can_param = (CAN_INFO_STRUCT*)(&float_tester),
     .status = CLEAN
   },
   {
-    .can_param = &float_tester_2,
+    .can_param = (CAN_INFO_STRUCT*)(&float_tester_2),
+    .status = CLEAN
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&u16_tester),
     .status = CLEAN
   },
   
@@ -262,11 +273,11 @@ GENERAL_PARAMETER bucket_1_bucket_general_param_list[2] =
 GENERAL_PARAMETER bucket_2_bucket_general_param_list[2] =
 {
   {
-    .can_param = &float_tester_3,
+    .can_param = (CAN_INFO_STRUCT*)(&float_tester_3),
     .status = CLEAN
   },
   {
-    .can_param = &float_tester_4,
+    .can_param = (CAN_INFO_STRUCT*)(&float_tester_4),
     .status = CLEAN
   },
   
@@ -275,15 +286,15 @@ GENERAL_PARAMETER bucket_2_bucket_general_param_list[2] =
 GENERAL_PARAMETER bucket_3_bucket_general_param_list[3] =
 {
   {
-    .can_param = &float_tester_5,
+    .can_param = (CAN_INFO_STRUCT*)(&float_tester_5),
     .status = CLEAN
   },
   {
-    .can_param = &float_tester_6,
+    .can_param = (CAN_INFO_STRUCT*)(&float_tester_6),
     .status = CLEAN
   },
   {
-    .can_param = &float_tester_7,
+    .can_param = (CAN_INFO_STRUCT*)(&float_tester_7),
     .status = CLEAN
   },
   
@@ -301,7 +312,7 @@ BUCKET bucket_list[NUM_BUCKETS] =
     .state = BUCKET_CONFIG_INIT,
     .param_list = 
     {
-      .len = 2,
+      .len = 3,
       .list = bucket_1_bucket_general_param_list
     }
   },

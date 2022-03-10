@@ -1,3 +1,5 @@
+
+
 #include "gopher_sense_lib.h"
 #include "gopher_sense.h"
 #include "GopherCAN.h"
@@ -240,9 +242,18 @@ S8 add_to_buffer (U32_BUFFER* buffer, U32 toadd)
         return BUFFER_ERR;
     }
 
-    if (buffer_full(buffer))
+    if (buffer->fill_level == buffer->buffer_size)
     {
-        return BUFFER_ERR;
+    	// if the buffer is full, replace the head and move it
+    	buffer->buffer[buffer->buffer_head] = toadd;
+    	buffer->buffer_head = (buffer->buffer_head + 1) % buffer->buffer_size;
+    }
+    else
+    {
+    	// buffer is not full, add to the end and increase the fill level
+    	buffer->buffer[(buffer->buffer_head + buffer->fill_level)
+					   % buffer->buffer_size] = toadd;
+    	buffer->fill_level++;
     }
 
     buffer->buffer[buffer->fill_level] = toadd;
@@ -258,27 +269,44 @@ S8 reset_buffer (U32_BUFFER* buffer)
     }
 
     buffer->fill_level = 0;
+    buffer->buffer_head = 0;
     return BUFFER_SUCCESS;
 }
 
-// Could average up to the fill level, returns error for now
 S8 average_buffer (U32_BUFFER* buffer, U32* avg)
 {
-    if (buffer == NULL || !buffer_full(buffer))
+    if (buffer == NULL)
     {
         return BUFFER_ERR;
     }
 
-    U32 calc_avg = 0;
-    U32* curr_buf = buffer->buffer;
+    U64 calc_avg = 0;
+    U16 c;
 
-    while (curr_buf - buffer->buffer > buffer->buffer_size)
+    if (buffer->fill_level == 0)
     {
-        calc_avg += *curr_buf;
-        curr_buf++;
+    	// just set the average to 0 if the buffer is empty
+    	*avg = 0;
+    }
+    else if (buffer->fill_level == buffer->buffer_size)
+    {
+    	// if the buffer is full, average up the entire buffer
+    	for (c = 0; c < buffer->buffer_size; c++)
+    	{
+    		calc_avg += buffer->buffer[c];
+    	}
+    	*avg = (U32)(calc_avg / buffer->buffer_size);
+    }
+    else
+    {
+    	// the buffer is partially full
+    	for (c = 0; c < buffer->fill_level; c++)
+    	{
+    		calc_avg += buffer->buffer[(buffer->buffer_head + c) % buffer->buffer_size];
+    	}
+    	*avg = (U32)(calc_avg / buffer->fill_level);
     }
 
-    *avg = calc_avg / buffer->buffer_size;
     return BUFFER_SUCCESS;
 
 }

@@ -23,7 +23,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   {
     .analog_param =
     {
-      .can_param = &{{param.param_name}},
+      .can_param = (CAN_INFO_STRUCT*)(&{{param.param_name}}),
       .status = CLEAN,
     },
     .analog_sensor = &{{module.getSensorName(param.producer)}},
@@ -33,7 +33,8 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
     {
       .buffer = adc1_param{{i}}_buffer_mem,
       .buffer_size = ADC1_PARAM{{i}}_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
   },
   #undef ADC1_PARAM{{i}}_BUF_SIZE
@@ -63,7 +64,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   {
     .analog_param =
     {
-      .can_param = &{{param.param_name}},
+      .can_param = (CAN_INFO_STRUCT*)(&{{param.param_name}}),
       .status = CLEAN,
     },
     .analog_sensor = &{{module.getSensorName(param.producer)}},
@@ -73,7 +74,8 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
     {
       .buffer = adc2_param{{i}}_buffer_mem,
       .buffer_size = ADC2_PARAM{{i}}_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
   },
   #undef ADC2_PARAM{{i}}_BUF_SIZE
@@ -103,7 +105,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   {
     .analog_param =
     {
-      .can_param = &{{param.param_name}},
+      .can_param = (CAN_INFO_STRUCT*)(&{{param.param_name}}),
       .status = CLEAN,
     },
     .analog_sensor = &{{module.getSensorName(param.producer)}},
@@ -113,7 +115,8 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
     {
       .buffer = adc3_param{{i}}_buffer_mem,
       .buffer_size = ADC3_PARAM{{i}}_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
   },
   #undef ADC3_PARAM{{i}}_BUF_SIZE
@@ -144,7 +147,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
 
     .can_param =
     {
-      .can_param = &{{param.param_name}},
+      .can_param = (CAN_INFO_STRUCT*)(&{{param.param_name}}),
       .status = CLEAN,
     },
     .can_sensor = &{{name}},
@@ -155,7 +158,8 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
     {
       .buffer = can_param{{i}}_buffer_mem,
       .buffer_size = CAN_PARAM{{i}}_BUF_SIZE,
-      .fill_level = 0
+      .fill_level = 0,
+	  .buffer_head = 0
     }
 
   },
@@ -176,7 +180,7 @@ GENERAL_PARAMETER {{bucket.name}}_bucket_general_param_list[{{bucket.params|leng
 {
   {% for param in bucket.params -%}
   {
-    .can_param = &{{param}},
+    .can_param = (CAN_INFO_STRUCT*)(&{{param}}),
     .status = CLEAN
   },
   {% endfor %}

@@ -27,8 +27,7 @@ typedef enum
 
 typedef struct
 {
-	//CAN_INFO_STRUCT* can_param; // TODO implement all CAN params, not just floats
-	FLOAT_CAN_STRUCT* can_param;
+	CAN_INFO_STRUCT* can_param;
     DATA_STATUS  status;
 } GENERAL_PARAMETER;
 
@@ -57,6 +56,7 @@ typedef enum {
     BUCKET_REQUESTED = 4
 } BUCKET_STATE;
 
+
 // describes a bucket of parameters
 typedef struct
 {
@@ -75,6 +75,7 @@ typedef enum
 
 typedef struct {
     U32* buffer;
+    U16  buffer_head;
     U16  buffer_size;
     U16  fill_level;
 } U32_BUFFER;

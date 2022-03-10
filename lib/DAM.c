@@ -39,60 +39,46 @@ TIM_HandleTypeDef* tim14_ptr;
 #define BUCKET_SEND_TASK_STACK_SIZE 128
 #define BUCKET_TASK_NAME_BASE "send_bucket_task_"
 #define BUCKET_SEND_MAX_ATTEMPTS 5
-#define INITIAL_DATA 0xAA
+#define INITIAL_DATA 0xAAf
 #define DATA_CONV_FAILURE_REPLACEMENT -1
 
 #define INIT_TX_DELAY_TIME_ms 10
 
-static U64 error_count;
 static DAM_ERROR_STATE latched_error_state = NO_ERRORS;
 static boolean hasInitialized = FALSE;
+static GPIO_TypeDef* status_led_port;
+static U16 status_led_pin;
 
 
+// set the LED state of
 void change_led_state(U8 sender, void* parameter, U8 remote_param, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
 {
     // this function will set the LED to high or low, depending on remote_param
     // the LED to change is dependent on the parameter stored on this module (*((U16*)parameter))
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, !!remote_param);
+	HAL_GPIO_WritePin(status_led_port, status_led_pin, !!remote_param);
 }
 
 
-// TODO: Error state behavior. Possibly give control of this to outsize the library
-void handle_DAM_error (DAM_ERROR_STATE error_state)
+// Handle LED states for each error for future VIRs
+void handle_DAM_error(DAM_ERROR_STATE error_state)
 {
+	U8 num_led_blinks = 0;
+	U8 c;
     latched_error_state = error_state;
-    switch (error_state)
-    {
-        // log the error?
-        case INITIALIZATION_ERROR:
-        {
-        	// DEBUG
-        	while (1);
-            NVIC_SystemReset();
-            break;
-        }
-        case CRITICAL_ERROR:
-        {
-        	// DEBUG
-        	while (1);
-            NVIC_SystemReset();
-            break;
-        }
-        case CONVERSION_ERROR:
-        {
-        	// DEBUG
-        	while (1);
 
-        	//send can error???
-        	break;
-        }
-        default:
-        {
-        	// DEBUG
-        	while (1);
-            error_count++;
-            break;
-        }
+    // set the number of LED blinks using the enums
+    num_led_blinks = (U8)error_state;
+
+    while(1)
+    {
+    	for(c = 0; c < num_led_blinks; c++)
+    	{
+    		HAL_GPIO_WritePin(status_led_port, status_led_pin, GPIO_PIN_SET);
+    		osDelay(100);
+    		HAL_GPIO_WritePin(status_led_port, status_led_pin, GPIO_PIN_RESET);
+    		osDelay(100);
+    	}
+    	osDelay(800);
     }
 }
 
@@ -100,7 +86,8 @@ void handle_DAM_error (DAM_ERROR_STATE error_state)
 // TODO really good docs on this function
 void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* scan,
 			  ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-			  TIM_HandleTypeDef* tim10, TIM_HandleTypeDef* tim11, TIM_HandleTypeDef* tim14)
+			  TIM_HandleTypeDef* tim10, TIM_HandleTypeDef* tim11, TIM_HandleTypeDef* tim14,
+			  GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin)
 {
     if (!hasInitialized)
     {
@@ -113,6 +100,8 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
     	tim10_ptr = tim10;
     	tim11_ptr = tim11;
     	tim14_ptr = tim14;
+    	status_led_port = stat_led_GPIOx;
+    	status_led_pin = stat_led_Pin;
 
         // Run once initialization code
     	// TODO should this be here or somewhere else?
@@ -138,7 +127,38 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
 }
 
 
-// TODO add some easy way to set a parameter to the LOCKED_SEND state
+// lock_param_sending
+//  Call this function with a GCAN param to lock this parameter to always send
+//  when the bucket it is in is requested
+// params:
+//  CAN_INFO_STRUCT* can_param: what parameter should always be sent
+// returns:
+//  0 on success, -1 on parameter not found
+S8 lock_param_sending(CAN_INFO_STRUCT* can_param)
+{
+	// run through each parameter in each bucket and check if the CAN_PARAM sent in
+	// is the match
+	BUCKET* bucket = bucket_list;
+	GENERAL_PARAMETER* param;
+	while (bucket - bucket_list < NUM_BUCKETS)
+	{
+		param = bucket->param_list.list;
+		while (param - bucket->param_list.list < bucket->param_list.len)
+		{
+			if (param->can_param->param_id == can_param->param_id)
+			{
+				// we found the correct parameter in a bucket
+				param->status = LOCKED_SEND;
+			}
+			param++;
+		}
+
+		bucket++;
+	}
+
+	// parameter not found
+	return -1;
+}
 
 
 // DAM_reset
@@ -187,7 +207,7 @@ void DAM_reset(void)
 		{
 			if (param->status != LOCKED_SEND) param->status = CLEAN;
 			param->can_param->update_enabled = TRUE;
-			param->can_param->data = INITIAL_DATA; // Set some initial value
+			fill_gcan_param_data(param->can_param, INITIAL_DATA); // Set some initial value
 			param++;
 		}
 		if (!hasInitialized)
@@ -212,18 +232,50 @@ void DAM_reset(void)
 }
 
 
-BUCKET* get_bucket_by_id (U8 bucket_id)
+/* DAM_main_task
+ * Main task state machine
+ */
+void DAM_main_task (void)
 {
-	BUCKET* ret_bucket = bucket_list;
-	while (ret_bucket - bucket_list < NUM_BUCKETS)
+	boolean all_buckets_ok;
+	BUCKET* bucket;
+	U32 last_timer = 0;
+    // Must have started buffer service task and tx task
+    while (1)
     {
-        if (ret_bucket->bucket_id == bucket_id)
-        {
-            return ret_bucket;
-        }
-        ret_bucket++;
+    	if (!hasInitialized) // waiting for initialization
+    	{
+    		osDelay(1);
+    	}
+    	else
+    	{
+    		ADC_sensor_service();
+    		sensorCAN_service();
+
+    		// toggle the LED at 0.5 second intervals if the all of the buckets
+    		// are working normally and there are no errors
+    		all_buckets_ok = TRUE;
+    		bucket = bucket_list;
+			while (bucket - bucket_list < NUM_BUCKETS)
+			{
+				// check if this bucket is not ready
+				if(bucket->state <= BUCKET_CONFIG_SENDING_FRQ)
+				{
+					all_buckets_ok = FALSE;
+					break;
+				}
+				bucket++;
+			}
+			if (all_buckets_ok && latched_error_state == NO_ERRORS)
+			{
+				if ((HAL_GetTick() - last_timer) >= 500)
+				{
+					HAL_GPIO_TogglePin(status_led_port, status_led_pin);
+					last_timer = HAL_GetTick();
+				}
+			}
+    	}
     }
-    return NULL;
 }
 
 
@@ -252,6 +304,7 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 
 	while (param - adc_params < num_params)
 	{
+		// only apply the parameter to the GCAN if there is enough data to fill the buffer
 		if (buffer_full(&param->buffer))
 		{
 			if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
@@ -264,10 +317,10 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 			{
 				handle_DAM_error(CONVERSION_ERROR);
 			}
-			// No data cast as we assume params are set up correctly
-			// TODO support all data types on the bus
-			param->analog_param.can_param->data = converted_data;
-			param->analog_param.status = DIRTY;
+
+			// fill the data and set this parameter to dirty
+			fill_gcan_param_data(param->analog_param.can_param, converted_data);
+			if (param->analog_param.status != LOCKED_SEND) param->analog_param.status = DIRTY;
 			fill_analog_subparams(param, converted_data);
 		}
 		param++;
@@ -284,6 +337,7 @@ void sensorCAN_service (void)
 	CAN_SENSOR_PARAM* param = can_sensor_params;
     while (param - can_sensor_params < NUM_CAN_SENSOR_PARAMS)
     {
+    	// only apply the parameter to the GCAN if there is enough data to fill the buffer
         if (buffer_full(&param->buffer))
         {
             if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
@@ -296,31 +350,13 @@ void sensorCAN_service (void)
             {
             	handle_DAM_error(CONVERSION_ERROR);
             }
-            // No data cast as we assume params are set up correctly
-            // TODO support all data types on the bus
-            param->can_param.can_param->data = converted_data; // fill the data
-            param->can_param.status = DIRTY;
+
+            // fill the data and set this parameter to dirty
+            fill_gcan_param_data(param->can_param.can_param, converted_data);
+            if (param->can_param.status != LOCKED_SEND) param->can_param.status = DIRTY;
             fill_can_subparams(param, converted_data);
         }
         param++;
-    }
-}
-
-// This has to do with filtering, so do this whomever implements that
-void fill_can_subparams (CAN_SENSOR_PARAM* param, float newdata)
-{
-    for (U8 i = 0; i < param->num_filtered_subparams; i++)
-    {
-    	// TODO implement can subparams?
-    }
-}
-
-// This has to do with filtering, so do this whomever implements that
-void fill_analog_subparams (ANALOG_SENSOR_PARAM* param, float newdata)
-{
-    for (U8 i = 0; i < param->num_filtered_subparams; i++)
-    {
-    	// TODO implement can subparams?
     }
 }
 
@@ -382,7 +418,7 @@ void send_bucket_task (void* pvParameters)
 					{
 						if (++err_count > BUCKET_SEND_MAX_ATTEMPTS)
 						{
-							handle_DAM_error(TBD_ERROR);
+							handle_DAM_error(GCAN_TX_FAILED);
 							break;
 						}
 						osDelay(1); // Delay due to error
@@ -405,26 +441,65 @@ void send_bucket_task (void* pvParameters)
 }
 
 
-/* DAM_main_task
- * Main task state machine
- */
-void DAM_main_task (void)
+BUCKET* get_bucket_by_id (U8 bucket_id)
 {
-    // Must have started buffer service task and tx task
-    while (1)
+	BUCKET* ret_bucket = bucket_list;
+	while (ret_bucket - bucket_list < NUM_BUCKETS)
     {
-    	if (!hasInitialized) // waiting for initialization
-    	{
-    		osDelay(1);
-    	}
-    	else
-    	{
-    		// TODO add some check for if all of the buckets are done configuring
-    		// and give some sort of external ok for devs to look at
-    		ADC_sensor_service();
-    		sensorCAN_service();
-    	}
+        if (ret_bucket->bucket_id == bucket_id)
+        {
+            return ret_bucket;
+        }
+        ret_bucket++;
     }
+    return NULL;
+}
+
+
+void fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data)
+{
+	switch (parameter_data_types[can_param->param_id])
+	{
+	case UNSIGNED8:
+		((U8_CAN_STRUCT*)(can_param))->data = (U8)data;
+		break;
+
+	case UNSIGNED16:
+		((U16_CAN_STRUCT*)(can_param))->data = (U16)data;
+		break;
+
+	case UNSIGNED32:
+		((U32_CAN_STRUCT*)(can_param))->data = (U32)data;
+		break;
+
+	case UNSIGNED64:
+		((U64_CAN_STRUCT*)(can_param))->data = (U64)data;
+		break;
+
+	case SIGNED8:
+		((S8_CAN_STRUCT*)(can_param))->data = (S8)data;
+		break;
+
+	case SIGNED16:
+		((S16_CAN_STRUCT*)(can_param))->data = (S16)data;
+		break;
+
+	case SIGNED32:
+		((S32_CAN_STRUCT*)(can_param))->data = (S32)data;
+		break;
+
+	case SIGNED64:
+		((S64_CAN_STRUCT*)(can_param))->data = (S64)data;
+		break;
+
+	case FLOATING:
+		((FLOAT_CAN_STRUCT*)(can_param))->data = data;
+		break;
+
+	default:
+		handle_DAM_error(DATA_ASSIGNMENT_ERROR);
+		break;
+	}
 }
 
 
@@ -465,7 +540,7 @@ void bucket_ok(MODULE_ID sender, void* parameter,
     }
     else
     {
-        handle_DAM_error(TBD_ERROR);
+        handle_DAM_error(BUCKET_NOT_RECOGNIZED);
     }
 }
 
@@ -483,7 +558,7 @@ void bucket_requested (MODULE_ID sender, void* parameter,
     BUCKET* bucket = get_bucket_by_id(bucket_id);
     if (bucket == NULL)
     {
-        handle_DAM_error(TBD_ERROR);
+        handle_DAM_error(BUCKET_NOT_RECOGNIZED);
         return;
     }
 
@@ -507,7 +582,7 @@ void custom_service_can_rx_hardware(CAN_HandleTypeDef* hcan, U32 rx_mailbox)
        sensor_can_message_handle(hcan, rx_mailbox);
    }
 
-   else handle_DAM_error(TBD_ERROR); // This case shouldnt happen
+   else handle_DAM_error(CAN_HANDLE_NOT_RECOGNIZED); // This case shouldnt happen
 }
 
 
@@ -533,9 +608,29 @@ void gopherCAN_rx_buffer_service_task (void)
     {
         if (service_can_rx_buffer())
         {
-            handle_DAM_error(TBD_ERROR);
+            handle_DAM_error(RX_BUFFER_HANDLE_ERROR);
         }
         osDelay(1);
+    }
+}
+
+
+
+// This has to do with filtering, so do this whomever implements that
+void fill_can_subparams (CAN_SENSOR_PARAM* param, float newdata)
+{
+    for (U8 i = 0; i < param->num_filtered_subparams; i++)
+    {
+    	// TODO implement can subparams?
+    }
+}
+
+// This has to do with filtering, so do this whomever implements that
+void fill_analog_subparams (ANALOG_SENSOR_PARAM* param, float newdata)
+{
+    for (U8 i = 0; i < param->num_filtered_subparams; i++)
+    {
+    	// TODO implement can subparams?
     }
 }
 
