@@ -6,6 +6,7 @@
 #include "base_types.h"
 #include "main.h"
 #include "dam_hw_config.h"
+#include "DAM.h"
 
 
 ADC_HandleTypeDef* adc1;
@@ -20,14 +21,14 @@ TIM_HandleTypeDef* adc3_timer;
 //DMA_HandleTypeDef hdma_adc2;
 //DMA_HandleTypeDef hdma_adc3;
 
-static volatile U16 adc1_sample_buffer[NUM_ADC1_PARAMS];
-static volatile U16 adc2_sample_buffer[NUM_ADC2_PARAMS];
-static volatile U16 adc3_sample_buffer[NUM_ADC3_PARAMS];
+U16 adc1_sample_buffer[NUM_ADC1_PARAMS];
+U16 adc2_sample_buffer[NUM_ADC2_PARAMS];
+U16 adc3_sample_buffer[NUM_ADC3_PARAMS];
 
 #define ADC_VOLTAGE 3.3
 #define VOLTAGE_3V3 3.3
 #define VOLTAGE_5V  5.0
-#define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetSysClockFreq()) // TODO this may be the wrong function, not sure what clock source these timers specifically pull from
+#define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetPCLK1Freq() << 1) // APB1 Timer clock = PCLK1 * 2
 #define TIM_MAX_VAL 65536
 
 
@@ -40,43 +41,101 @@ void configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleType
 }
 
 
-void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *adc_handle)
+// startDataAq
+//  Start the timers and the ADC DMA. Data is constantly filled in the buffer with the DMA
+//  Then the most recent sample will be added to the buffer each time the timer is fired
+void startDataAq(void)
 {
-    // stop the DMA and start the timer
-    HAL_ADC_Stop_DMA(adc_handle);
+	// start the timers
+    HAL_TIM_Base_Start_IT(adc1_timer);
+    HAL_TIM_Base_Start_IT(adc2_timer);
+    HAL_TIM_Base_Start_IT(adc3_timer);
 
+    // start the DMA
+#if NUM_ADC1_PARAMS > 0
+    HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, NUM_ADC1_PARAMS);
+#endif // NUM_ADC1_PARAMS > 0
+#if NUM_ADC2_PARAMS > 0
+    HAL_ADC_Start_DMA(adc2, (uint32_t*)adc2_sample_buffer, NUM_ADC2_PARAMS);
+#endif // NUM_ADC2_PARAMS > 0
+#if NUM_ADC3_PARAMS > 0
+    HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, NUM_ADC3_PARAMS);
+#endif // NUM_ADC3_PARAMS > 0
+}
+
+
+// stopDataAq
+//  stop running DMA and the timers
+void stopDataAq(void)
+{
+	// stop the timers
+    HAL_TIM_Base_Stop_IT(adc1_timer);
+    HAL_TIM_Base_Stop_IT(adc2_timer);
+    HAL_TIM_Base_Stop_IT(adc3_timer);
+    __HAL_TIM_SET_COUNTER(adc1_timer, 0);
+    __HAL_TIM_SET_COUNTER(adc2_timer, 0);
+    __HAL_TIM_SET_COUNTER(adc3_timer, 0);
+
+    // stop the DMA
+#if NUM_ADC1_PARAMS > 0
+    HAL_ADC_Stop_DMA(adc1);
+#endif // NUM_ADC1_PARAMS > 0
+#if NUM_ADC2_PARAMS > 0
+    HAL_ADC_Stop_DMA(adc2);
+#endif // NUM_ADC2_PARAMS > 0
+#if NUM_ADC3_PARAMS > 0
+    HAL_ADC_Stop_DMA(adc3);
+#endif // NUM_ADC3_PARAMS > 0
+}
+
+
+// DAQ_TimerCallback
+//  This is called by each timer when it overflows. This will take the data from the DMA
+//  buffer and put it in the parameter buffer
+void DAQ_TimerCallback (TIM_HandleTypeDef* timer)
+{
+	ADC_HandleTypeDef* adc_handle;
+
+	// get the ADC handle from this timer
+	adc_handle = get_ADC_from_timer(timer);
+	if (!adc_handle)
+	{
+		handle_DAM_error(TIMER_TO_ADC_ERROR);
+	}
+
+	// stop DMA from this ADC channel while we grab the data
+	HAL_ADC_Stop_DMA(adc_handle);
+
+	// put the data into the parameter buffer and restart DMA
 #if NUM_ADC1_PARAMS > 0
     if (adc_handle == adc1)
     {
-        __HAL_TIM_SET_COUNTER(adc1_timer, 0);
-        HAL_TIM_Base_Start_IT(adc1_timer);
         add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
+        HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, NUM_ADC1_PARAMS);
     }
 #endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
     if (adc_handle == adc2)
     {
-        __HAL_TIM_SET_COUNTER(adc2_timer, 0);
-        HAL_TIM_Base_Start_IT(adc2_timer);
         add_data_to_buffer(adc2_sensor_params, adc2_sample_buffer, NUM_ADC2_PARAMS);
+        HAL_ADC_Start_DMA(adc2, (uint32_t*)adc2_sample_buffer, NUM_ADC2_PARAMS);
     }
 #endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
     if (adc_handle == adc3)
     {
-        __HAL_TIM_SET_COUNTER(adc3_timer, 0);
-        HAL_TIM_Base_Start_IT(adc3_timer);
         add_data_to_buffer(adc3_sensor_params, adc3_sample_buffer, NUM_ADC3_PARAMS);
+        HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, NUM_ADC3_PARAMS);
     }
 #endif // NUM_ADC3_PARAMS > 0
 }
 
 
-// for each parameter in this array, transfer the data from the
-void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_buffer, U32 num_params)
+// for each parameter in this array, transfer the data from the sample buffer to the param buffer
+void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, U16* sample_buffer, U32 num_params)
 {
 	ANALOG_SENSOR_PARAM* param = param_array;
-	volatile U16* buffer = sample_buffer;
+	U16* buffer = sample_buffer;
 
 	while(param - param_array < num_params)
 	{
@@ -84,6 +143,16 @@ void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_b
 		param++;
 		buffer++;
 	}
+}
+
+
+ADC_HandleTypeDef* get_ADC_from_timer(TIM_HandleTypeDef* timer)
+{
+	if (timer == adc1_timer) return adc1;
+	if (timer == adc2_timer) return adc2;
+	if (timer == adc3_timer) return adc3;
+
+	return NULL;
 }
 
 
@@ -105,59 +174,16 @@ void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz)
 {
     __HAL_TIM_DISABLE(timer);
     __HAL_TIM_SET_COUNTER(timer, 0);
-    // TODO Maybe look at how timers are set up to make sure timings are correct
     U32 reload;
     do {
-        reload = (TIM_CLOCK_BASE_FREQ/psc) / timer_int_freq_hz;
-        psc *= 2;
+        reload = (U32)((TIM_CLOCK_BASE_FREQ/psc) / timer_int_freq_hz);
+        psc <<= 1;
     } while (reload > TIM_MAX_VAL);
 
-    psc /= 2;
     __HAL_TIM_SET_PRESCALER(timer, psc);
     __HAL_TIM_SET_AUTORELOAD(timer, reload);
     __HAL_TIM_ENABLE(timer);
 }
-
-
-void startTimers (void)
-{
-    HAL_TIM_Base_Start_IT(adc1_timer);
-    HAL_TIM_Base_Start_IT(adc2_timer);
-    HAL_TIM_Base_Start_IT(adc3_timer);
-}
-
-
-void stopTimers (void)
-{
-    HAL_TIM_Base_Stop_IT(adc1_timer);
-    HAL_TIM_Base_Stop_IT(adc2_timer);
-    HAL_TIM_Base_Stop_IT(adc3_timer);
-    __HAL_TIM_SET_COUNTER(adc1_timer, 0);
-    __HAL_TIM_SET_COUNTER(adc2_timer, 0);
-    __HAL_TIM_SET_COUNTER(adc3_timer, 0);
-}
-
-
-// Call this inside the period elapsed callback
-void DAQ_TimerCallback (TIM_HandleTypeDef* timer)
-{
-    HAL_TIM_Base_Stop_IT(timer);
-
-    if (timer == adc1_timer && NUM_ADC1_PARAMS > 0)
-    {
-        HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, NUM_ADC1_PARAMS);
-    }
-    else if (timer == adc2_timer && NUM_ADC2_PARAMS > 0)
-    {
-        HAL_ADC_Start_DMA(adc2, (uint32_t*)adc2_sample_buffer, NUM_ADC2_PARAMS);
-    }
-    else if (timer == adc3_timer && NUM_ADC3_PARAMS > 0)
-    {
-        HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, NUM_ADC3_PARAMS);
-    }
-}
-
-
 
 
 //******************* CAN Handling *******************
@@ -256,8 +282,6 @@ S8 add_to_buffer (U32_BUFFER* buffer, U32 toadd)
     	buffer->fill_level++;
     }
 
-    buffer->buffer[buffer->fill_level] = toadd;
-    buffer->fill_level++;
     return BUFFER_SUCCESS;
 }
 
@@ -287,6 +311,7 @@ S8 average_buffer (U32_BUFFER* buffer, U32* avg)
     {
     	// just set the average to 0 if the buffer is empty
     	*avg = 0;
+    	return BUFFER_EMPTY;
     }
     else if (buffer->fill_level == buffer->buffer_size)
     {
@@ -469,7 +494,7 @@ S8 interpolate_table_linear (TABLE* table, float data_in, float* data_out)
 		return CONV_SUCCESS;
 	}
 
-	if (data_in < table->independent_vars[entries-1])
+	if (data_in > table->independent_vars[entries-1])
 	{
 		// if off top edge return top val
 		*data_out = table->dependent_vars[entries-1];

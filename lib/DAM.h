@@ -24,6 +24,7 @@ typedef enum
 	BUCKET_NOT_RECOGNIZED = 5,
 	CAN_HANDLE_NOT_RECOGNIZED = 6,
 	RX_BUFFER_HANDLE_ERROR = 7,
+	TIMER_TO_ADC_ERROR = 8,
 
 } DAM_ERROR_STATE;
 
@@ -35,6 +36,7 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
 			  ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
 			  TIM_HandleTypeDef* tim10, TIM_HandleTypeDef* tim11, TIM_HandleTypeDef* tim14,
 			  GPIO_TypeDef* err_led_GPIOx, U16 err_led_Pin);
+S8 lock_param_sending(CAN_INFO_STRUCT* can_param);
 void DAM_reset(void);
 void complete_DLM_handshake (void);
 BUCKET* get_bucket_by_id (U8 bucket_id);

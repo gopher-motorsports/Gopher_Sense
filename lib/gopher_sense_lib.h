@@ -13,6 +13,7 @@
 #define BUFFER_SUCCESS 1
 #define CONV_ERR -2
 #define RESISTOR_ERR -3
+#define BUFFER_EMPTY -4
 #define CONV_SUCCESS 2
 
 
@@ -24,10 +25,11 @@ void configLibTIM(TIM_HandleTypeDef* t1, U16 t1_freq,
                   TIM_HandleTypeDef* t3, U16 t3_freq, U16 psc);
 
 void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz);
-void startTimers(void);
-void stopTimers(void);
+void startDataAq(void);
+void stopDataAq(void);
 void DAQ_TimerCallback(TIM_HandleTypeDef* timer);
-void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_buffer, U32 num_params);
+void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, U16* sample_buffer, U32 num_params);
+ADC_HandleTypeDef* get_ADC_from_timer(TIM_HandleTypeDef* timer);
 void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox);
 
 

@@ -147,7 +147,7 @@ typedef struct
 // link between gophercan parameter and analog sensor data
 typedef struct
 {
-    GENERAL_PARAMETER   analog_param; // raw data
+    GENERAL_PARAMETER*  bucket_param;
     ANALOG_SENSOR*      analog_sensor;
     FILTERED_PARAM*     filtered_subparams;
     U8                  num_filtered_subparams;
@@ -177,12 +177,12 @@ typedef struct
 // link between gophercan parameter and CAN sensor data
 typedef struct
 {
-    GENERAL_PARAMETER can_param; // raw data
-    CAN_SENSOR*       can_sensor;
-    U32               message_idx; // which message from the can sensor? (index)
-    FILTERED_PARAM*   filtered_subparams;
-    U8                num_filtered_subparams;
-    U32_BUFFER        buffer;
+    GENERAL_PARAMETER* bucket_param;
+    CAN_SENSOR*        can_sensor;
+    U32                message_idx; // which message from the can sensor? (index)
+    FILTERED_PARAM*    filtered_subparams;
+    U8                 num_filtered_subparams;
+    U32_BUFFER         buffer;
 } CAN_SENSOR_PARAM;
 
 

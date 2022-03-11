@@ -4,6 +4,44 @@
 #include "GopherCAN.h"
 
 
+// BUCKETS
+{% if buckets|length > 0 -%}
+
+// setup the param lists for each bucket
+{% for bucket in buckets %}
+GENERAL_PARAMETER {{bucket.name}}_bucket_general_param_list[{{bucket.params|length}}] =
+{
+  {% for param in bucket.params -%}
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&{{param}}),
+    .status = CLEAN
+  },
+  {% endfor %}
+};
+{% endfor %}
+
+// initalize the bucket structs
+BUCKET bucket_list[NUM_BUCKETS] =
+{
+  {% for bucket in buckets %}
+  // Define bucket {{bucket.name}}
+  {
+    .bucket_id = {{bucket.id}},
+    .frequency = {{bucket.frequency}},
+    .state = BUCKET_CONFIG_INIT,
+    .param_list = 
+    {
+      .len = {{bucket.params|length}},
+      .list = {{bucket.name}}_bucket_general_param_list
+    }
+  },
+  {% endfor %}
+};
+{% else %}
+// No buckets configured
+{% endif %}
+// ***************************************************************************
+
 {% set l = module.adc1_params|length%}
 {% if l > 0 %}
 // BEGIN ADC1 PARAMS
@@ -21,11 +59,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   {% set i = loop.index %}
   // adc1_param{{i}}
   {
-    .analog_param =
-    {
-      .can_param = (CAN_INFO_STRUCT*)(&{{param.param_name}}),
-      .status = CLEAN,
-    },
+    .bucket_param = bucket_{{param.bucket_id}}_bucket_general_param_list + {{param.bucket_loc}},
     .analog_sensor = &{{module.getSensorName(param.producer)}},
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -62,11 +96,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   {% set i = loop.index %}
   // adc2_param{{i}}
   {
-    .analog_param =
-    {
-      .can_param = (CAN_INFO_STRUCT*)(&{{param.param_name}}),
-      .status = CLEAN,
-    },
+    .bucket_param = bucket_{{param.bucket_id}}_bucket_general_param_list + {{param.bucket_loc}},
     .analog_sensor = &{{module.getSensorName(param.producer)}},
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -103,11 +133,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   {% set i = loop.index %}
   // adc3_param{{i}}
   {
-    .analog_param =
-    {
-      .can_param = (CAN_INFO_STRUCT*)(&{{param.param_name}}),
-      .status = CLEAN,
-    },
+    .bucket_param = bucket_{{param.bucket_id}}_bucket_general_param_list + {{param.bucket_loc}},
     .analog_sensor = &{{module.getSensorName(param.producer)}},
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -145,11 +171,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
   // can_param{{i}}
   {
 
-    .can_param =
-    {
-      .can_param = (CAN_INFO_STRUCT*)(&{{param.param_name}}),
-      .status = CLEAN,
-    },
+    .bucket_param = bucket_{{param.bucket_id}}_bucket_general_param_list + {{param.bucket_loc}},
     .can_sensor = &{{name}},
     .message_idx = {{module.getDependencyMessageIndex(name, param.dependency)}},
     .num_filtered_subparams = 0, // not yet implemented
@@ -170,42 +192,5 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
 // No CAN params
 {% endif %}
 // ***************************************************************************
-
-// BUCKETS
-{% if buckets|length > 0 -%}
-
-// setup the param lists for each bucket
-{% for bucket in buckets %}
-GENERAL_PARAMETER {{bucket.name}}_bucket_general_param_list[{{bucket.params|length}}] =
-{
-  {% for param in bucket.params -%}
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&{{param}}),
-    .status = CLEAN
-  },
-  {% endfor %}
-};
-{% endfor %}
-
-// initalize the bucket structs
-BUCKET bucket_list[NUM_BUCKETS] =
-{
-  {% for bucket in buckets %}
-  // Define bucket {{bucket.name}}
-  {
-    .bucket_id = {{bucket.id}},
-    .frequency = {{bucket.frequency}},
-    .state = BUCKET_CONFIG_INIT,
-    .param_list = 
-    {
-      .len = {{bucket.params|length}},
-      .list = {{bucket.name}}_bucket_general_param_list
-    }
-  },
-  {% endfor %}
-};
-{% else %}
-// No buckets configured
-{% endif %}
 
 //END autogenerted file

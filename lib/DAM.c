@@ -29,11 +29,10 @@ TIM_HandleTypeDef* tim10_ptr;
 TIM_HandleTypeDef* tim11_ptr;
 TIM_HandleTypeDef* tim14_ptr;
 
-// TODO Move this to a config file. Maybe auto generate? Maybe just fix at 10k
 #define TIMER_PSC 16
-#define ADC1_SCHEDULING_FREQUENCY_HZ 100
-#define ADC2_SCHEDULING_FREQUENCY_HZ 100
-#define ADC3_SCHEDULING_FREQUENCY_HZ 100
+#define ADC1_SCHEDULING_FREQUENCY_HZ 1000
+#define ADC2_SCHEDULING_FREQUENCY_HZ 1000
+#define ADC3_SCHEDULING_FREQUENCY_HZ 1000
 
 
 #define BUCKET_SEND_TASK_STACK_SIZE 128
@@ -68,6 +67,7 @@ void handle_DAM_error(DAM_ERROR_STATE error_state)
 
     // set the number of LED blinks using the enums
     num_led_blinks = (U8)error_state;
+    stopDataAq();
 
     while(1)
     {
@@ -167,7 +167,7 @@ S8 lock_param_sending(CAN_INFO_STRUCT* can_param)
 void DAM_reset(void)
 {
 	// All code needed for DLM-DAM reset goes here
-	stopTimers();
+	stopDataAq();
 
 	// Reset all of the buffers. Only do the ones that exist
 #if NUM_ADC1_PARAMS > 0
@@ -226,8 +226,8 @@ void DAM_reset(void)
 		bucket++;
 	}
 
-	// start collecting data through the timers
-	startTimers();
+	// start collecting data!
+	startDataAq();
 	hasInitialized = TRUE;
 }
 
@@ -304,25 +304,21 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 
 	while (param - adc_params < num_params)
 	{
-		// only apply the parameter to the GCAN if there is enough data to fill the buffer
-		if (buffer_full(&param->buffer))
+		if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
 		{
-			if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
-			{
-				continue;
-			}
-			data_in = avg;
-
-			if (apply_analog_sensor_conversion(param->analog_sensor, data_in, &converted_data) != BUFFER_SUCCESS)
-			{
-				handle_DAM_error(CONVERSION_ERROR);
-			}
-
-			// fill the data and set this parameter to dirty
-			fill_gcan_param_data(param->analog_param.can_param, converted_data);
-			if (param->analog_param.status != LOCKED_SEND) param->analog_param.status = DIRTY;
-			fill_analog_subparams(param, converted_data);
+			continue;
 		}
+		data_in = avg;
+
+		if (apply_analog_sensor_conversion(param->analog_sensor, data_in, &converted_data) != CONV_SUCCESS)
+		{
+			handle_DAM_error(CONVERSION_ERROR);
+		}
+
+		// fill the data and set this parameter to dirty
+		fill_gcan_param_data(param->bucket_param->can_param, converted_data);
+		if (param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
+		fill_analog_subparams(param, converted_data);
 		param++;
 	}
 }
@@ -337,25 +333,21 @@ void sensorCAN_service (void)
 	CAN_SENSOR_PARAM* param = can_sensor_params;
     while (param - can_sensor_params < NUM_CAN_SENSOR_PARAMS)
     {
-    	// only apply the parameter to the GCAN if there is enough data to fill the buffer
-        if (buffer_full(&param->buffer))
-        {
-            if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
-            {
-                continue;
-            }
-            data_in = avg;
+		if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
+		{
+			continue;
+		}
+		data_in = avg;
 
-            if (apply_can_sensor_conversion(param->can_sensor, param->message_idx, data_in, &converted_data) != BUFFER_SUCCESS)
-            {
-            	handle_DAM_error(CONVERSION_ERROR);
-            }
+		if (apply_can_sensor_conversion(param->can_sensor, param->message_idx, data_in, &converted_data) != CONV_SUCCESS)
+		{
+			handle_DAM_error(CONVERSION_ERROR);
+		}
 
-            // fill the data and set this parameter to dirty
-            fill_gcan_param_data(param->can_param.can_param, converted_data);
-            if (param->can_param.status != LOCKED_SEND) param->can_param.status = DIRTY;
-            fill_can_subparams(param, converted_data);
-        }
+		// fill the data and set this parameter to dirty
+		fill_gcan_param_data(param->bucket_param->can_param, converted_data);
+		if (param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
+		fill_can_subparams(param, converted_data);
         param++;
     }
 }
@@ -594,6 +586,9 @@ void gopherCAN_tx_service_task (void)
 
     while (1)
     {
+    	// TODO delete this
+    	u16_tester.data++;
+
         service_can_tx_hardware(gcan_ptr);
         osDelay(1);
     }

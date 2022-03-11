@@ -37,13 +37,15 @@ def getSensorNameFromID(id, sensors):
 
 
 class Param():
-    def __init__(self, param_name, filtered_params, buffer_size, producer, filter, dependency):
+    def __init__(self, param_name, filtered_params, buffer_size, producer, filter, dependency, bucket_id, bucket_loc):
         self.param_name = param_name
         self.filtered_params = filtered_params
         self.buffer_size = buffer_size
         self.producer = producer
         self.filter = filter #(type, value) tuple
         self.dependency = dependency
+        self.bucket_id = bucket_id
+        self.bucket_loc = bucket_loc
 
 class Module():
     def __init__(self, name, id, adc_input, can_input, params, analog_sensors, can_sensors):
@@ -73,7 +75,8 @@ class Module():
                     fp = param['filter_subparams'][f_p]
                     filteredP = Param(f_p, [], 0, producer, (fp['filter_type'].upper(),fp['filter_value']), None)
                     filtered_params.append(filteredP)
-            p = Param(p, filtered_params, param['buffering']['num_samples_buffered'], producer, None, param['sensor_output'] )
+
+            p = Param(p, filtered_params, param['buffering']['num_samples_buffered'], producer, None, param['sensor_output'], 420, 69 )
             if ("ADC1" in producer):
                 self.adc1_params.append(p)
             elif ("ADC2" in producer):
@@ -225,6 +228,40 @@ def main():
         b = hwconfig_munch.buckets[_b]
         bucket_params = [bp for bp in b['parameters']]
         buckets.append(Bucket(_b, b['id'], b['frequency'], bucket_params))
+        
+    # link all the params with where they are in the buckets
+    for param in module.adc1_params:
+        for bucket in buckets:
+            for bucket_param in bucket.params:
+                if param.param_name == bucket_param:
+                    # this is the bucket to link the param to
+                    param.bucket_id = buckets.index(bucket) + 1
+                    param.bucket_loc = bucket.params.index(bucket_param)
+                    
+    for param in module.adc2_params:
+        for bucket in buckets:
+            for bucket_param in bucket.params:
+                if param.param_name == bucket_param:
+                    # this is the bucket to link the param to
+                    param.bucket_id = buckets.index(bucket) + 1
+                    param.bucket_loc = bucket.params.index(bucket_param)
+                    
+    for param in module.adc3_params:
+        for bucket in buckets:
+            for bucket_param in bucket.params:
+                if param.param_name == bucket_param:
+                    # this is the bucket to link the param to
+                    param.bucket_id = buckets.index(bucket) + 1
+                    param.bucket_loc = bucket.params.index(bucket_param)
+                    
+    for param in module.can_params:
+        for bucket in buckets:
+            for bucket_param in bucket.params:
+                if param.param_name == bucket_param:
+                    # this is the bucket to link the param to
+                    param.bucket_id = buckets.index(bucket) + 1
+                    param.bucket_loc = bucket.params.index(bucket_param)
+        
 
     print("Generating ", HWCONFIG_C_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, HWCONFIG_C_FILE)) as file_:
