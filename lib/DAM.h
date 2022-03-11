@@ -18,11 +18,12 @@ typedef enum
 {
     NO_ERRORS = 0,
     INITIALIZATION_ERROR = 1,
-    CAN_ERROR = 2,
-    RUNTIME_ERROR = 3,
-    CRITICAL_ERROR = 4,
-	CONVERSION_ERROR = 5,
-    TBD_ERROR = 0xAA,
+	CONVERSION_ERROR = 2,
+	GCAN_TX_FAILED = 3,
+	DATA_ASSIGNMENT_ERROR = 4,
+	BUCKET_NOT_RECOGNIZED = 5,
+	CAN_HANDLE_NOT_RECOGNIZED = 6,
+	RX_BUFFER_HANDLE_ERROR = 7,
 
 } DAM_ERROR_STATE;
 
@@ -32,7 +33,8 @@ typedef enum
 void handle_DAM_error(DAM_ERROR_STATE error_state);
 void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* scan,
 			  ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-			  TIM_HandleTypeDef* tim10, TIM_HandleTypeDef* tim11, TIM_HandleTypeDef* tim14);
+			  TIM_HandleTypeDef* tim10, TIM_HandleTypeDef* tim11, TIM_HandleTypeDef* tim14,
+			  GPIO_TypeDef* err_led_GPIOx, U16 err_led_Pin);
 void DAM_reset(void);
 void complete_DLM_handshake (void);
 BUCKET* get_bucket_by_id (U8 bucket_id);
@@ -41,6 +43,7 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params);
 void sensorCAN_service (void);
 void fill_can_subparams (CAN_SENSOR_PARAM* param, float newdata);
 void fill_analog_subparams (ANALOG_SENSOR_PARAM* param, float newdata);
+void fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data);
 
 
 void send_bucket_task (void* pvParameters);

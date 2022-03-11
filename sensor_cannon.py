@@ -20,8 +20,6 @@ SENSOR_C_FILE = 'gopher_sense_TEMPLATE.c.jinja2'
 HWCONFIG_C_FILE = 'hwconfig_TEMPLATE.c.jinja2'
 HWCONFIG_H_FILE = 'hwconfig_TEMPLATE.h.jinja2'
 
-# C:\\Users\\admin\\STM32CubeIDE\\workspace_1.8.0\\DAM\\Resources\\dam_hw_config.yaml
-
 def C_ize_Name(name):
     return name.replace(' ', '_').lower()
 
@@ -232,17 +230,17 @@ def main():
     with open(os.path.join(TEMPLATES_DIRECTORY, HWCONFIG_C_FILE)) as file_:
         template = Template(file_.read())
         output = template.render(module=module, buckets=buckets, configFileName=configFileName)
-        print(configFileName)
-        filename = configFileName + ".c"
+        print("Configuring DAM from:", configFileName)
+        filename = "dam_hw_config.c"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
     print("Generating ", HWCONFIG_H_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, HWCONFIG_H_FILE)) as file_:
         template = Template(file_.read())
         output = template.render(module=module, buckets=buckets, configFileName=configFileName)
-        filename = configFileName + ".h"
+        filename = "dam_hw_config.h"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
 if __name__ == '__main__':
     main()
-    print('done')
+    print('Generation Complete.')

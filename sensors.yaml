@@ -1,6 +1,6 @@
 sensors:
 # this is the name it will be referenced in the config files
-    "test_analog_sensor":
+    "test_voltage_sensor":
 # this is the name for the code
         name_english: "Basic Voltage Sensor for Testing"
 # all of the outputs this sensor can produce. Analog sensors will probably be only 1
@@ -44,7 +44,7 @@ sensors:
     "test_resistive_sensor":
         name_english: "Basic Resistive Sensor for Testing"
         outputs:
-            current:
+            resistance:
                 unit: Float_0-1
                 quantization: continuous
                 offset: 0
@@ -66,7 +66,30 @@ sensors:
                 r5v: 10000
                 rfilt: 10000
                 rdiv: 19100
-
+                
+    "test_current_sensor":
+        name_english: "Basic 420mA Sensor for Testing"
+        outputs:
+            current:
+                unit: Float_0-1
+                quantization: continuous
+                offset: 0
+                data_size: 12
+        sensor_type:
+            analog:
+                analog_subtype: Current
+                table:
+                    entries:
+                        independent1: 4
+                        dependent1: 0
+                        independent2: 20
+                        dependent2: 1
+                rin: 0
+                rdown: 160
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: RES_OPEN
 
     "test_can_sensor":
         name_english: "CAN Sensor for Testing"

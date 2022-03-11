@@ -4,12 +4,13 @@
 
 #include "sensor_hal.h"
 
-#define NUM_ANALOG_SENSORS 2
+#define NUM_ANALOG_SENSORS 3
 #define NUM_CAN_SENSORS 1
 
 
 extern ANALOG_SENSOR basic_voltage_sensor_for_testing;
 extern ANALOG_SENSOR basic_resistive_sensor_for_testing;
+extern ANALOG_SENSOR basic_420ma_sensor_for_testing;
 
 
 extern CAN_SENSOR can_sensor_for_testing;

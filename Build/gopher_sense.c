@@ -29,7 +29,7 @@ TABLE basic_voltage_sensor_for_testing_output_model_table =
 };
 ANALOG_SENSOR basic_voltage_sensor_for_testing = 
 {
-    .sensor_id = "test_analog_sensor",
+    .sensor_id = "test_voltage_sensor",
     .model =
     {
         .input_type = VOLTAGE,
@@ -89,6 +89,53 @@ ANALOG_SENSOR basic_resistive_sensor_for_testing =
         .rfilt = 10000,
         .rdiv = 19100,
         .table = &basic_resistive_sensor_for_testing_output_model_table
+    },
+    .output = 
+    {
+        .output_name = "resistance",
+        .output_unit = "Float_0-1",
+        .data_size_bits = 12,
+        .scalar = 
+        {
+            .quantization = continuous, //1 if continuous
+            .offset = 0
+        }
+    }
+    
+};
+
+
+// Sensor definition basic_420ma_sensor_for_testing
+
+float basic_420ma_sensor_for_testing_output_model_table_independent_vars[2] = {
+    4,
+    20
+    
+};
+float basic_420ma_sensor_for_testing_output_model_table_dependent_vars[2] = {
+    0,
+    1
+    
+};
+TABLE basic_420ma_sensor_for_testing_output_model_table = 
+{
+    .num_entries = 2,
+    .independent_vars = basic_420ma_sensor_for_testing_output_model_table_independent_vars,
+    .dependent_vars = basic_420ma_sensor_for_testing_output_model_table_dependent_vars
+};
+ANALOG_SENSOR basic_420ma_sensor_for_testing = 
+{
+    .sensor_id = "test_current_sensor",
+    .model =
+    {
+        .input_type = CURRENT,
+        .rin = 0,
+        .rdown = 160,
+        .r3v = RES_OPEN,
+        .r5v = RES_OPEN,
+        .rfilt = 10000,
+        .rdiv = RES_OPEN,
+        .table = &basic_420ma_sensor_for_testing_output_model_table
     },
     .output = 
     {
