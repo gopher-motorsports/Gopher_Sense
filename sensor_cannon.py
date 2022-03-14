@@ -37,23 +37,22 @@ def getSensorNameFromID(id, sensors):
 
 
 class Param():
-    def __init__(self, param_name, filtered_params, buffer_size, producer, filter, dependency, bucket_id, bucket_loc):
+    def __init__(self, param_name, filtered_params, buffer_size, producer, filter, dependency ):
         self.param_name = param_name
         self.filtered_params = filtered_params
         self.buffer_size = buffer_size
         self.producer = producer
         self.filter = filter #(type, value) tuple
         self.dependency = dependency
-        self.bucket_id = bucket_id
-        self.bucket_loc = bucket_loc
+        self.bucket_id = 420
+        self.bucket_loc = 69
 
 class Module():
-    def __init__(self, name, id, adc_input, can_input, params, analog_sensors, can_sensors):
+    def __init__(self, name, adc_input, can_input, params, analog_sensors, can_sensors):
         self.analog_sensors = analog_sensors
         self.can_sensors = can_sensors
 
         self.name = name
-        self.id = id
         self. adc_channels = adc_input
         self.can_input = can_input
 
@@ -76,24 +75,21 @@ class Module():
                     filteredP = Param(f_p, [], 0, producer, (fp['filter_type'].upper(),fp['filter_value']), None)
                     filtered_params.append(filteredP)
 
-            p = Param(p, filtered_params, param['buffering']['num_samples_buffered'], producer, None, param['sensor_output'], 420, 69 )
+            p = Param(p, filtered_params, param['buffering']['num_samples_buffered'], producer, None, param['sensor_output'] )
             if ("ADC1" in producer):
                 self.adc1_params.append(p)
             elif ("ADC2" in producer):
                 self.adc2_params.append(p)
             elif ("ADC3" in producer):
                 self.adc3_params.append(p)
-            elif ("can" in producer):
+            elif ("CAN" in producer):
                 self.can_params.append(p)
+
+        # TODO make sure this sorting works, it is very important when running DMA so the sensor signals
+        # do not get swapped around
         self.adc1_params.sort(key=lambda param:param.producer, reverse=True)
-#         for p in self.adc1_params:
-#             print(p.producer)
         self.adc2_params.sort(key=lambda param:param.producer, reverse=True)
-#         for p in self.adc2_params:
-#             print(p.producer)
         self.adc3_params.sort(key=lambda param:param.producer, reverse=True)
-#         for p in self.adc3_params:
-#             print(p.producer)
 
 
     def getSensorName(self, id):
@@ -130,7 +126,7 @@ class Bucket():
     def __init__(self, name, id, frequency, params):
         self.name = name
         self.id = id
-        self.frequency = frequency
+        self.ms_between_req = int(1000 / frequency)
         self.params = params
 
 # convienient container for data
@@ -221,13 +217,13 @@ def main():
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
 
-    module = Module(hwconfig_munch.module_name, hwconfig_munch.gophercan_module_id, hwconfig_munch['data_input_methods']['adc_channels'], \
+    module = Module(hwconfig_munch.module_name, hwconfig_munch['data_input_methods']['adc_channels'], \
                     hwconfig_munch['data_input_methods']['can_sensors'], hwconfig_munch['parameters_produced'], analog_sensors, can_sensors)
     buckets = []
     for _b in hwconfig_munch.buckets:
         b = hwconfig_munch.buckets[_b]
         bucket_params = [bp for bp in b['parameters']]
-        buckets.append(Bucket(_b, b['id'], b['frequency'], bucket_params))
+        buckets.append(Bucket(_b, b['id'], b['frequency_hz'], bucket_params))
         
     # link all the params with where they are in the buckets
     for param in module.adc1_params:

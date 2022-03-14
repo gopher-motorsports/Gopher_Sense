@@ -61,7 +61,7 @@ typedef enum {
 typedef struct
 {
     U8           bucket_id;
-    U16          frequency;
+    U16          ms_between_req;
     BUCKET_STATE state;
     PARAM_LIST   param_list;
 } BUCKET;

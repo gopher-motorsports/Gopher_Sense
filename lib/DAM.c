@@ -111,6 +111,8 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
         }
         set_all_params_state(TRUE);
 
+        // TODO init and start the sensorCAN bus
+
         // CAN commands for the communication with the DLM
         add_custom_can_func(SET_LED_STATE, &change_led_state, TRUE, NULL);
         add_custom_can_func(SEND_BUCKET_PARAMS, &send_bucket_params, TRUE, NULL);
@@ -387,10 +389,12 @@ void send_bucket_task (void* pvParameters)
     		// Send the frequency until this bucket is requested the first time
     		send_can_command(PRIO_HIGH, DLM_ID, ASSIGN_BUCKET_TO_FRQ,
 							 bucket->bucket_id,
-							 GET_U16_MSB(bucket->frequency),
-							 GET_U16_LSB(bucket->frequency), 0);
+							 GET_U16_MSB(bucket->ms_between_req),
+							 GET_U16_LSB(bucket->ms_between_req), 0);
 
-    		osDelay(INIT_TX_DELAY_TIME_ms); // Delay to avoid flooding the TX_queue
+    		// wait for twice the time this bucket expects to get the first request in before
+    		// sending the frequency again to minimize extra messages
+    		osDelay(bucket->ms_between_req << 1);
     		break;
 
     	case BUCKET_GETTING_DATA:

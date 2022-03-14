@@ -1,0 +1,93 @@
+module_name: "example_dam"
+
+
+buckets:
+    bucket_1:
+        id: 1
+        frequency_hz: 100
+        parameters:
+            - float_tester
+            - float_tester_2
+            - u16_tester
+
+    bucket_2:
+        id: 2
+        frequency_hz: 20
+        parameters:
+            - float_tester_3
+            - float_tester_4
+
+    bucket_3:
+        id: 3
+        frequency_hz: 10
+        parameters:
+            - float_tester_5
+            - float_tester_6
+            - example_new_param
+
+parameters_produced:
+    float_tester:
+        produced_by: ADC1_IN5
+        sensor:
+            name: "test_voltage_sensor"
+            output: voltage
+        filter_subparams:
+        buffering:
+            num_samples_buffered: 100
+
+    float_tester_2:
+        produced_by: ADC2_IN6
+        sensor:
+            name: "test_resistive_sensor"
+            output: resistance
+        filter_subparams:
+        buffering:
+            num_samples_buffered: 100
+            
+    float_tester_3:
+        produced_by: ADC3_IN7
+        sensor:
+            name: "test_current_sensor"
+            output: current
+        filter_subparams:
+        buffering:
+            num_samples_buffered: 100
+
+# CAN sensors     
+    float_tester_4:
+        produced_by: CAN
+        sensor:
+            name: "test_can_sensor"
+            output: d16_fixed
+        filter_subparams:
+        buffering:
+            num_samples_buffered: 1
+            
+    float_tester_5:
+        produced_by: CAN
+        sensor:
+            name: "test_can_sensor"
+            output: u16_raw
+        filter_subparams:
+        buffering:
+            num_samples_buffered: 1
+            
+    float_tester_6:
+        produced_by: CAN
+        sensor:
+            name: "test_can_sensor"
+            output: float_1_raw
+        filter_subparams:
+        buffering:
+            num_samples_buffered: 1
+            
+    example_new_param:
+        produced_by: CAN
+        sensor:
+            name: "test_can_sensor"
+            output: float_2_scaled
+        filter_subparams:
+        buffering:
+            num_samples_buffered: 1
+
+
