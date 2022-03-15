@@ -37,24 +37,23 @@ def getSensorNameFromID(id, sensors):
 
 
 class Param():
-    def __init__(self, param_name, filtered_params, buffer_size, producer, filter, dependency ):
+    def __init__(self, param_name, filtered_params, buffer_size, producer, filter, sen_name,  sen_output ):
         self.param_name = param_name
         self.filtered_params = filtered_params
         self.buffer_size = buffer_size
         self.producer = producer
         self.filter = filter #(type, value) tuple
-        self.dependency = dependency
+        self.sensor_name = sen_name
+        self.sensor_output = sen_output
         self.bucket_id = 420
         self.bucket_loc = 69
 
 class Module():
-    def __init__(self, name, adc_input, can_input, params, analog_sensors, can_sensors):
+    def __init__(self, name, params, analog_sensors, can_sensors):
         self.analog_sensors = analog_sensors
         self.can_sensors = can_sensors
 
         self.name = name
-        self. adc_channels = adc_input
-        self.can_input = can_input
 
         self.adc1_params = []
         self.adc2_params = []
@@ -67,15 +66,10 @@ class Module():
         for p in self.params:
             param = self.params[p]
             producer = param['produced_by']
+            
+            # Filtered params would go here if they existed
 
-            filtered_params = []
-            if param['filter_subparams']:
-                for f_p in param['filter_subparams']:
-                    fp = param['filter_subparams'][f_p]
-                    filteredP = Param(f_p, [], 0, producer, (fp['filter_type'].upper(),fp['filter_value']), None)
-                    filtered_params.append(filteredP)
-
-            p = Param(p, filtered_params, param['buffering']['num_samples_buffered'], producer, None, param['sensor_output'] )
+            p = Param(p, None, param['num_samples_buffered'], producer, None, param['sensor']['name'], param['sensor']['output'] )
             if ("ADC1" in producer):
                 self.adc1_params.append(p)
             elif ("ADC2" in producer):
@@ -85,27 +79,23 @@ class Module():
             elif ("CAN" in producer):
                 self.can_params.append(p)
 
-        # TODO make sure this sorting works, it is very important when running DMA so the sensor signals
-        # do not get swapped around
-        self.adc1_params.sort(key=lambda param:param.producer, reverse=True)
-        self.adc2_params.sort(key=lambda param:param.producer, reverse=True)
-        self.adc3_params.sort(key=lambda param:param.producer, reverse=True)
+        # This sorting is to the ADC channels are in order
+        self.adc1_params.sort(key=lambda param:param.producer, reverse=False)
+        self.adc2_params.sort(key=lambda param:param.producer, reverse=False)
+        self.adc3_params.sort(key=lambda param:param.producer, reverse=False)
 
 
-    def getSensorName(self, id):
-        aid = None
-        cid = None
-        if id in self.adc_channels:
-            aid = self.adc_channels[id]['sensor']
-        if id in self.can_input:
-            cid = self.can_input[id]['sensor']
+    def getSensorName(self, param_sensor_name):
         for asensor in self.analog_sensors:
-            if asensor.sensorID == aid:
+            if param_sensor_name == asensor.sensorID:
                 return asensor.name
+                
         for csensor in self.can_sensors:
-            if csensor.sensorID == cid:
+            if param_sensor_name == csensor.sensorID:
                 return csensor.name
+        
         return None
+
 
     def getDependencyMessageIndex(self, name, dependency):
         sensor = None
@@ -154,20 +144,6 @@ class CANSensor():
         self.byte_order = byte_order
         self.messages = messages
         self.numMessages = len(messages)
-        self.runCoherenceCheck()
-#     def getOutputQuantization(self, output):
-#         if output in self.outputs:
-#             return self.outputs[output]['quantization']
-#         else:
-#             return None
-#     def getOutputOffset(self, output):
-#         if output in self.outputs:
-#             return self.outputs[output]['offset']
-#         else:
-#             return None
-    def runCoherenceCheck(self):
-        # TODO check for messages that output an output not listed or if outputs arent produced by messages
-        pass
 
 def main():
     argv = sys.argv
@@ -217,8 +193,7 @@ def main():
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
 
-    module = Module(hwconfig_munch.module_name, hwconfig_munch['data_input_methods']['adc_channels'], \
-                    hwconfig_munch['data_input_methods']['can_sensors'], hwconfig_munch['parameters_produced'], analog_sensors, can_sensors)
+    module = Module(hwconfig_munch.module_name, hwconfig_munch['parameters_produced'], analog_sensors, can_sensors)
     buckets = []
     for _b in hwconfig_munch.buckets:
         b = hwconfig_munch.buckets[_b]
@@ -257,6 +232,7 @@ def main():
                     # this is the bucket to link the param to
                     param.bucket_id = buckets.index(bucket) + 1
                     param.bucket_loc = bucket.params.index(bucket_param)
+                    
         
 
     print("Generating ", HWCONFIG_C_FILE)
