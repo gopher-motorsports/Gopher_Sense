@@ -29,14 +29,13 @@ TIM_HandleTypeDef* tim10_ptr;
 TIM_HandleTypeDef* tim11_ptr;
 TIM_HandleTypeDef* tim14_ptr;
 
-// TODO Move this to a config file. Maybe auto generate? Maybe just fix at 10k
 #define TIMER_PSC 16
-#define ADC1_SCHEDULING_FREQUENCY_HZ 100
-#define ADC2_SCHEDULING_FREQUENCY_HZ 100
-#define ADC3_SCHEDULING_FREQUENCY_HZ 100
+#define ADC1_SCHEDULING_FREQUENCY_HZ 1000
+#define ADC2_SCHEDULING_FREQUENCY_HZ 1000
+#define ADC3_SCHEDULING_FREQUENCY_HZ 1000
 
 
-#define BUCKET_SEND_TASK_STACK_SIZE 128
+#define BUCKET_SEND_TASK_STACK_SIZE 512
 #define BUCKET_TASK_NAME_BASE "send_bucket_task_"
 #define BUCKET_SEND_MAX_ATTEMPTS 5
 #define INITIAL_DATA 0xAAf
@@ -68,6 +67,7 @@ void handle_DAM_error(DAM_ERROR_STATE error_state)
 
     // set the number of LED blinks using the enums
     num_led_blinks = (U8)error_state;
+    stopDataAq();
 
     while(1)
     {
@@ -103,13 +103,24 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
     	status_led_port = stat_led_GPIOx;
     	status_led_pin = stat_led_Pin;
 
+    	// check to make sure if there are params in the ADCs or SCAN the correct
+    	// handles were passed in
+    	// TODO
+
         // Run once initialization code
     	// TODO should this be here or somewhere else?
+    	if (!gcan_ptr) handle_DAM_error(INITIALIZATION_ERROR);
         if (init_can(gcan_ptr, this_module_id, BXTYPE_MASTER))
         {
             handle_DAM_error(INITIALIZATION_ERROR);
         }
         set_all_params_state(TRUE);
+
+        if (scan_ptr)
+        {
+        	// TODO init and start the sensorCAN bus
+        	// make sure that filters are working correctly
+        }
 
         // CAN commands for the communication with the DLM
         add_custom_can_func(SET_LED_STATE, &change_led_state, TRUE, NULL);
@@ -117,10 +128,10 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
         add_custom_can_func(BUCKET_OK, &bucket_ok, TRUE, NULL);
         add_custom_can_func(REQUEST_BUCKET, &bucket_requested, TRUE, NULL);
 
-        configLibADC(adc1_ptr, adc2_ptr, adc3_ptr);
-        configLibTIM(tim10_ptr, ADC1_SCHEDULING_FREQUENCY_HZ,
+        if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr)) handle_DAM_error(INITIALIZATION_ERROR);
+        if (configLibTIM(tim10_ptr, ADC1_SCHEDULING_FREQUENCY_HZ,
                      tim11_ptr, ADC2_SCHEDULING_FREQUENCY_HZ,
-                     tim14_ptr, ADC3_SCHEDULING_FREQUENCY_HZ, TIMER_PSC);
+                     tim14_ptr, ADC3_SCHEDULING_FREQUENCY_HZ, TIMER_PSC)) handle_DAM_error(INITIALIZATION_ERROR);;
     }
 
     DAM_reset();
@@ -166,9 +177,6 @@ S8 lock_param_sending(CAN_INFO_STRUCT* can_param)
 //  over again
 void DAM_reset(void)
 {
-	// All code needed for DLM-DAM reset goes here
-	stopTimers();
-
 	// Reset all of the buffers. Only do the ones that exist
 #if NUM_ADC1_PARAMS > 0
 	for (U8 i = 0; i < NUM_ADC1_PARAMS; i++)
@@ -226,8 +234,8 @@ void DAM_reset(void)
 		bucket++;
 	}
 
-	// start collecting data through the timers
-	startTimers();
+	// start collecting data!
+	startDataAq();
 	hasInitialized = TRUE;
 }
 
@@ -274,6 +282,8 @@ void DAM_main_task (void)
 					last_timer = HAL_GetTick();
 				}
 			}
+
+			taskYIELD();
     	}
     }
 }
@@ -304,25 +314,22 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 
 	while (param - adc_params < num_params)
 	{
-		// only apply the parameter to the GCAN if there is enough data to fill the buffer
-		if (buffer_full(&param->buffer))
+		if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
 		{
-			if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
-			{
-				continue;
-			}
-			data_in = avg;
-
-			if (apply_analog_sensor_conversion(param->analog_sensor, data_in, &converted_data) != BUFFER_SUCCESS)
-			{
-				handle_DAM_error(CONVERSION_ERROR);
-			}
-
-			// fill the data and set this parameter to dirty
-			fill_gcan_param_data(param->analog_param.can_param, converted_data);
-			if (param->analog_param.status != LOCKED_SEND) param->analog_param.status = DIRTY;
-			fill_analog_subparams(param, converted_data);
+			param++;
+			continue;
 		}
+		data_in = avg;
+
+		if (apply_analog_sensor_conversion(param->analog_sensor, data_in, &converted_data) != CONV_SUCCESS)
+		{
+			handle_DAM_error(CONVERSION_ERROR);
+		}
+
+		// fill the data and set this parameter to dirty
+		fill_gcan_param_data(param->bucket_param->can_param, converted_data);
+		if (param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
+		fill_analog_subparams(param, converted_data);
 		param++;
 	}
 }
@@ -337,25 +344,22 @@ void sensorCAN_service (void)
 	CAN_SENSOR_PARAM* param = can_sensor_params;
     while (param - can_sensor_params < NUM_CAN_SENSOR_PARAMS)
     {
-    	// only apply the parameter to the GCAN if there is enough data to fill the buffer
-        if (buffer_full(&param->buffer))
-        {
-            if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
-            {
-                continue;
-            }
-            data_in = avg;
+		if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
+		{
+			param++;
+			continue;
+		}
+		data_in = avg;
 
-            if (apply_can_sensor_conversion(param->can_sensor, param->message_idx, data_in, &converted_data) != BUFFER_SUCCESS)
-            {
-            	handle_DAM_error(CONVERSION_ERROR);
-            }
+		if (apply_can_sensor_conversion(param->can_sensor, param->message_idx, data_in, &converted_data) != CONV_SUCCESS)
+		{
+			handle_DAM_error(CONVERSION_ERROR);
+		}
 
-            // fill the data and set this parameter to dirty
-            fill_gcan_param_data(param->can_param.can_param, converted_data);
-            if (param->can_param.status != LOCKED_SEND) param->can_param.status = DIRTY;
-            fill_can_subparams(param, converted_data);
-        }
+		// fill the data and set this parameter to dirty
+		fill_gcan_param_data(param->bucket_param->can_param, converted_data);
+		if (param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
+		fill_can_subparams(param, converted_data);
         param++;
     }
 }
@@ -395,15 +399,17 @@ void send_bucket_task (void* pvParameters)
     		// Send the frequency until this bucket is requested the first time
     		send_can_command(PRIO_HIGH, DLM_ID, ASSIGN_BUCKET_TO_FRQ,
 							 bucket->bucket_id,
-							 GET_U16_MSB(bucket->frequency),
-							 GET_U16_LSB(bucket->frequency), 0);
+							 GET_U16_MSB(bucket->ms_between_req),
+							 GET_U16_LSB(bucket->ms_between_req), 0);
 
-    		osDelay(INIT_TX_DELAY_TIME_ms); // Delay to avoid flooding the TX_queue
+    		// wait for twice the time this bucket expects to get the first request in before
+    		// sending the frequency again to minimize extra messages
+    		osDelay(bucket->ms_between_req << 1);
     		break;
 
     	case BUCKET_GETTING_DATA:
     		// yield the sending task when not requested
-    		taskYIELD();
+    		osDelay(1);
     		break;
 
     	case BUCKET_REQUESTED:
