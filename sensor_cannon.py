@@ -80,9 +80,9 @@ class Module():
                 self.can_params.append(p)
 
         # This sorting is to the ADC channels are in order
-        self.adc1_params.sort(key=lambda param:param.producer, reverse=False)
-        self.adc2_params.sort(key=lambda param:param.producer, reverse=False)
-        self.adc3_params.sort(key=lambda param:param.producer, reverse=False)
+        self.adc1_params.sort(key=lambda param:int(param.producer[7:]), reverse=False)
+        self.adc2_params.sort(key=lambda param:int(param.producer[7:]), reverse=False)
+        self.adc3_params.sort(key=lambda param:int(param.producer[7:]), reverse=False)
 
 
     def getSensorName(self, param_sensor_name):
@@ -200,6 +200,8 @@ def main():
         bucket_params = [bp for bp in b['parameters']]
         buckets.append(Bucket(_b, b['id'], b['frequency_hz'], bucket_params))
         
+        
+    # TODO some error if the link fails
     # link all the params with where they are in the buckets
     for param in module.adc1_params:
         for bucket in buckets:

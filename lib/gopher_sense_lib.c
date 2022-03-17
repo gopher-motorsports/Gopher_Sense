@@ -9,21 +9,24 @@
 #include "DAM.h"
 
 
-ADC_HandleTypeDef* adc1;
-ADC_HandleTypeDef* adc2;
-ADC_HandleTypeDef* adc3;
+ADC_HandleTypeDef* adc1 = NULL;
+ADC_HandleTypeDef* adc2 = NULL;
+ADC_HandleTypeDef* adc3 = NULL;
 
-TIM_HandleTypeDef* adc1_timer;
-TIM_HandleTypeDef* adc2_timer;
-TIM_HandleTypeDef* adc3_timer;
+// TODO we really only need one timer
+TIM_HandleTypeDef* adc1_timer = NULL;
+TIM_HandleTypeDef* adc2_timer = NULL;
+TIM_HandleTypeDef* adc3_timer = NULL;
 
-//DMA_HandleTypeDef hdma_adc1;
-//DMA_HandleTypeDef hdma_adc2;
-//DMA_HandleTypeDef hdma_adc3;
+#define ADC_SAMPLE_SIZE_PER_PARAM 64
 
-U16 adc1_sample_buffer[NUM_ADC1_PARAMS];
-U16 adc2_sample_buffer[NUM_ADC2_PARAMS];
-U16 adc3_sample_buffer[NUM_ADC3_PARAMS];
+#define ADC1_SAMPLE_BUFFER_SIZE NUM_ADC1_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
+#define ADC2_SAMPLE_BUFFER_SIZE NUM_ADC2_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
+#define ADC3_SAMPLE_BUFFER_SIZE NUM_ADC3_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
+
+volatile U16 adc1_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE];
+volatile U16 adc2_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE];
+volatile U16 adc3_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE];
 
 #define ADC_VOLTAGE 3.3
 #define VOLTAGE_3V3 3.3
@@ -33,11 +36,22 @@ U16 adc3_sample_buffer[NUM_ADC3_PARAMS];
 
 
 //******************* ADC Config *******************
-void configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleTypeDef* ad3)
+S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleTypeDef* ad3)
 {
+#if NUM_ADC1_PARAMS > 0
+    if (!ad1) return ADC_NOT_CONFIGURED;
     adc1 = ad1;
+#endif // NUM_ADC1_PARAMS > 0
+#if NUM_ADC2_PARAMS > 0
+    if (!ad2) return ADC_NOT_CONFIGURED;
     adc2 = ad2;
+#endif // NUM_ADC2_PARAMS > 0
+#if NUM_ADC3_PARAMS > 0
+    if (!ad3) return ADC_NOT_CONFIGURED;
     adc3 = ad3;
+#endif // NUM_ADC3_PARAMS > 0
+
+    return 0;
 }
 
 
@@ -46,44 +60,41 @@ void configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleType
 //  Then the most recent sample will be added to the buffer each time the timer is fired
 void startDataAq(void)
 {
-	// start the timers
-    HAL_TIM_Base_Start_IT(adc1_timer);
-    HAL_TIM_Base_Start_IT(adc2_timer);
-    HAL_TIM_Base_Start_IT(adc3_timer);
-
     // start the DMA
 #if NUM_ADC1_PARAMS > 0
-    HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, NUM_ADC1_PARAMS);
+    HAL_TIM_Base_Start_IT(adc1_timer);
+    HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, ADC1_SAMPLE_BUFFER_SIZE);
 #endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
-    HAL_ADC_Start_DMA(adc2, (uint32_t*)adc2_sample_buffer, NUM_ADC2_PARAMS);
+    HAL_TIM_Base_Start_IT(adc2_timer);
+    HAL_ADC_Start_DMA(adc2, (uint32_t*)adc2_sample_buffer, ADC2_SAMPLE_BUFFER_SIZE);
 #endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
-    HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, NUM_ADC3_PARAMS);
+    HAL_TIM_Base_Start_IT(adc3_timer);
+    HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, ADC3_SAMPLE_BUFFER_SIZE);
 #endif // NUM_ADC3_PARAMS > 0
 }
 
 
 // stopDataAq
 //  stop running DMA and the timers
+// TODO is there any reason to ever stop? Maybe it is ok as long as we are not stopping
+// and starting all of the time
 void stopDataAq(void)
 {
-	// stop the timers
-    HAL_TIM_Base_Stop_IT(adc1_timer);
-    HAL_TIM_Base_Stop_IT(adc2_timer);
-    HAL_TIM_Base_Stop_IT(adc3_timer);
-    __HAL_TIM_SET_COUNTER(adc1_timer, 0);
-    __HAL_TIM_SET_COUNTER(adc2_timer, 0);
-    __HAL_TIM_SET_COUNTER(adc3_timer, 0);
-
-    // stop the DMA
 #if NUM_ADC1_PARAMS > 0
+	HAL_TIM_Base_Stop_IT(adc1_timer);
+	__HAL_TIM_SET_COUNTER(adc1_timer, 0);
     HAL_ADC_Stop_DMA(adc1);
 #endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
+	HAL_TIM_Base_Stop_IT(adc2_timer);
+	__HAL_TIM_SET_COUNTER(adc2_timer, 0);
     HAL_ADC_Stop_DMA(adc2);
 #endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
+	HAL_TIM_Base_Stop_IT(adc3_timer);
+	__HAL_TIM_SET_COUNTER(adc3_timer, 0);
     HAL_ADC_Stop_DMA(adc3);
 #endif // NUM_ADC3_PARAMS > 0
 }
@@ -102,46 +113,54 @@ void DAQ_TimerCallback (TIM_HandleTypeDef* timer)
 	{
 		handle_DAM_error(TIMER_TO_ADC_ERROR);
 	}
-
-	// stop DMA from this ADC channel while we grab the data
-	HAL_ADC_Stop_DMA(adc_handle);
-
-	// put the data into the parameter buffer and restart DMA
+	// put the data into the parameter buffer
 #if NUM_ADC1_PARAMS > 0
     if (adc_handle == adc1)
     {
         add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
-        HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, NUM_ADC1_PARAMS);
     }
 #endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
     if (adc_handle == adc2)
     {
         add_data_to_buffer(adc2_sensor_params, adc2_sample_buffer, NUM_ADC2_PARAMS);
-        HAL_ADC_Start_DMA(adc2, (uint32_t*)adc2_sample_buffer, NUM_ADC2_PARAMS);
     }
 #endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
     if (adc_handle == adc3)
     {
         add_data_to_buffer(adc3_sensor_params, adc3_sample_buffer, NUM_ADC3_PARAMS);
-        HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, NUM_ADC3_PARAMS);
     }
 #endif // NUM_ADC3_PARAMS > 0
 }
 
 
 // for each parameter in this array, transfer the data from the sample buffer to the param buffer
-void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, U16* sample_buffer, U32 num_params)
+void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_buffer, U32 num_params)
 {
 	ANALOG_SENSOR_PARAM* param = param_array;
-	U16* buffer = sample_buffer;
+	volatile U16* buffer = sample_buffer;
+	U32 total = 0;
 
-	while(param - param_array < num_params)
+	// run through the DMA buffer and add up all of the samples to be averaged. The prameter
+	// samples are offset by the number of parameters in that ADC as the ADC goes through each
+	// channel one at a time
+	while (param - param_array < num_params)
 	{
-		add_to_buffer(&param->buffer, (U32)*buffer);
+		// get all the samples for this parameter
+		total = 0;
+		buffer = sample_buffer;
+		while (buffer - sample_buffer < (ADC_SAMPLE_SIZE_PER_PARAM*num_params))
+		{
+			total += *buffer;
+			buffer += num_params;
+		}
+
+		// calculate the average and add it to the buffer
+		add_to_buffer(&param->buffer, (U32)(total / ADC_SAMPLE_SIZE_PER_PARAM));
+
+		// move on to the next param
 		param++;
-		buffer++;
 	}
 }
 
@@ -157,16 +176,31 @@ ADC_HandleTypeDef* get_ADC_from_timer(TIM_HandleTypeDef* timer)
 
 
 //******************* Timer interaction *******************
-void configLibTIM(TIM_HandleTypeDef* t1, U16 t1_freq,
+S8 configLibTIM(TIM_HandleTypeDef* t1, U16 t1_freq,
                   TIM_HandleTypeDef* t2, U16 t2_freq,
                   TIM_HandleTypeDef* t3, U16 t3_freq, U16 psc)
 {
+	// the timers can only be NULL if that ADC is not active
+
+#if NUM_ADC1_PARAMS > 0
+	if (!t1) return TMR_NOT_CONFIGURED;
     adc1_timer = t1;
-    adc2_timer = t2;
-    adc3_timer = t3;
     configTimer(adc1_timer, psc, t1_freq);
+#endif // NUM_ADC1_PARAMS > 0
+
+#if NUM_ADC2_PARAMS > 0
+    if (!t2) return TMR_NOT_CONFIGURED;
+    adc2_timer = t2;
     configTimer(adc2_timer, psc, t2_freq);
+#endif // NUM_ADC2_PARAMS > 0
+
+#if NUM_ADC3_PARAMS > 0
+    if (!t3) return TMR_NOT_CONFIGURED;
+    adc3_timer = t3;
     configTimer(adc3_timer, psc, t3_freq);
+#endif // NUM_ADC3_PARAMS > 0
+
+    return 0;
 }
 
 
@@ -189,6 +223,7 @@ void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz)
 //******************* CAN Handling *******************
 
 // Redesign option: pull this into a queue and handle not in an ISR
+// TODO do the redesign option
 void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
 {
     CAN_RxHeaderTypeDef rx_header;
@@ -219,6 +254,13 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
         {
             U32 data = 0;
             U8 shift = 0;
+
+            // check that the DLC of this message can support the data we are expecting
+            if (message.dlc <= can_info->data_end)
+            {
+            	handle_DAM_error(SCAN_DLC_ERROR);
+            }
+
             // Get correct data based on byte order
             if (sensor->byte_order == LSB)
             {

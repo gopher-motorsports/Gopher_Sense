@@ -35,7 +35,7 @@ TIM_HandleTypeDef* tim14_ptr;
 #define ADC3_SCHEDULING_FREQUENCY_HZ 1000
 
 
-#define BUCKET_SEND_TASK_STACK_SIZE 128
+#define BUCKET_SEND_TASK_STACK_SIZE 512
 #define BUCKET_TASK_NAME_BASE "send_bucket_task_"
 #define BUCKET_SEND_MAX_ATTEMPTS 5
 #define INITIAL_DATA 0xAAf
@@ -103,15 +103,24 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
     	status_led_port = stat_led_GPIOx;
     	status_led_pin = stat_led_Pin;
 
+    	// check to make sure if there are params in the ADCs or SCAN the correct
+    	// handles were passed in
+    	// TODO
+
         // Run once initialization code
     	// TODO should this be here or somewhere else?
+    	if (!gcan_ptr) handle_DAM_error(INITIALIZATION_ERROR);
         if (init_can(gcan_ptr, this_module_id, BXTYPE_MASTER))
         {
             handle_DAM_error(INITIALIZATION_ERROR);
         }
         set_all_params_state(TRUE);
 
-        // TODO init and start the sensorCAN bus
+        if (scan_ptr)
+        {
+        	// TODO init and start the sensorCAN bus
+        	// make sure that filters are working correctly
+        }
 
         // CAN commands for the communication with the DLM
         add_custom_can_func(SET_LED_STATE, &change_led_state, TRUE, NULL);
@@ -119,10 +128,10 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
         add_custom_can_func(BUCKET_OK, &bucket_ok, TRUE, NULL);
         add_custom_can_func(REQUEST_BUCKET, &bucket_requested, TRUE, NULL);
 
-        configLibADC(adc1_ptr, adc2_ptr, adc3_ptr);
-        configLibTIM(tim10_ptr, ADC1_SCHEDULING_FREQUENCY_HZ,
+        if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr)) handle_DAM_error(INITIALIZATION_ERROR);
+        if (configLibTIM(tim10_ptr, ADC1_SCHEDULING_FREQUENCY_HZ,
                      tim11_ptr, ADC2_SCHEDULING_FREQUENCY_HZ,
-                     tim14_ptr, ADC3_SCHEDULING_FREQUENCY_HZ, TIMER_PSC);
+                     tim14_ptr, ADC3_SCHEDULING_FREQUENCY_HZ, TIMER_PSC)) handle_DAM_error(INITIALIZATION_ERROR);;
     }
 
     DAM_reset();
@@ -168,9 +177,6 @@ S8 lock_param_sending(CAN_INFO_STRUCT* can_param)
 //  over again
 void DAM_reset(void)
 {
-	// All code needed for DLM-DAM reset goes here
-	stopDataAq();
-
 	// Reset all of the buffers. Only do the ones that exist
 #if NUM_ADC1_PARAMS > 0
 	for (U8 i = 0; i < NUM_ADC1_PARAMS; i++)
@@ -276,6 +282,8 @@ void DAM_main_task (void)
 					last_timer = HAL_GetTick();
 				}
 			}
+
+			taskYIELD();
     	}
     }
 }
@@ -308,6 +316,7 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 	{
 		if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
 		{
+			param++;
 			continue;
 		}
 		data_in = avg;
@@ -337,6 +346,7 @@ void sensorCAN_service (void)
     {
 		if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
 		{
+			param++;
 			continue;
 		}
 		data_in = avg;
@@ -399,7 +409,7 @@ void send_bucket_task (void* pvParameters)
 
     	case BUCKET_GETTING_DATA:
     		// yield the sending task when not requested
-    		taskYIELD();
+    		osDelay(1);
     		break;
 
     	case BUCKET_REQUESTED:
@@ -590,9 +600,6 @@ void gopherCAN_tx_service_task (void)
 
     while (1)
     {
-    	// TODO delete this
-    	u16_tester.data++;
-
         service_can_tx_hardware(gcan_ptr);
         osDelay(1);
     }

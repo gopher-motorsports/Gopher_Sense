@@ -125,7 +125,8 @@ sensors:
                         output_measured: d16_fixed
 # CAN message ID for this data. There can be multiple outputs with different ids per sensor
                         id: 0x137
-# Which data bytes are associated with this output. Make sure this matches the size
+# Which data bytes are associated with this output. Make sure this matches the size. Both
+# values are inclusive, so a message with a single byte would be [0,0]
                         data_byte_start: 0
                         data_byte_end: 1
                     message2:
