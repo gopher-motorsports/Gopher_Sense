@@ -26,14 +26,9 @@ CAN_HandleTypeDef* gcan_ptr;
 CAN_HandleTypeDef* scan_ptr;
 
 TIM_HandleTypeDef* tim10_ptr;
-TIM_HandleTypeDef* tim11_ptr;
-TIM_HandleTypeDef* tim14_ptr;
 
 #define TIMER_PSC 16
-#define ADC1_SCHEDULING_FREQUENCY_HZ 1000
-#define ADC2_SCHEDULING_FREQUENCY_HZ 1000
-#define ADC3_SCHEDULING_FREQUENCY_HZ 1000
-
+#define ADC_READING_FREQUENCY_HZ 1000
 
 #define BUCKET_SEND_TASK_STACK_SIZE 512
 #define BUCKET_TASK_NAME_BASE "send_bucket_task_"
@@ -86,8 +81,7 @@ void handle_DAM_error(DAM_ERROR_STATE error_state)
 // TODO really good docs on this function
 void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* scan,
 			  ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-			  TIM_HandleTypeDef* tim10, TIM_HandleTypeDef* tim11, TIM_HandleTypeDef* tim14,
-			  GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin)
+			  TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin)
 {
     if (!hasInitialized)
     {
@@ -98,8 +92,6 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
     	adc2_ptr = adc2;
     	adc3_ptr = adc3;
     	tim10_ptr = tim10;
-    	tim11_ptr = tim11;
-    	tim14_ptr = tim14;
     	status_led_port = stat_led_GPIOx;
     	status_led_pin = stat_led_Pin;
 
@@ -129,9 +121,7 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
         add_custom_can_func(REQUEST_BUCKET, &bucket_requested, TRUE, NULL);
 
         if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr)) handle_DAM_error(INITIALIZATION_ERROR);
-        if (configLibTIM(tim10_ptr, ADC1_SCHEDULING_FREQUENCY_HZ,
-                     tim11_ptr, ADC2_SCHEDULING_FREQUENCY_HZ,
-                     tim14_ptr, ADC3_SCHEDULING_FREQUENCY_HZ, TIMER_PSC)) handle_DAM_error(INITIALIZATION_ERROR);;
+        if (configLibTIM(tim10_ptr, ADC_READING_FREQUENCY_HZ, TIMER_PSC)) handle_DAM_error(INITIALIZATION_ERROR);
     }
 
     DAM_reset();

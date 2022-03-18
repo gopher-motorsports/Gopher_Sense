@@ -13,10 +13,7 @@ ADC_HandleTypeDef* adc1 = NULL;
 ADC_HandleTypeDef* adc2 = NULL;
 ADC_HandleTypeDef* adc3 = NULL;
 
-// TODO we really only need one timer
-TIM_HandleTypeDef* adc1_timer = NULL;
-TIM_HandleTypeDef* adc2_timer = NULL;
-TIM_HandleTypeDef* adc3_timer = NULL;
+TIM_HandleTypeDef* adc_timer = NULL;
 
 #define ADC_SAMPLE_SIZE_PER_PARAM 64
 
@@ -56,21 +53,20 @@ S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleTypeDe
 
 
 // startDataAq
-//  Start the timers and the ADC DMA. Data is constantly filled in the buffer with the DMA
+//  Start the timer and the ADC DMA. Data is constantly filled in the buffer with the DMA
 //  Then the most recent sample will be added to the buffer each time the timer is fired
 void startDataAq(void)
 {
+	HAL_TIM_Base_Start_IT(adc_timer);
+
     // start the DMA
 #if NUM_ADC1_PARAMS > 0
-    HAL_TIM_Base_Start_IT(adc1_timer);
     HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, ADC1_SAMPLE_BUFFER_SIZE);
 #endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
-    HAL_TIM_Base_Start_IT(adc2_timer);
     HAL_ADC_Start_DMA(adc2, (uint32_t*)adc2_sample_buffer, ADC2_SAMPLE_BUFFER_SIZE);
 #endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
-    HAL_TIM_Base_Start_IT(adc3_timer);
     HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, ADC3_SAMPLE_BUFFER_SIZE);
 #endif // NUM_ADC3_PARAMS > 0
 }
@@ -82,19 +78,16 @@ void startDataAq(void)
 // and starting all of the time
 void stopDataAq(void)
 {
+	HAL_TIM_Base_Stop_IT(adc_timer);
+	__HAL_TIM_SET_COUNTER(adc_timer, 0);
+
 #if NUM_ADC1_PARAMS > 0
-	HAL_TIM_Base_Stop_IT(adc1_timer);
-	__HAL_TIM_SET_COUNTER(adc1_timer, 0);
     HAL_ADC_Stop_DMA(adc1);
 #endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
-	HAL_TIM_Base_Stop_IT(adc2_timer);
-	__HAL_TIM_SET_COUNTER(adc2_timer, 0);
     HAL_ADC_Stop_DMA(adc2);
 #endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
-	HAL_TIM_Base_Stop_IT(adc3_timer);
-	__HAL_TIM_SET_COUNTER(adc3_timer, 0);
     HAL_ADC_Stop_DMA(adc3);
 #endif // NUM_ADC3_PARAMS > 0
 }
@@ -105,32 +98,15 @@ void stopDataAq(void)
 //  buffer and put it in the parameter buffer
 void DAQ_TimerCallback (TIM_HandleTypeDef* timer)
 {
-	ADC_HandleTypeDef* adc_handle;
-
-	// get the ADC handle from this timer
-	adc_handle = get_ADC_from_timer(timer);
-	if (!adc_handle)
-	{
-		handle_DAM_error(TIMER_TO_ADC_ERROR);
-	}
 	// put the data into the parameter buffer
 #if NUM_ADC1_PARAMS > 0
-    if (adc_handle == adc1)
-    {
-        add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
-    }
+    add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
 #endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
-    if (adc_handle == adc2)
-    {
-        add_data_to_buffer(adc2_sensor_params, adc2_sample_buffer, NUM_ADC2_PARAMS);
-    }
+    add_data_to_buffer(adc2_sensor_params, adc2_sample_buffer, NUM_ADC2_PARAMS);
 #endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
-    if (adc_handle == adc3)
-    {
-        add_data_to_buffer(adc3_sensor_params, adc3_sample_buffer, NUM_ADC3_PARAMS);
-    }
+    add_data_to_buffer(adc3_sensor_params, adc3_sample_buffer, NUM_ADC3_PARAMS);
 #endif // NUM_ADC3_PARAMS > 0
 }
 
@@ -165,40 +141,14 @@ void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_b
 }
 
 
-ADC_HandleTypeDef* get_ADC_from_timer(TIM_HandleTypeDef* timer)
-{
-	if (timer == adc1_timer) return adc1;
-	if (timer == adc2_timer) return adc2;
-	if (timer == adc3_timer) return adc3;
-
-	return NULL;
-}
-
 
 //******************* Timer interaction *******************
-S8 configLibTIM(TIM_HandleTypeDef* t1, U16 t1_freq,
-                  TIM_HandleTypeDef* t2, U16 t2_freq,
-                  TIM_HandleTypeDef* t3, U16 t3_freq, U16 psc)
+S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
 {
-	// the timers can only be NULL if that ADC is not active
-
-#if NUM_ADC1_PARAMS > 0
-	if (!t1) return TMR_NOT_CONFIGURED;
-    adc1_timer = t1;
-    configTimer(adc1_timer, psc, t1_freq);
-#endif // NUM_ADC1_PARAMS > 0
-
-#if NUM_ADC2_PARAMS > 0
-    if (!t2) return TMR_NOT_CONFIGURED;
-    adc2_timer = t2;
-    configTimer(adc2_timer, psc, t2_freq);
-#endif // NUM_ADC2_PARAMS > 0
-
-#if NUM_ADC3_PARAMS > 0
-    if (!t3) return TMR_NOT_CONFIGURED;
-    adc3_timer = t3;
-    configTimer(adc3_timer, psc, t3_freq);
-#endif // NUM_ADC3_PARAMS > 0
+	// config the timer
+	if (!tim) return TMR_NOT_CONFIGURED;
+    adc_timer = tim;
+    configTimer(adc_timer, psc, tim_freq);
 
     return 0;
 }

@@ -35,8 +35,7 @@ typedef enum
 void handle_DAM_error(DAM_ERROR_STATE error_state);
 void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* scan,
 			  ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-			  TIM_HandleTypeDef* tim10, TIM_HandleTypeDef* tim11, TIM_HandleTypeDef* tim14,
-			  GPIO_TypeDef* err_led_GPIOx, U16 err_led_Pin);
+			  TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin);
 S8 lock_param_sending(CAN_INFO_STRUCT* can_param);
 void DAM_reset(void);
 void complete_DLM_handshake (void);
