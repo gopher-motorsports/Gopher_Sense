@@ -125,7 +125,7 @@ void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_b
 	{
 		// get all the samples for this parameter
 		total = 0;
-		buffer = sample_buffer;
+		buffer = sample_buffer + (param - param_array);
 		while (buffer - sample_buffer < (ADC_SAMPLE_SIZE_PER_PARAM*num_params))
 		{
 			total += *buffer;
