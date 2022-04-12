@@ -13,7 +13,7 @@ sensors:
                 quantization: continuous
 # what a value of zero means when going on the table. Usually 0 for analog sensors. 'b' in y = mx + b
                 offset: 0
-# the size of one data packet. Usually 12 for analog sensors
+# the size of one data packet. This is always 12 for analog sensors as we have a 12bit ADC
                 data_size: 12
         sensor_type:
 # type of sensor. This is an analog sensor
@@ -24,7 +24,9 @@ sensors:
 # lookup table for converting the output of the sensor (in Volts, Ohms, or milliamps) to the units
 # the output
                     entries:
-# entries for the table
+# entries for the table. Independent is the value that is read by the module, corresponding to the dependent
+# value, which is the actual data we want to record. In this example the voltages [0->5] map to a [0->1]. There
+# must be at least 2 data points for this to work, but as many as needed can be added
                         independent1: 0
                         dependent1: 0
                         independent2: 2.5
@@ -32,7 +34,9 @@ sensors:
                         independent3: 5.0
                         dependent3: 1.0
 # resistor values. These are the same name as on the PCB and are needed so the math going
-# to the ADC can be abstracted away and the table can be directly from the sensor
+# to the ADC can be abstracted away and the table can be directly from the sensor. Set 'rin' and
+# 'rfilt' to 0 and the rest to RES_OPEN on a voltage sensor to pass in the raw voltage with no
+# modification
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN

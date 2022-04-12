@@ -79,7 +79,7 @@ void handle_DAM_error(DAM_ERROR_STATE error_state)
 
 
 // TODO really good docs on this function
-void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* scan,
+void DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
 			  ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
 			  TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin)
 {
@@ -99,13 +99,8 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
     	// handles were passed in
     	// TODO
 
-        // Run once initialization code
-    	// TODO should this be here or somewhere else?
+        // enable all parameters for DAMs
     	if (!gcan_ptr) handle_DAM_error(INITIALIZATION_ERROR);
-        if (init_can(gcan_ptr, this_module_id, BXTYPE_MASTER))
-        {
-            handle_DAM_error(INITIALIZATION_ERROR);
-        }
         set_all_params_state(TRUE);
 
         if (scan_ptr)
