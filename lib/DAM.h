@@ -25,7 +25,8 @@ typedef enum
 	CAN_HANDLE_NOT_RECOGNIZED = 6,
 	RX_BUFFER_HANDLE_ERROR = 7,
 	TIMER_TO_ADC_ERROR = 8,
-	SCAN_DLC_ERROR = 9
+	SCAN_DLC_ERROR = 9,
+	TASK_EXIT_ERROR = 10
 
 } DAM_ERROR_STATE;
 
@@ -33,10 +34,9 @@ typedef enum
 
 //---------------Function Prototypes---------------
 void handle_DAM_error(DAM_ERROR_STATE error_state);
-void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* scan,
+void DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
 			  ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-			  TIM_HandleTypeDef* tim10, TIM_HandleTypeDef* tim11, TIM_HandleTypeDef* tim14,
-			  GPIO_TypeDef* err_led_GPIOx, U16 err_led_Pin);
+			  TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin);
 S8 lock_param_sending(CAN_INFO_STRUCT* can_param);
 void DAM_reset(void);
 void complete_DLM_handshake (void);
@@ -50,7 +50,7 @@ void fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data);
 
 
 void send_bucket_task (void* pvParameters);
-void DAM_main_task(void);
+void DAM_main_task(void* param);
 void gopherCAN_tx_service_task (void);
 void gopherCAN_rx_buffer_service_task (void);
 

@@ -26,36 +26,24 @@ CAN_HandleTypeDef* gcan_ptr;
 CAN_HandleTypeDef* scan_ptr;
 
 TIM_HandleTypeDef* tim10_ptr;
-TIM_HandleTypeDef* tim11_ptr;
-TIM_HandleTypeDef* tim14_ptr;
 
 #define TIMER_PSC 16
-#define ADC1_SCHEDULING_FREQUENCY_HZ 1000
-#define ADC2_SCHEDULING_FREQUENCY_HZ 1000
-#define ADC3_SCHEDULING_FREQUENCY_HZ 1000
+#define ADC_READING_FREQUENCY_HZ 1000
 
-
-#define BUCKET_SEND_TASK_STACK_SIZE 512
+#define TASK_STACK_SIZE 512
 #define BUCKET_TASK_NAME_BASE "send_bucket_task_"
 #define BUCKET_SEND_MAX_ATTEMPTS 5
 #define INITIAL_DATA 0xAAf
 #define DATA_CONV_FAILURE_REPLACEMENT -1
 
 #define INIT_TX_DELAY_TIME_ms 10
+#define NO_CONNECTION_TIMEOUT_ms 2000
 
 static DAM_ERROR_STATE latched_error_state = NO_ERRORS;
 static boolean hasInitialized = FALSE;
 static GPIO_TypeDef* status_led_port;
 static U16 status_led_pin;
-
-
-// set the LED state of
-void change_led_state(U8 sender, void* parameter, U8 remote_param, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
-{
-    // this function will set the LED to high or low, depending on remote_param
-    // the LED to change is dependent on the parameter stored on this module (*((U16*)parameter))
-	HAL_GPIO_WritePin(status_led_port, status_led_pin, !!remote_param);
-}
+static U32 last_bucket_req = 0;
 
 
 // Handle LED states for each error for future VIRs
@@ -83,11 +71,31 @@ void handle_DAM_error(DAM_ERROR_STATE error_state)
 }
 
 
-// TODO really good docs on this function
-void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* scan,
+// DAM_init
+//  This function will init the Gopher Sense library. This includes setting up
+//  the timer for ADC buffer transfers, the main task to control the DAM, and the
+//  individual bucket tasks.
+// params:
+//  CAN_HandleTypeDef* gcan:      Pointer to the CAN handle being used for gopherCAN on
+//								  this module. GopherCAN init should be called before this
+//								  function
+//  CAN_HandleTypeDef* scan:      Pointer to the sensorCAN handle. This functon will init
+//								  sensorCAN, so nothing else must be done for it. This value
+//								  can be passed in as NULL if there is no sensorCAN on this
+//								  module, but make sure it is configured that way in the yaml
+//  ADC_HandleTypeDef* adc1:      Pointer to ADC1 handle. This can be NULL, but make sure it
+//								  is configured that way in the yaml
+//  ADC_HandleTypeDef* adc2:	  Pointer to ADC2 handle. This can be NULL, but make sure it
+//								  is configured that way in the yaml
+//  ADC_HandleTypeDef* adc3:	  Pointer to ADC3 handle. This can be NULL, but make sure it
+//								  is configured that way in the yaml
+//  TIM_HandleTypeDef* tim10:     The timer that will be used for the timer interrupt. Make sure
+//								  interrupts are enabled and the library callback is defined in main
+//  GPIO_TypeDef* stat_led_GPIOx: Port for the LED for the library
+//  U16 stat_led_Pin:			  Pin for the LED for the library
+void DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
 			  ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-			  TIM_HandleTypeDef* tim10, TIM_HandleTypeDef* tim11, TIM_HandleTypeDef* tim14,
-			  GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin)
+			  TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin)
 {
     if (!hasInitialized)
     {
@@ -98,40 +106,47 @@ void DAM_init(CAN_HandleTypeDef* gcan, U8 this_module_id, CAN_HandleTypeDef* sca
     	adc2_ptr = adc2;
     	adc3_ptr = adc3;
     	tim10_ptr = tim10;
-    	tim11_ptr = tim11;
-    	tim14_ptr = tim14;
     	status_led_port = stat_led_GPIOx;
     	status_led_pin = stat_led_Pin;
 
     	// check to make sure if there are params in the ADCs or SCAN the correct
     	// handles were passed in
-    	// TODO
+    	if (!stat_led_GPIOx) handle_DAM_error(INITIALIZATION_ERROR);
+    	if (!tim10) handle_DAM_error(INITIALIZATION_ERROR);
+#if NUM_ADC1_PARAMS > 0
+    	if (!adc1) handle_DAM_error(INITIALIZATION_ERROR);
+#endif
+#if NUM_ADC2_PARAMS > 0
+    	if (!adc2) handle_DAM_error(INITIALIZATION_ERROR);
+#endif
+#if NUM_ADC3_PARAMS > 0
+    	if (!adc3) handle_DAM_error(INITIALIZATION_ERROR);
+#endif
 
-        // Run once initialization code
-    	// TODO should this be here or somewhere else?
+        // make sure a gcan peripheral was passed in and enable all parameters for DAMs
     	if (!gcan_ptr) handle_DAM_error(INITIALIZATION_ERROR);
-        if (init_can(gcan_ptr, this_module_id, BXTYPE_MASTER))
-        {
-            handle_DAM_error(INITIALIZATION_ERROR);
-        }
         set_all_params_state(TRUE);
 
+#if NUM_CAN_SENSOR_PARAMS > 0
         if (scan_ptr)
         {
         	// TODO init and start the sensorCAN bus
         	// make sure that filters are working correctly
         }
+        else
+        {
+        	// there was not a sensor can passed in when there should be
+        	handle_DAM_error(INITIALIZATION_ERROR);
+        }
+#endif
 
         // CAN commands for the communication with the DLM
-        add_custom_can_func(SET_LED_STATE, &change_led_state, TRUE, NULL);
         add_custom_can_func(SEND_BUCKET_PARAMS, &send_bucket_params, TRUE, NULL);
         add_custom_can_func(BUCKET_OK, &bucket_ok, TRUE, NULL);
         add_custom_can_func(REQUEST_BUCKET, &bucket_requested, TRUE, NULL);
 
         if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr)) handle_DAM_error(INITIALIZATION_ERROR);
-        if (configLibTIM(tim10_ptr, ADC1_SCHEDULING_FREQUENCY_HZ,
-                     tim11_ptr, ADC2_SCHEDULING_FREQUENCY_HZ,
-                     tim14_ptr, ADC3_SCHEDULING_FREQUENCY_HZ, TIMER_PSC)) handle_DAM_error(INITIALIZATION_ERROR);;
+        if (configLibTIM(tim10_ptr, ADC_READING_FREQUENCY_HZ, TIMER_PSC)) handle_DAM_error(INITIALIZATION_ERROR);
     }
 
     DAM_reset();
@@ -223,8 +238,8 @@ void DAM_reset(void)
 			//create bucket tasks
 			char name_buf[30];
 			sprintf(name_buf, "%s%d", BUCKET_TASK_NAME_BASE, bucket->bucket_id);
-			if (xTaskCreate(send_bucket_task, name_buf, BUCKET_SEND_TASK_STACK_SIZE,
-							(void*) bucket, osPriorityNormal, NULL) != pdPASS)
+			if (xTaskCreate(send_bucket_task, name_buf, TASK_STACK_SIZE,
+							(void*) bucket, osPriorityLow, NULL) != pdPASS)
 			{
 				// set error state
 				handle_DAM_error(INITIALIZATION_ERROR);
@@ -232,6 +247,15 @@ void DAM_reset(void)
 		}
 
 		bucket++;
+	}
+
+	// create the DAM main task
+	char name_buf[] = "DAM_main_task";
+	if (xTaskCreate(DAM_main_task, name_buf, TASK_STACK_SIZE, NULL, osPriorityNormal,
+			NULL) != pdPASS)
+	{
+		// set error state
+		handle_DAM_error(INITIALIZATION_ERROR);
 	}
 
 	// start collecting data!
@@ -242,9 +266,15 @@ void DAM_reset(void)
 
 /* DAM_main_task
  * Main task state machine
+ * This should run at a priority above the bucket response tasks as we want
+ * the data to be handled by this task first, then the data to be sent to the
+ * DLM
  */
-void DAM_main_task (void)
+void DAM_main_task(void* param)
 {
+	// param is unused
+	param = NULL;
+
 	boolean all_buckets_ok;
 	BUCKET* bucket;
 	U32 last_timer = 0;
@@ -274,18 +304,32 @@ void DAM_main_task (void)
 				}
 				bucket++;
 			}
-			if (all_buckets_ok && latched_error_state == NO_ERRORS)
+			if (all_buckets_ok && latched_error_state == NO_ERRORS &&
+				HAL_GetTick() - last_bucket_req < NO_CONNECTION_TIMEOUT_ms)
 			{
+				// blink at 500ms intervals when we are logging correctly
 				if ((HAL_GetTick() - last_timer) >= 500)
 				{
 					HAL_GPIO_TogglePin(status_led_port, status_led_pin);
 					last_timer = HAL_GetTick();
 				}
 			}
+			else
+			{
+				// waiting for the DLM to complete the handshake. Blink at 2 sec intervals
+				if ((HAL_GetTick() - last_timer) >= 2000)
+				{
+					HAL_GPIO_TogglePin(status_led_port, status_led_pin);
+					last_timer = HAL_GetTick();
+				}
+			}
 
-			taskYIELD();
+			osDelay(1);
     	}
     }
+
+    // This should not be reached. Panic
+    handle_DAM_error(TASK_EXIT_ERROR);
 }
 
 
@@ -337,6 +381,7 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 
 void sensorCAN_service (void)
 {
+#if NUM_CAN_SENSOR_PARAMS > 0
 	U32 avg;
 	float data_in;
 	float converted_data;
@@ -362,6 +407,7 @@ void sensorCAN_service (void)
 		fill_can_subparams(param, converted_data);
         param++;
     }
+#endif
 }
 
 
@@ -442,7 +488,8 @@ void send_bucket_task (void* pvParameters)
     	}
     }
 
-    // this should never be reached
+    // this should never be reached. Set an error state
+    handle_DAM_error(TASK_EXIT_ERROR);
     vTaskDelete(NULL);
 }
 
@@ -539,15 +586,17 @@ void bucket_ok(MODULE_ID sender, void* parameter,
     if (sender != DLM_ID) return;
 
     BUCKET* bucket = get_bucket_by_id(bucket_id);
-    if (bucket != NULL && bucket->state <= BUCKET_CONFIG_SENDING_FRQ )
+    if (bucket == NULL)
+    {
+    	handle_DAM_error(BUCKET_NOT_RECOGNIZED);
+    	return;
+    }
+    if (bucket->state <= BUCKET_CONFIG_SENDING_FRQ )
     {
     	// dont reset the state of bucket getting data/sending
         bucket->state = BUCKET_CONFIG_SENDING_FRQ;
     }
-    else
-    {
-        handle_DAM_error(BUCKET_NOT_RECOGNIZED);
-    }
+
 }
 
 
@@ -570,6 +619,8 @@ void bucket_requested (MODULE_ID sender, void* parameter,
 
     bucket->state = BUCKET_REQUESTED;
 
+    // note that a new bucket was requested
+    last_bucket_req = HAL_GetTick();
 }
 
 
