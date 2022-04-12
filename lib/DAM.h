@@ -25,7 +25,8 @@ typedef enum
 	CAN_HANDLE_NOT_RECOGNIZED = 6,
 	RX_BUFFER_HANDLE_ERROR = 7,
 	TIMER_TO_ADC_ERROR = 8,
-	SCAN_DLC_ERROR = 9
+	SCAN_DLC_ERROR = 9,
+	TASK_EXIT_ERROR = 10
 
 } DAM_ERROR_STATE;
 
@@ -49,7 +50,7 @@ void fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data);
 
 
 void send_bucket_task (void* pvParameters);
-void DAM_main_task(void);
+void DAM_main_task(void* param);
 void gopherCAN_tx_service_task (void);
 void gopherCAN_rx_buffer_service_task (void);
 

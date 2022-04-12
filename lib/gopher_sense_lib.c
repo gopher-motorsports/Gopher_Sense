@@ -21,9 +21,9 @@ TIM_HandleTypeDef* adc_timer = NULL;
 #define ADC2_SAMPLE_BUFFER_SIZE NUM_ADC2_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
 #define ADC3_SAMPLE_BUFFER_SIZE NUM_ADC3_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
 
-volatile U16 adc1_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE];
-volatile U16 adc2_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE];
-volatile U16 adc3_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE];
+volatile U16 adc1_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
+volatile U16 adc2_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
+volatile U16 adc3_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
 
 #define ADC_VOLTAGE 3.3
 #define VOLTAGE_3V3 3.3
@@ -57,8 +57,6 @@ S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleTypeDe
 //  Then the most recent sample will be added to the buffer each time the timer is fired
 void startDataAq(void)
 {
-	HAL_TIM_Base_Start_IT(adc_timer);
-
     // start the DMA
 #if NUM_ADC1_PARAMS > 0
     HAL_ADC_Start_DMA(adc1, (uint32_t*)adc1_sample_buffer, ADC1_SAMPLE_BUFFER_SIZE);
@@ -69,6 +67,9 @@ void startDataAq(void)
 #if NUM_ADC3_PARAMS > 0
     HAL_ADC_Start_DMA(adc3, (uint32_t*)adc3_sample_buffer, ADC3_SAMPLE_BUFFER_SIZE);
 #endif // NUM_ADC3_PARAMS > 0
+
+    // start the timers to begin moving data to the param buffers
+    HAL_TIM_Base_Start_IT(adc_timer);
 }
 
 
@@ -176,6 +177,7 @@ void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz)
 // TODO do the redesign option
 void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
 {
+#if NUM_CAN_SENSOR_PARAMS > 0
     CAN_RxHeaderTypeDef rx_header;
     CAN_MSG message;
     CAN_SENSOR_PARAM* param = can_sensor_params;
@@ -235,6 +237,7 @@ void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox)
 
         param++;
     }
+#endif
 }
 
 
