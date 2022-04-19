@@ -111,7 +111,9 @@ void DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
 
     	// check to make sure if there are params in the ADCs or SCAN the correct
     	// handles were passed in
+#if NEED_HW_TIMER
     	if (!stat_led_GPIOx) handle_DAM_error(INITIALIZATION_ERROR);
+#endif
     	if (!tim10) handle_DAM_error(INITIALIZATION_ERROR);
 #if NUM_ADC1_PARAMS > 0
     	if (!adc1) handle_DAM_error(INITIALIZATION_ERROR);

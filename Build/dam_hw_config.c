@@ -9,7 +9,7 @@
 // BUCKETS
 // setup the param lists for each bucket
 
-GENERAL_PARAMETER bucket_1_bucket_general_param_list[8] =
+GENERAL_PARAMETER bucket_1_bucket_general_param_list[3] =
 {
   {
     .can_param = (CAN_INFO_STRUCT*)(&dam_chan_1),
@@ -23,6 +23,11 @@ GENERAL_PARAMETER bucket_1_bucket_general_param_list[8] =
     .can_param = (CAN_INFO_STRUCT*)(&dam_chan_3),
     .status = CLEAN
   },
+  
+};
+
+GENERAL_PARAMETER bucket_2_bucket_general_param_list[3] =
+{
   {
     .can_param = (CAN_INFO_STRUCT*)(&dam_chan_4),
     .status = CLEAN
@@ -35,107 +40,25 @@ GENERAL_PARAMETER bucket_1_bucket_general_param_list[8] =
     .can_param = (CAN_INFO_STRUCT*)(&dam_chan_6),
     .status = CLEAN
   },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_7),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_8),
-    .status = CLEAN
-  },
   
 };
 
-GENERAL_PARAMETER bucket_2_bucket_general_param_list[8] =
+GENERAL_PARAMETER bucket_3_bucket_general_param_list[4] =
 {
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_9),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_10),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_11),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_12),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_13),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_14),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_15),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_16),
-    .status = CLEAN
-  },
-  
-};
-
-GENERAL_PARAMETER bucket_3_bucket_general_param_list[8] =
-{
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_17),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_18),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_19),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_20),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_21),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_22),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_23),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&dam_chan_24),
-    .status = CLEAN
-  },
-  
-};
-
-GENERAL_PARAMETER bucket_4_bucket_general_param_list[4] =
-{
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&float_tester),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&float_tester_2),
-    .status = CLEAN
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&float_tester_3),
-    .status = CLEAN
-  },
   {
     .can_param = (CAN_INFO_STRUCT*)(&float_tester_4),
+    .status = CLEAN
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&float_tester_5),
+    .status = CLEAN
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&float_tester_6),
+    .status = CLEAN
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&example_new_param),
     .status = CLEAN
   },
   
@@ -149,11 +72,11 @@ BUCKET bucket_list[NUM_BUCKETS] =
   // Define bucket bucket_1
   {
     .bucket_id = 1,
-    .ms_between_req = 100,
+    .ms_between_req = 20,
     .state = BUCKET_CONFIG_INIT,
     .param_list = 
     {
-      .len = 8,
+      .len = 3,
       .list = bucket_1_bucket_general_param_list
     }
   },
@@ -165,7 +88,7 @@ BUCKET bucket_list[NUM_BUCKETS] =
     .state = BUCKET_CONFIG_INIT,
     .param_list = 
     {
-      .len = 8,
+      .len = 3,
       .list = bucket_2_bucket_general_param_list
     }
   },
@@ -173,24 +96,12 @@ BUCKET bucket_list[NUM_BUCKETS] =
   // Define bucket bucket_3
   {
     .bucket_id = 3,
-    .ms_between_req = 100,
-    .state = BUCKET_CONFIG_INIT,
-    .param_list = 
-    {
-      .len = 8,
-      .list = bucket_3_bucket_general_param_list
-    }
-  },
-  
-  // Define bucket bucket_4
-  {
-    .bucket_id = 4,
     .ms_between_req = 1000,
     .state = BUCKET_CONFIG_INIT,
     .param_list = 
     {
       .len = 4,
-      .list = bucket_4_bucket_general_param_list
+      .list = bucket_3_bucket_general_param_list
     }
   },
   
@@ -205,36 +116,12 @@ BUCKET bucket_list[NUM_BUCKETS] =
 // give memory to the buffers
 
 
-#define ADC1_PARAM1_BUF_SIZE 10
+#define ADC1_PARAM1_BUF_SIZE 100
 U32 adc1_param1_buffer_mem[ADC1_PARAM1_BUF_SIZE];
 
 
 #define ADC1_PARAM2_BUF_SIZE 10
 U32 adc1_param2_buffer_mem[ADC1_PARAM2_BUF_SIZE];
-
-
-#define ADC1_PARAM3_BUF_SIZE 10
-U32 adc1_param3_buffer_mem[ADC1_PARAM3_BUF_SIZE];
-
-
-#define ADC1_PARAM4_BUF_SIZE 10
-U32 adc1_param4_buffer_mem[ADC1_PARAM4_BUF_SIZE];
-
-
-#define ADC1_PARAM5_BUF_SIZE 10
-U32 adc1_param5_buffer_mem[ADC1_PARAM5_BUF_SIZE];
-
-
-#define ADC1_PARAM6_BUF_SIZE 10
-U32 adc1_param6_buffer_mem[ADC1_PARAM6_BUF_SIZE];
-
-
-#define ADC1_PARAM7_BUF_SIZE 10
-U32 adc1_param7_buffer_mem[ADC1_PARAM7_BUF_SIZE];
-
-
-#define ADC1_PARAM8_BUF_SIZE 10
-U32 adc1_param8_buffer_mem[ADC1_PARAM8_BUF_SIZE];
 
 // Fill out the array with all of the sensor params
 ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] = 
@@ -243,7 +130,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   
   // adc1_param1
   {
-    .bucket_param = bucket_3_bucket_general_param_list + 0,
+    .bucket_param = bucket_1_bucket_general_param_list + 0,
     .analog_sensor = &basic_voltage_sensor_for_testing,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -260,7 +147,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   
   // adc1_param2
   {
-    .bucket_param = bucket_3_bucket_general_param_list + 1,
+    .bucket_param = bucket_1_bucket_general_param_list + 1,
     .analog_sensor = &basic_voltage_sensor_for_testing,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -274,108 +161,6 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   },
   #undef ADC1_PARAM2_BUF_SIZE
   
-  
-  // adc1_param3
-  {
-    .bucket_param = bucket_3_bucket_general_param_list + 2,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc1_param3_buffer_mem,
-      .buffer_size = ADC1_PARAM3_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC1_PARAM3_BUF_SIZE
-  
-  
-  // adc1_param4
-  {
-    .bucket_param = bucket_3_bucket_general_param_list + 3,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc1_param4_buffer_mem,
-      .buffer_size = ADC1_PARAM4_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC1_PARAM4_BUF_SIZE
-  
-  
-  // adc1_param5
-  {
-    .bucket_param = bucket_3_bucket_general_param_list + 6,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc1_param5_buffer_mem,
-      .buffer_size = ADC1_PARAM5_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC1_PARAM5_BUF_SIZE
-  
-  
-  // adc1_param6
-  {
-    .bucket_param = bucket_3_bucket_general_param_list + 7,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc1_param6_buffer_mem,
-      .buffer_size = ADC1_PARAM6_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC1_PARAM6_BUF_SIZE
-  
-  
-  // adc1_param7
-  {
-    .bucket_param = bucket_3_bucket_general_param_list + 4,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc1_param7_buffer_mem,
-      .buffer_size = ADC1_PARAM7_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC1_PARAM7_BUF_SIZE
-  
-  
-  // adc1_param8
-  {
-    .bucket_param = bucket_3_bucket_general_param_list + 5,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc1_param8_buffer_mem,
-      .buffer_size = ADC1_PARAM8_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC1_PARAM8_BUF_SIZE
-  
 };
 
 // ***************************************************************************
@@ -387,36 +172,12 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
 // give memory to the buffers
 
 
-#define ADC2_PARAM1_BUF_SIZE 10
+#define ADC2_PARAM1_BUF_SIZE 100
 U32 adc2_param1_buffer_mem[ADC2_PARAM1_BUF_SIZE];
 
 
 #define ADC2_PARAM2_BUF_SIZE 10
 U32 adc2_param2_buffer_mem[ADC2_PARAM2_BUF_SIZE];
-
-
-#define ADC2_PARAM3_BUF_SIZE 10
-U32 adc2_param3_buffer_mem[ADC2_PARAM3_BUF_SIZE];
-
-
-#define ADC2_PARAM4_BUF_SIZE 10
-U32 adc2_param4_buffer_mem[ADC2_PARAM4_BUF_SIZE];
-
-
-#define ADC2_PARAM5_BUF_SIZE 10
-U32 adc2_param5_buffer_mem[ADC2_PARAM5_BUF_SIZE];
-
-
-#define ADC2_PARAM6_BUF_SIZE 10
-U32 adc2_param6_buffer_mem[ADC2_PARAM6_BUF_SIZE];
-
-
-#define ADC2_PARAM7_BUF_SIZE 10
-U32 adc2_param7_buffer_mem[ADC2_PARAM7_BUF_SIZE];
-
-
-#define ADC2_PARAM8_BUF_SIZE 10
-U32 adc2_param8_buffer_mem[ADC2_PARAM8_BUF_SIZE];
 
 // Fill out the array with all of the sensor params
 ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] = 
@@ -425,7 +186,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   
   // adc2_param1
   {
-    .bucket_param = bucket_2_bucket_general_param_list + 4,
+    .bucket_param = bucket_1_bucket_general_param_list + 2,
     .analog_sensor = &basic_voltage_sensor_for_testing,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -442,7 +203,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   
   // adc2_param2
   {
-    .bucket_param = bucket_2_bucket_general_param_list + 5,
+    .bucket_param = bucket_2_bucket_general_param_list + 0,
     .analog_sensor = &basic_voltage_sensor_for_testing,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -456,108 +217,6 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   },
   #undef ADC2_PARAM2_BUF_SIZE
   
-  
-  // adc2_param3
-  {
-    .bucket_param = bucket_2_bucket_general_param_list + 6,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc2_param3_buffer_mem,
-      .buffer_size = ADC2_PARAM3_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC2_PARAM3_BUF_SIZE
-  
-  
-  // adc2_param4
-  {
-    .bucket_param = bucket_2_bucket_general_param_list + 7,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc2_param4_buffer_mem,
-      .buffer_size = ADC2_PARAM4_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC2_PARAM4_BUF_SIZE
-  
-  
-  // adc2_param5
-  {
-    .bucket_param = bucket_2_bucket_general_param_list + 0,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc2_param5_buffer_mem,
-      .buffer_size = ADC2_PARAM5_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC2_PARAM5_BUF_SIZE
-  
-  
-  // adc2_param6
-  {
-    .bucket_param = bucket_2_bucket_general_param_list + 1,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc2_param6_buffer_mem,
-      .buffer_size = ADC2_PARAM6_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC2_PARAM6_BUF_SIZE
-  
-  
-  // adc2_param7
-  {
-    .bucket_param = bucket_2_bucket_general_param_list + 2,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc2_param7_buffer_mem,
-      .buffer_size = ADC2_PARAM7_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC2_PARAM7_BUF_SIZE
-  
-  
-  // adc2_param8
-  {
-    .bucket_param = bucket_2_bucket_general_param_list + 3,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc2_param8_buffer_mem,
-      .buffer_size = ADC2_PARAM8_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC2_PARAM8_BUF_SIZE
-  
 };
 
 // ***************************************************************************
@@ -569,36 +228,12 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
 // give memory to the buffers
 
 
-#define ADC3_PARAM1_BUF_SIZE 10
+#define ADC3_PARAM1_BUF_SIZE 100
 U32 adc3_param1_buffer_mem[ADC3_PARAM1_BUF_SIZE];
 
 
 #define ADC3_PARAM2_BUF_SIZE 10
 U32 adc3_param2_buffer_mem[ADC3_PARAM2_BUF_SIZE];
-
-
-#define ADC3_PARAM3_BUF_SIZE 10
-U32 adc3_param3_buffer_mem[ADC3_PARAM3_BUF_SIZE];
-
-
-#define ADC3_PARAM4_BUF_SIZE 10
-U32 adc3_param4_buffer_mem[ADC3_PARAM4_BUF_SIZE];
-
-
-#define ADC3_PARAM5_BUF_SIZE 10
-U32 adc3_param5_buffer_mem[ADC3_PARAM5_BUF_SIZE];
-
-
-#define ADC3_PARAM6_BUF_SIZE 10
-U32 adc3_param6_buffer_mem[ADC3_PARAM6_BUF_SIZE];
-
-
-#define ADC3_PARAM7_BUF_SIZE 10
-U32 adc3_param7_buffer_mem[ADC3_PARAM7_BUF_SIZE];
-
-
-#define ADC3_PARAM8_BUF_SIZE 10
-U32 adc3_param8_buffer_mem[ADC3_PARAM8_BUF_SIZE];
 
 // Fill out the array with all of the sensor params
 ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] = 
@@ -607,7 +242,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   
   // adc3_param1
   {
-    .bucket_param = bucket_1_bucket_general_param_list + 3,
+    .bucket_param = bucket_2_bucket_general_param_list + 1,
     .analog_sensor = &basic_voltage_sensor_for_testing,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -624,7 +259,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   
   // adc3_param2
   {
-    .bucket_param = bucket_1_bucket_general_param_list + 4,
+    .bucket_param = bucket_2_bucket_general_param_list + 2,
     .analog_sensor = &basic_voltage_sensor_for_testing,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -637,108 +272,6 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
     }
   },
   #undef ADC3_PARAM2_BUF_SIZE
-  
-  
-  // adc3_param3
-  {
-    .bucket_param = bucket_1_bucket_general_param_list + 5,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc3_param3_buffer_mem,
-      .buffer_size = ADC3_PARAM3_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC3_PARAM3_BUF_SIZE
-  
-  
-  // adc3_param4
-  {
-    .bucket_param = bucket_1_bucket_general_param_list + 6,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc3_param4_buffer_mem,
-      .buffer_size = ADC3_PARAM4_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC3_PARAM4_BUF_SIZE
-  
-  
-  // adc3_param5
-  {
-    .bucket_param = bucket_1_bucket_general_param_list + 7,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc3_param5_buffer_mem,
-      .buffer_size = ADC3_PARAM5_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC3_PARAM5_BUF_SIZE
-  
-  
-  // adc3_param6
-  {
-    .bucket_param = bucket_1_bucket_general_param_list + 0,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc3_param6_buffer_mem,
-      .buffer_size = ADC3_PARAM6_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC3_PARAM6_BUF_SIZE
-  
-  
-  // adc3_param7
-  {
-    .bucket_param = bucket_1_bucket_general_param_list + 1,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc3_param7_buffer_mem,
-      .buffer_size = ADC3_PARAM7_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC3_PARAM7_BUF_SIZE
-  
-  
-  // adc3_param8
-  {
-    .bucket_param = bucket_1_bucket_general_param_list + 2,
-    .analog_sensor = &basic_voltage_sensor_for_testing,
-    .num_filtered_subparams = 0, // not yet implemented
-    .filtered_subparams = NULL, // not yet implemented
-    .buffer =
-    {
-      .buffer = adc3_param8_buffer_mem,
-      .buffer_size = ADC3_PARAM8_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC3_PARAM8_BUF_SIZE
   
 };
 
@@ -774,7 +307,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
   // can_param1
   {
 
-    .bucket_param = bucket_4_bucket_general_param_list + 0,
+    .bucket_param = bucket_3_bucket_general_param_list + 0,
     .can_sensor = &can_sensor_for_testing,
     .message_idx = 0,
     .num_filtered_subparams = 0, // not yet implemented
@@ -795,7 +328,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
   // can_param2
   {
 
-    .bucket_param = bucket_4_bucket_general_param_list + 1,
+    .bucket_param = bucket_3_bucket_general_param_list + 1,
     .can_sensor = &can_sensor_for_testing,
     .message_idx = 1,
     .num_filtered_subparams = 0, // not yet implemented
@@ -816,7 +349,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
   // can_param3
   {
 
-    .bucket_param = bucket_4_bucket_general_param_list + 2,
+    .bucket_param = bucket_3_bucket_general_param_list + 2,
     .can_sensor = &can_sensor_for_testing,
     .message_idx = 2,
     .num_filtered_subparams = 0, // not yet implemented
@@ -837,7 +370,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
   // can_param4
   {
 
-    .bucket_param = bucket_4_bucket_general_param_list + 3,
+    .bucket_param = bucket_3_bucket_general_param_list + 3,
     .can_sensor = &can_sensor_for_testing,
     .message_idx = 3,
     .num_filtered_subparams = 0, // not yet implemented

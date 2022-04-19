@@ -45,7 +45,7 @@ class Param():
         self.filter = filter #(type, value) tuple
         self.sensor_name = sen_name
         self.sensor_output = sen_output
-        self.bucket_id = 420
+        self.bucket_name = "[GCAN Param Not Found in Bucket]"
         self.bucket_loc = 69
 
 class Module():
@@ -160,6 +160,9 @@ def main():
     hwconfig_munch = munch.Munch(hwconfig_raw)
     sensors_munch = munch.Munch(sensor_raw)
     sensors = sensors_munch.sensors
+    
+    # run the gcan auto gen script to make sure GopherCAN_ids.c/h is up to date
+    # TODO
 
     # define sensor objects
     analog_sensors = []
@@ -200,41 +203,59 @@ def main():
         bucket_params = [bp for bp in b['parameters']]
         buckets.append(Bucket(_b, b['id'], b['frequency_hz'], bucket_params))
         
-        
-    # TODO some error if the link fails
+
     # link all the params with where they are in the buckets
     for param in module.adc1_params:
+        found = False
         for bucket in buckets:
             for bucket_param in bucket.params:
                 if param.param_name == bucket_param:
                     # this is the bucket to link the param to
-                    param.bucket_id = buckets.index(bucket) + 1
+                    param.bucket_name = bucket.name
                     param.bucket_loc = bucket.params.index(bucket_param)
+                    found = True
+        if not found:
+            print("Could not find the bucket for param: " + param.param_name)
+            quit()
                     
     for param in module.adc2_params:
+        found = False
         for bucket in buckets:
             for bucket_param in bucket.params:
                 if param.param_name == bucket_param:
                     # this is the bucket to link the param to
-                    param.bucket_id = buckets.index(bucket) + 1
+                    param.bucket_name = bucket.name
                     param.bucket_loc = bucket.params.index(bucket_param)
+                    found = True
+        if not found:
+            print("Could not find the bucket for param: " + param.param_name)
+            quit()
                     
     for param in module.adc3_params:
+        found = False
         for bucket in buckets:
             for bucket_param in bucket.params:
                 if param.param_name == bucket_param:
                     # this is the bucket to link the param to
-                    param.bucket_id = buckets.index(bucket) + 1
+                    param.bucket_name = bucket.name
                     param.bucket_loc = bucket.params.index(bucket_param)
+                    found = True
+        if not found:
+            print("Could not find the bucket for param: " + param.param_name)
+            quit()
                     
     for param in module.can_params:
+        found = False
         for bucket in buckets:
             for bucket_param in bucket.params:
                 if param.param_name == bucket_param:
                     # this is the bucket to link the param to
-                    param.bucket_id = buckets.index(bucket) + 1
+                    param.bucket_name = bucket.name
                     param.bucket_loc = bucket.params.index(bucket_param)
-                    
+                    found = True
+        if not found:
+            print("Could not find the bucket for param: " + param.param_name)
+            quit()
         
 
     print("Generating ", HWCONFIG_C_FILE)
