@@ -61,7 +61,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   {% set i = loop.index %}
   // adc1_param{{i}}
   {
-    .bucket_param = bucket_{{param.bucket_id}}_bucket_general_param_list + {{param.bucket_loc}},
+    .bucket_param = {{param.bucket_name}}_bucket_general_param_list + {{param.bucket_loc}},
     .analog_sensor = &{{module.getSensorName(param.sensor_name)}},
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -98,7 +98,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   {% set i = loop.index %}
   // adc2_param{{i}}
   {
-    .bucket_param = bucket_{{param.bucket_id}}_bucket_general_param_list + {{param.bucket_loc}},
+    .bucket_param = {{param.bucket_name}}_bucket_general_param_list + {{param.bucket_loc}},
     .analog_sensor = &{{module.getSensorName(param.sensor_name)}},
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -135,7 +135,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   {% set i = loop.index %}
   // adc3_param{{i}}
   {
-    .bucket_param = bucket_{{param.bucket_id}}_bucket_general_param_list + {{param.bucket_loc}},
+    .bucket_param = {{param.bucket_name}}_bucket_general_param_list + {{param.bucket_loc}},
     .analog_sensor = &{{module.getSensorName(param.sensor_name)}},
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
@@ -173,7 +173,7 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
   // can_param{{i}}
   {
 
-    .bucket_param = bucket_{{param.bucket_id}}_bucket_general_param_list + {{param.bucket_loc}},
+    .bucket_param = {{param.bucket_name}}_bucket_general_param_list + {{param.bucket_loc}},
     .can_sensor = &{{name}},
     .message_idx = {{module.getDependencyMessageIndex(name, param.sensor_output)}},
     .num_filtered_subparams = 0, // not yet implemented
