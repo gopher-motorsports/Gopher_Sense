@@ -30,7 +30,7 @@ typedef enum
 
 } DAM_ERROR_STATE;
 
-
+#define NEED_HW_TIMER ((NUM_ADC1_PARAMS > 0) || (NUM_ADC2_PARAMS > 0) || (NUM_ADC3_PARAMS > 0))
 
 //---------------Function Prototypes---------------
 void handle_DAM_error(DAM_ERROR_STATE error_state);

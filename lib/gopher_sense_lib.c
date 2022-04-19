@@ -13,7 +13,9 @@ ADC_HandleTypeDef* adc1 = NULL;
 ADC_HandleTypeDef* adc2 = NULL;
 ADC_HandleTypeDef* adc3 = NULL;
 
+#if NEED_HW_TIMER
 TIM_HandleTypeDef* adc_timer = NULL;
+#endif
 
 #define ADC_SAMPLE_SIZE_PER_PARAM 64
 
@@ -21,9 +23,15 @@ TIM_HandleTypeDef* adc_timer = NULL;
 #define ADC2_SAMPLE_BUFFER_SIZE NUM_ADC2_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
 #define ADC3_SAMPLE_BUFFER_SIZE NUM_ADC3_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
 
+#if NUM_ADC1_PARAMS > 0
 volatile U16 adc1_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
+#endif
+#if NUM_ADC2_PARAMS > 0
 volatile U16 adc2_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
+#endif
+#if NUM_ADC3_PARAMS > 0
 volatile U16 adc3_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
+#endif
 
 #define ADC_VOLTAGE 3.3
 #define VOLTAGE_3V3 3.3
@@ -69,7 +77,9 @@ void startDataAq(void)
 #endif // NUM_ADC3_PARAMS > 0
 
     // start the timers to begin moving data to the param buffers
+#if NEED_HW_TIMER
     HAL_TIM_Base_Start_IT(adc_timer);
+#endif
 }
 
 
@@ -79,8 +89,10 @@ void startDataAq(void)
 // and starting all of the time
 void stopDataAq(void)
 {
+#if NEED_HW_TIMER
 	HAL_TIM_Base_Stop_IT(adc_timer);
 	__HAL_TIM_SET_COUNTER(adc_timer, 0);
+#endif
 
 #if NUM_ADC1_PARAMS > 0
     HAL_ADC_Stop_DMA(adc1);
@@ -146,10 +158,12 @@ void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_b
 //******************* Timer interaction *******************
 S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
 {
+#if NEED_HW_TIMER
 	// config the timer
 	if (!tim) return TMR_NOT_CONFIGURED;
     adc_timer = tim;
     configTimer(adc_timer, psc, tim_freq);
+#endif
 
     return 0;
 }
