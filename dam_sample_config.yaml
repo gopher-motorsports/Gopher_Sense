@@ -4,7 +4,7 @@ module_name: "example_dam"
 buckets:
     bucket_1:
         id: 1
-        frequency_hz: 10
+        frequency_hz: 1
         parameters:
             - dam_chan_1
             - dam_chan_2
@@ -17,7 +17,7 @@ buckets:
 
     bucket_2:
         id: 2
-        frequency_hz: 10
+        frequency_hz: 1
         parameters:        
             - dam_chan_9
             - dam_chan_10
@@ -30,7 +30,7 @@ buckets:
             
     bucket_3:
         id: 3
-        frequency_hz: 10
+        frequency_hz: 1
         parameters:
             - dam_chan_17
             - dam_chan_18
@@ -43,7 +43,7 @@ buckets:
             
     bucket_4:
         id: 4
-        frequency_hz: 1
+        frequency_hz: 10
         parameters:
             - float_tester
             - float_tester_2

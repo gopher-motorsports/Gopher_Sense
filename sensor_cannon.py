@@ -161,6 +161,21 @@ def main():
     sensors_munch = munch.Munch(sensor_raw)
     sensors = sensors_munch.sensors
     
+    # get the files as a string and process them as a bytestring
+    ascii_values = []
+    concat = ", "
+    sensorFileStr = open(SENSOR_CONFIG_FILE)
+    sensorFileStr = sensorFileStr.read()
+    for char in sensorFileStr:
+        ascii_values.append(hex(ord(char)))
+    sensorFileStr = concat.join(ascii_values)
+        
+    configFileStr = open(argv[1])
+    configFileStr = configFileStr.read()
+    for char in configFileStr:
+        ascii_values.append(hex(ord(char)))
+    configFileStr = concat.join(ascii_values)
+    
     # run the gcan auto gen script to make sure GopherCAN_ids.c/h is up to date
     # TODO
 
@@ -191,7 +206,7 @@ def main():
     print("Generating ", SENSOR_C_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, SENSOR_C_FILE)) as file_:
         template = Template(file_.read())
-        output = template.render(analog_sensors=analog_sensors, can_sensors=can_sensors)
+        output = template.render(analog_sensors=analog_sensors, can_sensors=can_sensors, sensorFileStr=sensorFileStr)
         filename = "gopher_sense.c"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
@@ -258,10 +273,11 @@ def main():
             quit()
         
 
+    # write the HW config files
     print("Generating ", HWCONFIG_C_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, HWCONFIG_C_FILE)) as file_:
         template = Template(file_.read())
-        output = template.render(module=module, buckets=buckets, configFileName=configFileName)
+        output = template.render(module=module, buckets=buckets, configFileStr=configFileStr)
         print("Configuring DAM from:", configFileName)
         filename = "dam_hw_config.c"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
@@ -269,7 +285,7 @@ def main():
     print("Generating ", HWCONFIG_H_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, HWCONFIG_H_FILE)) as file_:
         template = Template(file_.read())
-        output = template.render(module=module, buckets=buckets, configFileName=configFileName)
+        output = template.render(module=module, buckets=buckets)
         filename = "dam_hw_config.h"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)

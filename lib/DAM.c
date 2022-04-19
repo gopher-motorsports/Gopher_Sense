@@ -28,7 +28,7 @@ CAN_HandleTypeDef* scan_ptr;
 TIM_HandleTypeDef* tim10_ptr;
 
 #define TIMER_PSC 16
-#define ADC_READING_FREQUENCY_HZ 1000
+#define ADC_READING_FREQUENCY_HZ 1000 // TODO test out with this at 10kHz
 
 #define TASK_STACK_SIZE 512
 #define BUCKET_TASK_NAME_BASE "send_bucket_task_"
@@ -109,6 +109,10 @@ void DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
     	status_led_port = stat_led_GPIOx;
     	status_led_pin = stat_led_Pin;
 
+        // make sure a gcan peripheral was passed in and enable all parameters for DAMs
+    	if (!gcan_ptr) handle_DAM_error(INITIALIZATION_ERROR);
+        set_all_params_state(TRUE);
+
     	// check to make sure if there are params in the ADCs or SCAN the correct
     	// handles were passed in
 #if NEED_HW_TIMER
@@ -124,16 +128,14 @@ void DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
 #if NUM_ADC3_PARAMS > 0
     	if (!adc3) handle_DAM_error(INITIALIZATION_ERROR);
 #endif
-
-        // make sure a gcan peripheral was passed in and enable all parameters for DAMs
-    	if (!gcan_ptr) handle_DAM_error(INITIALIZATION_ERROR);
-        set_all_params_state(TRUE);
-
 #if NUM_CAN_SENSOR_PARAMS > 0
         if (scan_ptr)
         {
-        	// TODO init and start the sensorCAN bus
-        	// make sure that filters are working correctly
+        	// start the SensorCAN bus
+        	if (HAL_CAN_Start(scan_ptr) != HAL_OK)
+        	{
+        		handle_DAM_error(INITIALIZATION_ERROR);
+        	}
         }
         else
         {
@@ -641,7 +643,7 @@ void custom_service_can_rx_hardware(CAN_HandleTypeDef* hcan, U32 rx_mailbox)
        sensor_can_message_handle(hcan, rx_mailbox);
    }
 
-   else handle_DAM_error(CAN_HANDLE_NOT_RECOGNIZED); // This case shouldnt happen
+   else handle_DAM_error(CAN_HANDLE_NOT_RECOGNIZED); // This case shouldn't happen
 }
 
 
@@ -692,9 +694,6 @@ void fill_analog_subparams (ANALOG_SENSOR_PARAM* param, float newdata)
     	// TODO implement can subparams?
     }
 }
-
-
-// TODO: add timer interrupt to ensure IDLEtask runs??
 
 
 
