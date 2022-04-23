@@ -137,11 +137,10 @@ class AnalogSensor():
 
 # convienient container for data
 class CANSensor():
-    def __init__(self, sensorID, name, outputs, byte_order, messages):
+    def __init__(self, sensorID, name, outputs, messages):
         self.sensorID = sensorID
         self.name = C_ize_Name(name)
         self.outputs = outputs
-        self.byte_order = byte_order
         self.messages = messages
         self.numMessages = len(messages)
 
@@ -188,8 +187,7 @@ def main():
             a = AnalogSensor(s, sensor['name_english'], sensor['outputs'], sensor['sensor_type']['analog'])
             analog_sensors.append(a)
         if 'CAN' in sensor['sensor_type']:
-            c = CANSensor(s, sensor['name_english'], sensor['outputs'] , \
-                          sensor['sensor_type']['CAN']['byte_order'], sensor['sensor_type']['CAN']['messages'])
+            c = CANSensor(s, sensor['name_english'], sensor['outputs'], sensor['sensor_type']['CAN']['messages'])
             can_sensors.append(c)
         # more sensors can be added here
 
