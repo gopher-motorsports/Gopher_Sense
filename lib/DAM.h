@@ -26,7 +26,9 @@ typedef enum
 	RX_BUFFER_HANDLE_ERROR = 7,
 	TIMER_TO_ADC_ERROR = 8,
 	SCAN_DLC_ERROR = 9,
-	TASK_EXIT_ERROR = 10
+	TASK_EXIT_ERROR = 10,
+	SCAN_YAML_CONFIG_ERR = 11,
+	SCAN_RX_ERR = 12
 
 } DAM_ERROR_STATE;
 
@@ -34,9 +36,10 @@ typedef enum
 
 //---------------Function Prototypes---------------
 void handle_DAM_error(DAM_ERROR_STATE error_state);
-void DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
-			  ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-			  TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin);
+void handle_DAM_LED(void);
+DAM_ERROR_STATE DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
+						 ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
+						 TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin);
 S8 lock_param_sending(CAN_INFO_STRUCT* can_param);
 void DAM_reset(void);
 void complete_DLM_handshake (void);

@@ -89,9 +89,11 @@ typedef struct
 
 typedef enum
 {
-    LSB = 0,
-    MSB = 1
-} B_O;
+    INT_LSB = 0, // LSB first in the message
+	INT_MSB = 1, // MSB first in the message
+	FLT_LSB = 2,
+	FLT_MSB = 3
+} DATA_ENCODING;
 
 
 // how to turn raw data into useable measurments
@@ -110,10 +112,9 @@ typedef struct
 // what is this data?
 typedef struct
 {
-    char         output_name[STR_LEN];
-    char	     output_unit[STR_LEN];
-    DATA_SCALAR  scalar;
-    U8           data_size_bits;
+    char          output_name[STR_LEN];
+    char	      output_unit[STR_LEN];
+    DATA_SCALAR   scalar;
 } OUTPUT;
 
 
@@ -158,17 +159,17 @@ typedef struct
 // describes how to interpret a part of a CAN sensor message
 typedef struct
 {
-  U32       message_id;
-  OUTPUT    output;
-  U8        data_start;
-  U8        data_end;
+  U32           message_id;
+  OUTPUT        output;
+  U8            data_start;
+  U8            data_end;
+  DATA_ENCODING data_enc;
 } SENSOR_CAN_MESSAGE;
 
 // describes a CAN sensor
 typedef struct
 {
     char                sensor_id[50];
-    B_O		            byte_order;
     SENSOR_CAN_MESSAGE* messages;
     U8                  num_messages;
 } CAN_SENSOR;
@@ -183,6 +184,7 @@ typedef struct
     FILTERED_PARAM*    filtered_subparams;
     U8                 num_filtered_subparams;
     U32_BUFFER         buffer;
+    boolean            new_buf_data; // set this true when there is new data in the param buffer that has not been added to the GCAN param
 } CAN_SENSOR_PARAM;
 
 

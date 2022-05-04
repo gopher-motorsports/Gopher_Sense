@@ -13,8 +13,6 @@ sensors:
                 quantization: continuous
 # what a value of zero means when going on the table. Usually 0 for analog sensors. 'b' in y = mx + b
                 offset: 0
-# the size of one data packet. This is always 12 for analog sensors as we have a 12bit ADC
-                data_size: 12
         sensor_type:
 # type of sensor. This is an analog sensor
             analog:
@@ -52,7 +50,6 @@ sensors:
                 unit: Float_0-1
                 quantization: continuous
                 offset: 0
-                data_size: 12
         sensor_type:
             analog:
                 analog_subtype: Resistive
@@ -78,7 +75,6 @@ sensors:
                 unit: Float_0-1
                 quantization: continuous
                 offset: 0
-                data_size: 12
         sensor_type:
             analog:
                 analog_subtype: Current
@@ -104,25 +100,20 @@ sensors:
 # convert 0-65535 to 0-1
                 quantization: 0.0000015259
                 offset: 0
-                data_size: 16
             u16_raw:
                 unit: raw_input
                 quantization: continuous
                 offset: 0
-                data_size: 16
             float_1_raw:
                 unit: float
                 quantization: continuous
                 offset: 0
-                data_size: 32
             float_2_scaled:
                 unit: scaled_float
                 quantization: 0.001
                 offset: 10
-                data_size: 32
         sensor_type:
             CAN:
-                byte_order: LSB
                 messages:
                     message1:
 # link to what output this message is measuring
@@ -131,20 +122,24 @@ sensors:
                         id: 0x137
 # Which data bytes are associated with this output. Make sure this matches the size. Both
 # values are inclusive, so a message with a single byte would be [0,0]
+                        encoding: INT_MSB
                         data_byte_start: 0
                         data_byte_end: 1
                     message2:
                         output_measured: u16_raw
                         id: 0x137
+                        encoding: INT_LSB
                         data_byte_start: 2
                         data_byte_end: 3
                     message3:
                         output_measured: float_1_raw
                         id: 0x138
+                        encoding: FLT_MSB
                         data_byte_start: 0
                         data_byte_end: 3
                     message4:
                         output_measured: float_2_scaled
                         id: 0x138
+                        encoding: FLT_LSB
                         data_byte_start: 4
                         data_byte_end: 7

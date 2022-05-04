@@ -47,7 +47,6 @@ ANALOG_SENSOR {{sensor.name}} =
     {
         .output_name = "{{o}}",
         .output_unit = "{{sensor.outputs[o]['unit']}}",
-        .data_size_bits = {{sensor.outputs[o]['data_size']}},
         .scalar = 
         {
             .quantization = {{sensor.outputs[o]['quantization']}}, //1 if continuous
@@ -82,7 +81,8 @@ SENSOR_CAN_MESSAGE {{sensor.name}}_messages[{{l}}] =
             }
         },
         .data_start = {{m['data_byte_start']}},
-        .data_end = {{m['data_byte_end']}}
+        .data_end = {{m['data_byte_end']}},
+		.data_enc = {{m['encoding']}}
     },
     {% endfor %}
 };
@@ -90,7 +90,6 @@ SENSOR_CAN_MESSAGE {{sensor.name}}_messages[{{l}}] =
 CAN_SENSOR {{sensor.name}} = 
 {
     .sensor_id = "{{sensor.sensorID}}",
-    .byte_order = {{sensor.byte_order}},
     {% set l = sensor.numMessages %}
     .num_messages = {{l}},
     .messages = {{sensor.name}}_messages

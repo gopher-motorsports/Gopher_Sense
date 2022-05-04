@@ -29,13 +29,15 @@ void startDataAq(void);
 void stopDataAq(void);
 void DAQ_TimerCallback(TIM_HandleTypeDef* timer);
 void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_buffer, U32 num_params);
-void sensor_can_message_handle (CAN_HandleTypeDef* hcan, U32 rx_mailbox);
-
+void service_scan_rx_buffer(void);
+void sensor_can_message_handle (CAN_MSG* message);
+void add_scan_message_to_bufffer(CAN_HandleTypeDef* hcan, U32 rx_mailbox);
 
 S8 buffer_full (U32_BUFFER* buffer);
 S8 add_to_buffer (U32_BUFFER* buffer, U32 toadd);
 S8 reset_buffer (U32_BUFFER* buffer);
 S8 average_buffer (U32_BUFFER* buffer, U32* avg);
+S8 average_buffer_as_float (U32_BUFFER* buffer, float* avg);
 S8 apply_can_sensor_conversion(CAN_SENSOR* sensor, U8 msg_idx, float data_in, float* data_out);
 S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor, float data_in, float* data_out);
 
