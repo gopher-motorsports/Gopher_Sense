@@ -155,7 +155,16 @@ DAM_ERROR_STATE DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
 
         	if (HAL_CAN_ConfigFilter(scan_ptr, &filterConfig) != HAL_OK)
         	{
-        		return FILTER_SET_FAILED;
+        		handle_DAM_error(INITIALIZATION_ERROR);
+        		return INITIALIZATION_ERROR;
+        	}
+
+        	// enable RX interrupts for the sensor can bus
+        	if (HAL_CAN_ActivateNotification(scan_ptr, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK
+        			|| HAL_CAN_ActivateNotification(scan_ptr, CAN_IT_RX_FIFO1_MSG_PENDING) != HAL_OK)
+        	{
+        		handle_DAM_error(INITIALIZATION_ERROR);
+        		return INITIALIZATION_ERROR;
         	}
 
         	// start the SensorCAN bus
@@ -315,66 +324,6 @@ void DAM_main_task(void* param)
     	{
     		ADC_sensor_service();
     		sensorCAN_service();
-
-    		// DEBUG
-    		// use CAN loopback to send some fake sensor data using the test
-    		// CAN sensor definition
-    		static U32 last_send = 0;
-    		U8 data[8];
-    		U32 tx_mailbox_num;
-    		CAN_TxHeaderTypeDef tx_header;
-
-    		static U16 can_sens1 = 0;			// MSB first u16
-    		static U16 can_sens2 = 10000;		// LSB first u16
-    		static float can_sens3 = 0.0;		// MSB first float
-    		static float can_sens4 = 10000.0;	// LSB first float
-    		FLOAT_CONVERTER fcon;
-
-    		if (HAL_GetTick() - last_send > 1000)
-    		{
-    			last_send = HAL_GetTick();
-
-    			// tick the values up and down
-    			can_sens1++;
-    			can_sens2--;
-    			can_sens3 += 0.125;
-    			can_sens4 -= 0.125;
-
-    			// build and send the first message
-    			tx_header.IDE = CAN_ID_STD;
-    			tx_header.TransmitGlobalTime = DISABLE;
-    			tx_header.RTR = CAN_RTR_DATA;
-    			tx_header.StdId = 0x137;
-    			tx_header.DLC = 4;
-
-    			data[0] = ((can_sens1 & 0xFF00) >> 8);
-    			data[1] = (can_sens1 & 0xFF);
-    			data[2] = (can_sens2 & 0xFF);
-    			data[3] = ((can_sens2 & 0xFF00) >> 8);
-    			HAL_CAN_AddTxMessage(scan_ptr, &tx_header, data, &tx_mailbox_num);
-
-    			// build and send the second message
-    			tx_header.StdId = 0x138;
-				tx_header.DLC = 8;
-
-				fcon.f = can_sens3;
-				data[0] = (fcon.u32 >> (3*8)) & 0xFF;
-				data[1] = (fcon.u32 >> (2*8)) & 0xFF;
-				data[2] = (fcon.u32 >> (1*8)) & 0xFF;
-				data[3] = (fcon.u32 >> (0*8)) & 0xFF;
-
-				fcon.f = can_sens4;
-				data[4] = (fcon.u32 >> (0*8)) & 0xFF;
-				data[5] = (fcon.u32 >> (1*8)) & 0xFF;
-				data[6] = (fcon.u32 >> (2*8)) & 0xFF;
-				data[7] = (fcon.u32 >> (3*8)) & 0xFF;
-				HAL_CAN_AddTxMessage(scan_ptr, &tx_header, data, &tx_mailbox_num);
-
-  				// this will not be a perfect simulation of the system, but it will work alright for testing
-    			sensor_can_message_handle(scan_ptr, CAN_RX_FIFO0);
-    		}
-
-    		// END DEBUG
     	}
 
     	handle_DAM_LED();
@@ -427,9 +376,11 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 			continue;
 		}
 
-		// fill the data and set this parameter to dirty
+		// fill the data and set this parameter to dirty. The last time this GCAN param was
+		// updated will be stored in the last_rx section
 		fill_gcan_param_data(param->bucket_param->can_param, converted_data);
 		if (param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
+		param->bucket_param->can_param->last_rx = HAL_GetTick();
 		fill_analog_subparams(param, converted_data);
 		param++;
 	}
@@ -439,23 +390,31 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 void sensorCAN_service (void)
 {
 #if NUM_CAN_SENSOR_PARAMS > 0
-	U32 avg;
+	S32 avg;
 	float data_in;
 	float converted_data;
 	CAN_SENSOR_PARAM* param = can_sensor_params;
 
 	// handle all of the messages in the scan RX buffer
-	// TODO
+	service_scan_rx_buffer();
 
 	// update the GopherCAN params as needed with what was just recieved
     while (param - can_sensor_params < NUM_CAN_SENSOR_PARAMS)
     {
-    	switch(param->can_sensor->messages[param->message_idx].data_end)
+    	// make sure there is actually new data in this param buffer
+    	if (!param->new_buf_data)
+    	{
+    		param++;
+    		continue;
+    	}
+
+    	switch(param->can_sensor->messages[param->message_idx].data_enc)
 		{
     	case INT_MSB:
     	case INT_LSB:
-    		// average the buffer as an integer
-			if (average_buffer(&param->buffer, &avg) != BUFFER_SUCCESS)
+    		// average the buffer as an integer. This average should be handled as signed
+    		// so negative numbers are allowed
+			if (average_buffer(&param->buffer, (U32*)(&avg)) != BUFFER_SUCCESS)
 			{
 				param++;
 				continue;
@@ -467,7 +426,6 @@ void sensorCAN_service (void)
     	case FLT_MSB:
     	case FLT_LSB:
     		// average the buffer as a float
-    		// TODO double check this
     		if (average_buffer_as_float(&param->buffer, &data_in) != BUFFER_SUCCESS)
 			{
 				param++;
@@ -490,11 +448,16 @@ void sensorCAN_service (void)
 			continue;
 		}
 
-		// fill the data and set this parameter to dirty
-		// TODO only do this if there was an RX recently
+		// fill in the data and reflect that there is new data to be sent. The time that this
+		// CAN param was updated will be reflected in the last_rx section of the GCAN param
 		fill_gcan_param_data(param->bucket_param->can_param, converted_data);
 		if (param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
+		param->bucket_param->can_param->last_rx = HAL_GetTick();
+		param->new_buf_data = FALSE;
+
 		fill_can_subparams(param, converted_data);
+
+		// move on to the next one
         param++;
     }
 #endif
@@ -585,7 +548,7 @@ void handle_DAM_LED(void)
 void handle_DAM_error(DAM_ERROR_STATE error_state)
 {
 	latched_error_state = error_state;
-	stopDataAq();
+	if (hasInitialized) stopDataAq();
 }
 
 
@@ -654,6 +617,9 @@ void send_bucket_task (void* pvParameters)
 						osDelay(1); // Delay due to error
 					}
 
+					// flush the TX buffer
+					service_can_tx_hardware(gcan_ptr);
+
 					// set this parameter to clean if it is ok too
 					if (param->status != LOCKED_SEND) param->status = CLEAN;
 			   }
@@ -661,7 +627,7 @@ void send_bucket_task (void* pvParameters)
 			}
 
 			bucket->state = BUCKET_GETTING_DATA;
-			taskYIELD();
+			osDelay(1);
     		break;
     	}
     }

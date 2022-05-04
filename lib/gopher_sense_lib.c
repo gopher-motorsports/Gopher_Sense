@@ -198,6 +198,29 @@ void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz)
 
 //******************* CAN Handling *******************
 
+
+// service_scan_rx_buffer
+//  Take the messages in the SCAN RX buffer and take the data and add handle
+//  each one
+void service_scan_rx_buffer(void)
+{
+	CAN_MSG* current_message;
+
+	// run through each message in the RX buffer and service it with sensor_can_message_handle() (FIFO)
+	while (!IS_EMPTY(&scan_rx_buffer))
+	{
+		// get the message at the head of the array
+		current_message = GET_FROM_BUFFER(&scan_rx_buffer, 0);
+
+		// service the message
+		sensor_can_message_handle(current_message);
+
+		// move the head now that the first element has been removed
+		remove_from_front(&scan_rx_buffer);
+	}
+}
+
+
 // take a raw message and put the data in the correct parameter buffer
 void sensor_can_message_handle (CAN_MSG* message)
 {
@@ -229,6 +252,7 @@ void sensor_can_message_handle (CAN_MSG* message)
 
             // build a U32 based on the start and end byte of the message and the encoding
             // (MSB or LSB) of the message (U32 is max supported because of the buffers)
+            // TODO handle all different sizes of negative numbers
             switch (can_info->data_enc)
             {
             case INT_LSB:
@@ -255,8 +279,7 @@ void sensor_can_message_handle (CAN_MSG* message)
             // always add the data to the buffer as a u32. Even if it is a float
             // it will get handled as such later
             add_to_buffer(&param->buffer, data.u32);
-
-            // TODO set the last RX of this param
+            param->new_buf_data = TRUE;
         }
 
         param++;
@@ -295,7 +318,6 @@ void add_scan_message_to_bufffer(CAN_HandleTypeDef* hcan, U32 rx_mailbox)
 		message->id = (rx_header.IDE ? rx_header.ExtId : rx_header.StdId);
 	}
 }
-
 
 
 //******************* Buffer interaction *******************
@@ -388,7 +410,6 @@ S8 average_buffer (U32_BUFFER* buffer, U32* avg)
 
 S8 average_buffer_as_float (U32_BUFFER* buffer, float* avg)
 {
-	// TODO double check this
 	if (buffer == NULL)
 	{
 		return BUFFER_ERR;
@@ -434,7 +455,7 @@ S8 apply_can_sensor_conversion (CAN_SENSOR* sensor, U8 msg_idx, float data_in, f
 	if (!sensor || !data_out) return CONV_ERR;
 
 	DATA_SCALAR scalar = sensor->messages[msg_idx].output.scalar;
-	*data_out = (data_in + scalar.offset) * scalar.quantization; // TODO Verify this is the case for all sensors
+	*data_out = (data_in * scalar.quantization) + scalar.offset;
     return CONV_SUCCESS;
 }
 

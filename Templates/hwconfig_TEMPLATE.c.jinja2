@@ -186,7 +186,8 @@ CAN_SENSOR_PARAM can_sensor_params[NUM_CAN_SENSOR_PARAMS] =
       .buffer_size = CAN_PARAM{{i}}_BUF_SIZE,
       .fill_level = 0,
 	  .buffer_head = 0
-    }
+    },
+	.new_buf_data = FALSE
 
   },
   #undef CAN_PARAM{{i}}_BUF_SIZE

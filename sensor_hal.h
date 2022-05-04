@@ -184,6 +184,7 @@ typedef struct
     FILTERED_PARAM*    filtered_subparams;
     U8                 num_filtered_subparams;
     U32_BUFFER         buffer;
+    boolean            new_buf_data; // set this true when there is new data in the param buffer that has not been added to the GCAN param
 } CAN_SENSOR_PARAM;
 
 
