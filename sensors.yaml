@@ -1,5 +1,6 @@
 sensors:
 # this is the name it will be referenced in the config files
+# TODO finish this
     "test_voltage_sensor":
 # this is the name for the code
         name_english: "Basic Voltage Sensor for Testing"
@@ -143,3 +144,310 @@ sensors:
                         encoding: FLT_LSB
                         data_byte_start: 4
                         data_byte_end: 7
+
+    "ride_hight_sensor":
+        name_english: "Ride Height Sensor"
+        outputs:
+            voltage:
+                unit: mm
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 2.5
+                        dependent2: 0.5
+                        independent3: 5.0
+                        dependent3: 1.0
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+    "MLH03KPSB06A":
+        name_english: "Brake Pressure Sensor"
+        outputs:
+            voltage:
+                unit: PSI
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0.5
+                        dependent1: 50
+                        independent2: 4.5
+                        dependent2: 8000
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+                
+    "pressure_sensor":
+        name_english: "Generic Pressure Sensor"
+        outputs:
+            voltage:
+                unit: PSI
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 2.5
+                        dependent2: 0.5
+                        independent3: 5.0
+                        dependent3: 1.0
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+                
+    "pressure_drop_sensor":
+        name_english: "Pressure Drop Sensor"
+        outputs:
+            voltage:
+                unit: PSI
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 2.5
+                        dependent2: 0.5
+                        independent3: 5.0
+                        dependent3: 1.0
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+                
+    "MSP300":
+        name_english: "Air Tank Pressure Sensor"
+        outputs:
+            voltage:
+                unit: PSI
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 2.5
+                        dependent2: 0.5
+                        independent3: 5.0
+                        dependent3: 1.0
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+                
+    "temp_sensor":
+        name_english: "Resistive Temp Sensor"
+        outputs:
+            resistance:
+                unit: Celcius
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Resistive
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 5000
+                        dependent2: 0.5
+                        independent2: 10000
+                        dependent2: 5.0
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: 10000
+                rfilt: 10000
+                rdiv: 19100
+                
+    # TODO finish this, there are lots of channels on each tire
+    "brake_temp_sensor":
+        name_english: "Brake Temp Sensors"
+        outputs:
+            rear_right_1:
+                unit: Celcius
+                quantization: 0.1
+                offset: -100
+        sensor_type:
+            CAN:
+                messages:
+                    message1:
+                        output_measured: rear_right_1
+                        id: 0x137
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+
+    # TODO finish this, there are lots of channels on each tire
+    "tire_temp_sensor":
+        name_english: "Tire Temp Sensors"
+        outputs:
+            rear_right_1:
+                unit: Celcius
+                quantization: 0.1
+                offset: -100
+        sensor_type:
+            CAN:
+                messages:
+                    message1:
+                        output_measured: rear_right_1
+                        id: 0x137
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                        
+    "exhaust_gas_temp":
+        name_english: "Exhaust Gas Temp"
+        outputs:
+            TODO:
+                unit: Celcius
+                quantization: 0.1
+                offset: -100
+        sensor_type:
+            CAN:
+                messages:
+                    message1:
+                        output_measured: TODO
+                        id: 0x137
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+
+    "linear_pos_sensor":
+        name_english: "Linerar Position Sensor"
+        outputs:
+            voltage:
+                unit: mm
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 2.5
+                        dependent2: 0.5
+                        independent3: 5.0
+                        dependent3: 1.0
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+                
+    "steering_angle_sensor":
+        name_english: "Steering Angle Sensor"
+        outputs:
+            voltage:
+                unit: degrees
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 2.5
+                        dependent2: 0.5
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+                
+    "water_flow_sensor":
+        name_english: "Water Flow Sensor"
+        outputs:
+            voltage:
+                unit: Liters/Minute
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 2.5
+                        dependent2: 0.5
+                        independent3: 5.0
+                        dependent3: 1.0
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+                
+    "lambda_sensor":
+        name_english: "Lambda Sensor"
+        outputs:
+            TODO:
+                unit: Celcius
+                quantization: 0.1
+                offset: -100
+        sensor_type:
+            CAN:
+                messages:
+                    message1:
+                        output_measured: TODO
+                        id: 0x137
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+
+    "five_axis":
+        name_english: "Five Axis Sensor"
+        outputs:
+            TODO:
+                unit: Celcius
+                quantization: 0.1
+                offset: -100
+        sensor_type:
+            CAN:
+                messages:
+                    message1:
+                        output_measured: TODO
+                        id: 0x137
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
