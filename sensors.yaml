@@ -146,6 +146,8 @@ sensors:
                         data_byte_end: 7
 
     "ride_hight_sensor":
+        # Q4X Stainless Steel Analog Laser Sensor
+        # TODO the datasheet says this is either a 0-10V sensor or 4-20mA sensor, so wait to configure this
         name_english: "Ride Height Sensor"
         outputs:
             voltage:
@@ -161,15 +163,14 @@ sensors:
                         dependent1: 0
                         independent2: 2.5
                         dependent2: 0.5
-                        independent3: 5.0
-                        dependent3: 1.0
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
                 r5v: RES_OPEN
                 rfilt: 10000
                 rdiv: 19100
-    "MLH03KPSB06A":
+    "brake_pressure_sensor":
+        # MLH03KPSB06A. special sensor for the brake pressure
         name_english: "Brake Pressure Sensor"
         outputs:
             voltage:
@@ -193,6 +194,7 @@ sensors:
                 rdiv: 19100
                 
     "pressure_sensor":
+        # PX3AN2BS100PSAAX. We have lots of these on the car
         name_english: "Generic Pressure Sensor"
         outputs:
             voltage:
@@ -204,12 +206,10 @@ sensors:
                 analog_subtype: Voltage
                 table:
                     entries:
-                        independent1: 0
+                        independent1: 0.5
                         dependent1: 0
-                        independent2: 2.5
-                        dependent2: 0.5
-                        independent3: 5.0
-                        dependent3: 1.0
+                        independent2: 4.5
+                        dependent2: 100
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
@@ -218,6 +218,8 @@ sensors:
                 rdiv: 19100
                 
     "pressure_drop_sensor":
+        # ABPDRRT005PG2A5
+        # min 0psi, max 5psi
         name_english: "Pressure Drop Sensor"
         outputs:
             voltage:
@@ -229,12 +231,10 @@ sensors:
                 analog_subtype: Voltage
                 table:
                     entries:
-                        independent1: 0
+                        independent1: 0.5
                         dependent1: 0
-                        independent2: 2.5
-                        dependent2: 0.5
-                        independent3: 5.0
-                        dependent3: 1.0
+                        independent2: 4.5
+                        dependent2: 5
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
@@ -242,7 +242,9 @@ sensors:
                 rfilt: 10000
                 rdiv: 19100
                 
-    "MSP300":
+    "air_tank_pressure_sensor":
+        # MSP300. Air tank pressure sensor
+        # TODO not sure what version we have. using the 5kpsi as an example
         name_english: "Air Tank Pressure Sensor"
         outputs:
             voltage:
@@ -254,12 +256,10 @@ sensors:
                 analog_subtype: Voltage
                 table:
                     entries:
-                        independent1: 0
+                        independent1: 0.5
                         dependent1: 0
-                        independent2: 2.5
-                        dependent2: 0.5
-                        independent3: 5.0
-                        dependent3: 1.0
+                        independent2: 4.5
+                        dependent2: 5000
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
@@ -268,6 +268,7 @@ sensors:
                 rdiv: 19100
                 
     "temp_sensor":
+        # 0 281 002 170 (Bosch)
         name_english: "Resistive Temp Sensor"
         outputs:
             resistance:
@@ -279,21 +280,55 @@ sensors:
                 analog_subtype: Resistive
                 table:
                     entries:
-                        independent1: 0
-                        dependent1: 0
-                        independent2: 5000
-                        dependent2: 0.5
-                        independent2: 10000
-                        dependent2: 5.0
+                        independent1: 45313
+                        dependent1: -40
+                        independent2: 26114
+                        dependent2: -30
+                        independent3: 15462
+                        dependent3: -20
+                        independent4: 9397
+                        dependent4: -10
+                        independent5: 5896
+                        dependent5: 0
+                        independent6: 3792
+                        dependent6: 10
+                        independent7: 2500
+                        dependent7: 20
+                        independent8: 1707
+                        dependent8: 30
+                        independent9: 1175
+                        dependent9: 40
+                        independent10: 834
+                        dependent10: 50
+                        independent11: 596
+                        dependent11: 60
+                        independent12: 436
+                        dependent12: 70
+                        independent13: 323
+                        dependent13: 80
+                        independent14: 243
+                        dependent14: 90
+                        independent15: 187
+                        dependent15: 100
+                        independent16: 144
+                        dependent16: 110
+                        independent17: 113
+                        dependent17: 120
+                        independent18: 89
+                        dependent18: 130
+                        independent19: 71
+                        dependent19: 140
+                        independent20: 57
+                        dependent20: 150
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
-                r5v: 10000
+                r5v: 10000 # maybe use a smaller resistance for better resolution at higher temps
                 rfilt: 10000
                 rdiv: 19100
                 
-    # TODO finish this, there are lots of channels on each tire
     "brake_temp_sensor":
+        # TODO actually finish this. There are many channels
         name_english: "Brake Temp Sensors"
         outputs:
             rear_right_1:
@@ -310,8 +345,8 @@ sensors:
                         data_byte_start: 0
                         data_byte_end: 1
 
-    # TODO finish this, there are lots of channels on each tire
     "tire_temp_sensor":
+        # TODO actually finish this. There are many channels
         name_english: "Tire Temp Sensors"
         outputs:
             rear_right_1:
@@ -329,6 +364,8 @@ sensors:
                         data_byte_end: 1
                         
     "exhaust_gas_temp":
+        # HTS 0630-330
+        # TODO this data sheet does not have a conversion on it
         name_english: "Exhaust Gas Temp"
         outputs:
             TODO:
@@ -345,7 +382,8 @@ sensors:
                         data_byte_start: 0
                         data_byte_end: 1
 
-    "linear_pos_sensor":
+    "linear_pos_sensor_75":
+        # Texense RSL-75
         name_english: "Linerar Position Sensor"
         outputs:
             voltage:
@@ -359,10 +397,8 @@ sensors:
                     entries:
                         independent1: 0
                         dependent1: 0
-                        independent2: 2.5
-                        dependent2: 0.5
-                        independent3: 5.0
-                        dependent3: 1.0
+                        independent2: 5
+                        dependent2: 80
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
@@ -371,6 +407,7 @@ sensors:
                 rdiv: 19100
                 
     "steering_angle_sensor":
+        # Texense RSL-75 with modified conversion to convert a linear pot to an angle
         name_english: "Steering Angle Sensor"
         outputs:
             voltage:
@@ -382,10 +419,11 @@ sensors:
                 analog_subtype: Voltage
                 table:
                     entries:
+                        # TODO probably wont be 0-5V
                         independent1: 0
-                        dependent1: 0
-                        independent2: 2.5
-                        dependent2: 0.5
+                        dependent1: -90
+                        independent2: 5
+                        dependent2: 90
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
@@ -394,6 +432,8 @@ sensors:
                 rdiv: 19100
                 
     "water_flow_sensor":
+        # TODO we need to calebrate this ourselves
+        # GR-108P2
         name_english: "Water Flow Sensor"
         outputs:
             voltage:
@@ -407,10 +447,8 @@ sensors:
                     entries:
                         independent1: 0
                         dependent1: 0
-                        independent2: 2.5
-                        dependent2: 0.5
-                        independent3: 5.0
-                        dependent3: 1.0
+                        independent2: 5.0
+                        dependent2: 1
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
@@ -419,6 +457,7 @@ sensors:
                 rdiv: 19100
                 
     "lambda_sensor":
+        # TODO no datasheet
         name_english: "Lambda Sensor"
         outputs:
             TODO:
@@ -436,18 +475,432 @@ sensors:
                         data_byte_end: 1
 
     "five_axis":
+        # Acceleration Sensor MM5.10-R
         name_english: "Five Axis Sensor"
         outputs:
-            TODO:
-                unit: Celcius
-                quantization: 0.1
-                offset: -100
+            yaw_rate:
+                unit: degrees per second
+                quantization: 0.005
+                offset: 0
+            y_axis_accel:
+                unit: Gs
+                quantization: 0.001274
+                offset: 0
+            roll_rate:
+                unit: degrees per second
+                quantization: 0.005
+                offset: 0
+            x_axis_accel:
+                unit: Gs
+                quantization: 0.001274
+                offset: 0
+            z_axis_accel:
+                unit: Gs
+                quantization: 0.001274
+                offset: 0
         sensor_type:
             CAN:
                 messages:
                     message1:
-                        output_measured: TODO
-                        id: 0x137
+                        output_measured: yaw_rate
+                        id: 0x174
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message2:
+                        output_measured: y_axis_accel
+                        id: 0x174
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message3:
+                        output_measured: roll_rate
+                        id: 0x178
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message4:
+                        output_measured: x_axis_accel
+                        id: 0x178
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message5:
+                        output_measured: z_axis_accel
+                        id: 0x17C
+                        encoding: INT_LSB
+                        data_byte_start: 3
+                        data_byte_end: 4
+                       
+    "M600_ecu_fast":
+        name_english: "M600 ECU High Prio Data"
+        outputs:
+            rpm:
+                unit: rpm
+                quantization: 1
+                offset: 0
+            wheel_slip:
+                unit: kph
+                quantization: 0.1
+                offset: 0
+            wheel_slip_target:
+                unit: kph
+                quantization: 0.1
+                offset: 0
+            aim_rpm:
+                unit: rpm
+                quantization: 1
+                offset: 0
+            wsfl:
+                unit: kph
+                quantization: 0.1
+                offset: 0
+            wsfr:
+                unit: kph
+                quantization: 0.1
+                offset: 0
+            wsrl:
+                unit: kph
+                quantization: 0.1
+                offset: 0
+            wsrr:
+                unit: kph
+                quantization: 0.1
+                offset: 0
+            ign_cut_level:
+                unit: percent
+                quantization: 0.392157
+                offset: 0
+        sensor_type:
+            CAN:
+                messages:
+                    message1:
+                        output_measured: rpm
+                        id: 0x120
                         encoding: INT_MSB
                         data_byte_start: 0
                         data_byte_end: 1
+                    message2:
+                        output_measured: wheel_slip
+                        id: 0x120
+                        encoding: INT_MSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message3:
+                        output_measured: wheel_slip_target
+                        id: 0x120
+                        encoding: INT_MSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message4:
+                        output_measured: aim_rpm
+                        id: 0x120
+                        encoding: INT_MSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                        
+                    message5:
+                        output_measured: wsfl
+                        id: 0x121
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message6:
+                        output_measured: wsfr
+                        id: 0x121
+                        encoding: INT_MSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message7:
+                        output_measured: wsrl
+                        id: 0x121
+                        encoding: INT_MSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message8:
+                        output_measured: wsrr
+                        id: 0x121
+                        encoding: INT_MSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                        
+                    message9:
+                        output_measured: ign_cut_level
+                        id: 0x122
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                        
+    "M600_ecu_slow":
+        name_english: "M600 ECU Low Prio Data"
+        outputs:
+            bat_volts:
+                unit: Volts
+                quantization: 0.01
+                offset: 0
+            engine_temp:
+                unit: C
+                quantization: 0.1
+                offset: 0
+            inlet_air_temp:
+                unit: C
+                quantization: 0.1
+                offset: 0
+            lambda_1:
+                unit: LA
+                quantization: 0.001
+                offset: 0
+            throttle_pos_1:
+                unit: percent
+                quantization: 0.1
+                offset: 0
+            throttle_pos_2:
+                unit: percent
+                quantization: 0.1
+                offset: 0
+            pedal_pos_1:
+                unit: percent
+                quantization: 0.1
+                offset: 0
+            pedal_pos_2:
+                unit: percent
+                quantization: 0.1
+                offset: 0
+            man_pressure:
+                unit: kPa
+                quantization: 0.1
+                offset: 0
+            fuel_cut_level:
+                unit: percent
+                quantization: 0.392157
+                offset: 0
+            ign_advance:
+                unit: dbtdc
+                quantization: 0.1
+                offset: 0
+            oil_pressure:
+                unit: kPa
+                quantization: 0.1
+                offset: 0
+            oil_temp:
+                unit: C
+                quantization: 0.1
+                offset: 0
+            fuel_pressure:
+                unit: kPa
+                quantization: 0.1
+                offset: 0
+            throttle_pos_required:
+                unit: percent
+                quantization: 0.1
+                offset: 0
+            brake_pressure_front:
+                unit: psi
+                quantization: 0.1
+                offset: 0
+            etc_duty:
+                unit: percent
+                quantization: 1
+                offset: 0
+            fan_duty:
+                unit: percent
+                quantization: 1
+                offset: 0
+            fanoil_duty:
+                unit: percent
+                quantization: 1
+                offset: 0
+            wpump_duty:
+                unit: percent
+                quantization: 1
+                offset: 0
+            brake_light_duty:
+                unit: percent
+                quantization: 1
+                offset: 0
+            warning_light_duty:
+                unit: percent
+                quantization: 1
+                offset: 0
+            aux_5v:
+                unit: Volts
+                quantization: 0.01
+                offset: 0
+            eng_5v:
+                unit: Volts
+                quantization: 0.01
+                offset: 0
+            gps_lat:
+                unit: Deg
+                quantization: 0.01 # TODO this might not be correct
+                offset: 0
+            gps_long:
+                unit: Deg
+                quantization: 0.01 # TODO this might not be correct
+                offset: 0
+                
+        sensor_type:
+            CAN:
+                messages:
+                    message1:
+                        output_measured: bat_volts
+                        id: 0x100
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message2:
+                        output_measured: engine_temp
+                        id: 0x100
+                        encoding: INT_MSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message3:
+                        output_measured: inlet_air_temp
+                        id: 0x100
+                        encoding: INT_MSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message4:
+                        output_measured: lambda_1
+                        id: 0x100
+                        encoding: INT_MSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+
+                    message5:
+                        output_measured: throttle_pos_1
+                        id: 0x101
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message6:
+                        output_measured: throttle_pos_2
+                        id: 0x101
+                        encoding: INT_MSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message7:
+                        output_measured: pedal_pos_1
+                        id: 0x101
+                        encoding: INT_MSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message8:
+                        output_measured: pedal_pos_2
+                        id: 0x101
+                        encoding: INT_MSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                        
+                    message9:
+                        output_measured: man_pressure
+                        id: 0x102
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message10:
+                        output_measured: fuel_cut_level
+                        id: 0x102
+                        encoding: INT_MSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message11:
+                        output_measured: ign_advance
+                        id: 0x102
+                        encoding: INT_MSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message12:
+                        output_measured: oil_pressure
+                        id: 0x102
+                        encoding: INT_MSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                        
+                    message13:
+                        output_measured: oil_temp
+                        id: 0x103
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message14:
+                        output_measured: fuel_pressure
+                        id: 0x103
+                        encoding: INT_MSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message15:
+                        output_measured: throttle_pos_required
+                        id: 0x103
+                        encoding: INT_MSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message16:
+                        output_measured: brake_pressure_front
+                        id: 0x103
+                        encoding: INT_MSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                        
+                    message17:
+                        output_measured: etc_duty
+                        id: 0x104
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message18:
+                        output_measured: fan_duty
+                        id: 0x104
+                        encoding: INT_MSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message19:
+                        output_measured: fanoil_duty
+                        id: 0x104
+                        encoding: INT_MSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message20:
+                        output_measured: wpump_duty
+                        id: 0x104
+                        encoding: INT_MSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                        
+                    message21:
+                        output_measured: brake_light_duty
+                        id: 0x105
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message22:
+                        output_measured: warning_light_duty
+                        id: 0x105
+                        encoding: INT_MSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message23:
+                        output_measured: aux_5v
+                        id: 0x105
+                        encoding: INT_MSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message24:
+                        output_measured: eng_5v
+                        id: 0x105
+                        encoding: INT_MSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                        
+                    message25:
+                        output_measured: gps_lat
+                        id: 0x106
+                        encoding: INT_MSB
+                        data_byte_start: 0
+                        data_byte_end: 3
+                    message26:
+                        output_measured: gps_long
+                        id: 0x106
+                        encoding: INT_MSB
+                        data_byte_start: 4
+                        data_byte_end: 7

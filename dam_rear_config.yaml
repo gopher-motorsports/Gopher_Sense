@@ -291,7 +291,7 @@ parameters_produced:
     brake_pressure_rear:
         produced_by: ADC1_IN8
         sensor:
-            name: "MLH03KPSB06A"
+            name: "brake_pressure_sensor"
             output: voltage
         num_samples_buffered: 10
 

@@ -9,86 +9,17 @@ buckets:
             - firewall_temp
             - front_left_shock_pot
             - front_right_shock_pot
+            - steering_angle
+            - brake_pressure_rear
+            - ride_height_front
+            - brake_temp_fl
+            - brake_temp_fr
+            # 5 axis
             - yaw_rate
             - y_axis_accel
             - roll_rate
             - x_axis_accel
             - z_axis_accel
-            - steering_angle
-            - brake_pressure_front
-            - ride_height_front
-
-    tire_brake_temps:
-        id: 2
-        frequency_hz: 5
-        parameters:
-            # brake temps
-            - brake_temp_fr_1
-            - brake_temp_fr_2
-            - brake_temp_fr_3
-            - brake_temp_fr_4
-            - brake_temp_fr_5
-            - brake_temp_fr_6
-            - brake_temp_fr_7
-            - brake_temp_fr_8
-            - brake_temp_fr_9
-            - brake_temp_fr_10
-            - brake_temp_fr_11
-            - brake_temp_fr_12
-            - brake_temp_fr_13
-            - brake_temp_fr_14
-            - brake_temp_fr_15
-            - brake_temp_fr_16
-            - brake_temp_fl_1
-            - brake_temp_fl_2
-            - brake_temp_fl_3
-            - brake_temp_fl_4
-            - brake_temp_fl_5
-            - brake_temp_fl_6
-            - brake_temp_fl_7
-            - brake_temp_fl_8
-            - brake_temp_fl_9
-            - brake_temp_fl_10
-            - brake_temp_fl_11
-            - brake_temp_fl_12
-            - brake_temp_fl_13
-            - brake_temp_fl_14
-            - brake_temp_fl_15
-            - brake_temp_fl_16
-
-            # tire temps
-            - tire_temp_fr_1
-            - tire_temp_fr_2
-            - tire_temp_fr_3
-            - tire_temp_fr_4
-            - tire_temp_fr_5
-            - tire_temp_fr_6
-            - tire_temp_fr_7
-            - tire_temp_fr_8
-            - tire_temp_fr_9
-            - tire_temp_fr_10
-            - tire_temp_fr_11
-            - tire_temp_fr_12
-            - tire_temp_fr_13
-            - tire_temp_fr_14
-            - tire_temp_fr_15
-            - tire_temp_fr_16
-            - tire_temp_fl_1
-            - tire_temp_fl_2
-            - tire_temp_fl_3
-            - tire_temp_fl_4
-            - tire_temp_fl_5
-            - tire_temp_fl_6
-            - tire_temp_fl_7
-            - tire_temp_fl_8
-            - tire_temp_fl_9
-            - tire_temp_fl_10
-            - tire_temp_fl_11
-            - tire_temp_fl_12
-            - tire_temp_fl_13
-            - tire_temp_fl_14
-            - tire_temp_fl_15
-            - tire_temp_fl_16
 
 
 parameters_produced:
@@ -120,7 +51,7 @@ parameters_produced:
     brake_pressure_front:
         produced_by: ADC3_IN5
         sensor:
-            name: "MLH03KPSB06A"
+            name: "brake_pressure_sensor"
             output: voltage
         num_samples_buffered: 10
         
@@ -145,49 +76,34 @@ parameters_produced:
         produced_by: CAN
         sensor:
             name: "five_axis"
-            output: TODO
+            output: yaw_rate
         num_samples_buffered: 1
         
     y_axis_accel:
         produced_by: CAN
         sensor:
             name: "five_axis"
-            output: TODO
+            output: y_axis_accel
         num_samples_buffered: 1
         
     roll_rate:
         produced_by: CAN
         sensor:
             name: "five_axis"
-            output: TODO
+            output: roll_rate
         num_samples_buffered: 1
         
     x_axis_accel:
         produced_by: CAN
         sensor:
             name: "five_axis"
-            output: TODO
+            output: x_axis_accel
         num_samples_buffered: 1
         
     z_axis_accel:
         produced_by: CAN
         sensor:
             name: "five_axis"
-            output: TODO
+            output: z_axis_accel
         num_samples_buffered: 1
 
-    brake_temp_fr_1:
-        produced_by: CAN
-        sensor:
-            name: "brake_temp_sensor"
-            output: TODO
-        num_samples_buffered: 1
-    # TODO there needs to be 31 more
-    
-    tire_temp_fr_1:
-        produced_by: CAN
-        sensor:
-            name: "tire_temp_sensor"
-            output: TODO
-        num_samples_buffered: 1
-    # TODO there needs to be 31 more

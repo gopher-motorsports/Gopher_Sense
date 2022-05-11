@@ -50,8 +50,6 @@ buckets:
             - float_tester_3
             - float_tester_4
 
-# TODO comment all of these
-
 parameters_produced:
 # DAM CHANNEL 1
     dam_chan_1:
