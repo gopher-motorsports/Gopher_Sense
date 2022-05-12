@@ -11,7 +11,7 @@
 #define NUM_ADC2_PARAMS 0
 #define NUM_ADC3_PARAMS 0
 #define NUM_CAN_SENSOR_PARAMS 35
-#define NUM_BUCKETS 2
+#define NUM_BUCKETS 4
 
 // analog params must be in channel order
 #if NUM_ADC1_PARAMS > 0

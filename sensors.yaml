@@ -398,14 +398,62 @@ sensors:
                         independent1: 0
                         dependent1: 0
                         independent2: 5
-                        dependent2: 80
+                        dependent2: 75
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
                 r5v: RES_OPEN
                 rfilt: 10000
                 rdiv: 19100
-                
+    
+    "linear_pos_sensor_50":
+        # Texense RSL-50
+        name_english: "Linerar Position Sensor"
+        outputs:
+            voltage:
+                unit: mm
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 5
+                        dependent2: 50
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+
+    "linear_pos_sensor_25":
+        # Texense RSL-25
+        name_english: "Linerar Position Sensor"
+        outputs:
+            voltage:
+                unit: mm
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 5
+                        dependent2: 25
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+
     "steering_angle_sensor":
         # Texense RSL-75 with modified conversion to convert a linear pot to an angle
         name_english: "Steering Angle Sensor"

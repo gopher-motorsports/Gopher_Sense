@@ -1,4 +1,4 @@
-module_name: "TCM_CAN_Example"
+module_name: "TCM_with_ECU_Decoding"
 
 
 buckets:
@@ -51,15 +51,35 @@ buckets:
         id: 3
         frequency_hz: 100
         parameters:
-            - TODO
+            - tcm_shifter_position
+            - tcm_clutch_position
+            - tcm_trans_rpm
+            - tcm_throttle_blip
+            - tcm_using_clutch
+            - tcm_anti_stall
+            
             
     low_frequency_tcm:
         id: 4
         frequency_hz: 25
         parameters:
-            - TODO
+            - sw_upshift
+            - sw_downshift
+            - sw_clutch
+            - sw_drs
+            - sw_aux2
+            - sw_aux3
+            - tcm_neutral
+            - tcm_target_rpm
+            - tcm_current_gear
+            - tcm_target_gear
+            - tcm_currently_moving
+            - tcm_successful_shift
 
 parameters_produced:
+# Analog sensors
+    # TODO shifter position and clutch position
+
 # CAN sensors:
 # High frequency
     rpm_ecu:
