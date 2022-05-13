@@ -772,11 +772,11 @@ sensors:
                 offset: 0
             aux_5v:
                 unit: Volts
-                quantization: 0.01
+                quantization: 0.001
                 offset: 0
             eng_5v:
                 unit: Volts
-                quantization: 0.01
+                quantization: 0.001
                 offset: 0
             gps_lat:
                 unit: Deg

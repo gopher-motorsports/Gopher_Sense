@@ -788,7 +788,7 @@ void custom_service_can_rx_hardware(CAN_HandleTypeDef* hcan, U32 rx_mailbox)
    // remove the interrupt flag
    CAN_RxHeaderTypeDef rx_header;
    CAN_MSG message;
-   HAL_CAN_GetRxMessage(hcan, rx_mailbox, &rx_header, message->data);
+   HAL_CAN_GetRxMessage(hcan, rx_mailbox, &rx_header, message.data);
 }
 
 
