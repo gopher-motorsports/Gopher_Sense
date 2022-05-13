@@ -384,7 +384,7 @@ sensors:
 
     "linear_pos_sensor_75":
         # Texense RSL-75
-        name_english: "Linerar Position Sensor"
+        name_english: "Linear Position Sensor 75mm"
         outputs:
             voltage:
                 unit: mm
@@ -408,7 +408,7 @@ sensors:
     
     "linear_pos_sensor_50":
         # Texense RSL-50
-        name_english: "Linerar Position Sensor"
+        name_english: "Linear Position Sensor 50mm"
         outputs:
             voltage:
                 unit: mm
@@ -432,7 +432,7 @@ sensors:
 
     "linear_pos_sensor_25":
         # Texense RSL-25
-        name_english: "Linerar Position Sensor"
+        name_english: "Linear Position Sensor 25mm"
         outputs:
             voltage:
                 unit: mm

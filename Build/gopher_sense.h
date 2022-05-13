@@ -17,9 +17,9 @@ extern ANALOG_SENSOR generic_pressure_sensor;
 extern ANALOG_SENSOR pressure_drop_sensor;
 extern ANALOG_SENSOR air_tank_pressure_sensor;
 extern ANALOG_SENSOR resistive_temp_sensor;
-extern ANALOG_SENSOR linerar_position_sensor;
-extern ANALOG_SENSOR linerar_position_sensor;
-extern ANALOG_SENSOR linerar_position_sensor;
+extern ANALOG_SENSOR linear_position_sensor_75mm;
+extern ANALOG_SENSOR linear_position_sensor_50mm;
+extern ANALOG_SENSOR linear_position_sensor_25mm;
 extern ANALOG_SENSOR steering_angle_sensor;
 extern ANALOG_SENSOR water_flow_sensor;
 

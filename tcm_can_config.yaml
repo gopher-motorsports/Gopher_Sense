@@ -78,7 +78,19 @@ buckets:
 
 parameters_produced:
 # Analog sensors
-    # TODO shifter position and clutch position
+    tcm_shifter_position:
+        produced_by: ADC2_IN11
+        sensor:
+            name: linear_pos_sensor_50
+            output: voltage
+        num_samples_buffered: 1
+        
+    tcm_clutch_position:
+        produced_by: ADC1_IN10
+        sensor:
+            name: linear_pos_sensor_50
+            output: voltage
+        num_samples_buffered: 1
 
 # CAN sensors:
 # High frequency
