@@ -43,6 +43,7 @@ DAM_ERROR_STATE DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
 S8 lock_param_sending(CAN_INFO_STRUCT* can_param);
 S8 update_and_queue_param_float(FLOAT_CAN_STRUCT* can_param, float f);
 S8 update_and_queue_param_u8(U8_CAN_STRUCT* can_param, U8 u8);
+S8 update_and_queue_param_u32(U32_CAN_STRUCT* can_param, U32 u32);
 void DAM_reset(void);
 void complete_DLM_handshake (void);
 BUCKET* get_bucket_by_id (U8 bucket_id);

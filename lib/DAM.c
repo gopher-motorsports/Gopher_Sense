@@ -276,7 +276,7 @@ S8 update_and_queue_param_float(FLOAT_CAN_STRUCT* can_param, float f)
 // update_and_queue_param_u32
 //  Add data to the correct gcan variable and set the parameter to dirty
 //  if the data is different
-S8 update_and_queue_param_u32(U8_CAN_STRUCT* can_param, U32 u32)
+S8 update_and_queue_param_u32(U32_CAN_STRUCT* can_param, U32 u32)
 {
 	if (can_param->data == u32)
 	{
