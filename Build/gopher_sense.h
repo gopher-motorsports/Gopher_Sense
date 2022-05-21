@@ -4,8 +4,8 @@
 
 #include "sensor_hal.h"
 
-#define NUM_ANALOG_SENSORS 14
-#define NUM_CAN_SENSORS 8
+#define NUM_ANALOG_SENSORS 15
+#define NUM_CAN_SENSORS 7
 
 
 extern ANALOG_SENSOR basic_voltage_sensor_for_testing;
@@ -17,6 +17,7 @@ extern ANALOG_SENSOR generic_pressure_sensor;
 extern ANALOG_SENSOR pressure_drop_sensor;
 extern ANALOG_SENSOR air_tank_pressure_sensor;
 extern ANALOG_SENSOR resistive_temp_sensor;
+extern ANALOG_SENSOR brake_temperature_sensor;
 extern ANALOG_SENSOR linear_position_sensor_75mm;
 extern ANALOG_SENSOR linear_position_sensor_50mm;
 extern ANALOG_SENSOR linear_position_sensor_25mm;
@@ -25,7 +26,6 @@ extern ANALOG_SENSOR water_flow_sensor;
 
 
 extern CAN_SENSOR can_sensor_for_testing;
-extern CAN_SENSOR brake_temp_sensors;
 extern CAN_SENSOR tire_temp_sensors;
 extern CAN_SENSOR exhaust_gas_temp;
 extern CAN_SENSOR lambda_sensor;

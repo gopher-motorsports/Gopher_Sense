@@ -6,14 +6,14 @@ buckets:
         id: 1
         frequency_hz: 25
         parameters:
-            - firewall_temp
             - front_left_shock_pot
             - front_right_shock_pot
             - steering_angle
-            - brake_pressure_rear
-            - ride_height_front
             - brake_temp_fl
             - brake_temp_fr
+            - brake_pressure_rear
+            - firewall_temp
+            - ride_height_front
             # 5 axis
             - yaw_rate
             - y_axis_accel
@@ -27,17 +27,17 @@ parameters_produced:
     front_left_shock_pot:
         produced_by: ADC3_IN9
         sensor:
-            name: "linear_pos_sensor"
+            name: "linear_pos_sensor_25"
             output: voltage
-        num_samples_buffered: 10
+        num_samples_buffered: 1
        
 # DAM CHANNEL 2       
     front_right_shock_pot:
         produced_by: ADC3_IN14
         sensor:
-            name: "linear_pos_sensor"
+            name: "linear_pos_sensor_25"
             output: voltage
-        num_samples_buffered: 10
+        num_samples_buffered: 1
             
 # DAM CHANNEL 3
     steering_angle:
@@ -45,31 +45,47 @@ parameters_produced:
         sensor:
             name: "steering_angle_sensor"
             output: voltage
-        num_samples_buffered: 10
+        num_samples_buffered: 1
            
-# DAM CHANNEL 5           
-    brake_pressure_front:
+# DAM CHANNEL 4        
+    brake_temp_fl:
+        produced_by: ADC3_IN4
+        sensor:
+            name: "brake_temp_sensor"
+            output: voltage
+        num_samples_buffered: 1
+        
+# DAM CHANNEL 5
+    brake_temp_fr:
         produced_by: ADC3_IN5
+        sensor:
+            name: "brake_temp_sensor"
+            output: voltage
+        num_samples_buffered: 1
+        
+# DAM CHANNEL 6
+    brake_pressure_rear:
+        produced_by: ADC3_IN6
         sensor:
             name: "brake_pressure_sensor"
             output: voltage
         num_samples_buffered: 10
         
-# DAM CHANNEL 11
+# DAM CHANNEL 8
     firewall_temp:
-        produced_by: ADC2_IN12
+        produced_by: ADC3_IN8
         sensor:
             name: "temp_sensor"
             output: resistance
-        num_samples_buffered: 10
+        num_samples_buffered: 1
         
-# DAM CHANNEL 13
+# DAM CHANNEL 10
     ride_height_front:
-        produced_by: ADC2_IN0
+        produced_by: ADC2_IN11
         sensor:
             name: "ride_hight_sensor"
             output: voltage
-        num_samples_buffered: 10
+        num_samples_buffered: 1
 
 # CAN sensors:
     yaw_rate:

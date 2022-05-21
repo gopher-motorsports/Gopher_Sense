@@ -41,6 +41,8 @@ DAM_ERROR_STATE DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
 						 ADC_HandleTypeDef* adc1, ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
 						 TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin);
 S8 lock_param_sending(CAN_INFO_STRUCT* can_param);
+S8 update_and_queue_param_float(FLOAT_CAN_STRUCT* can_param, float f);
+S8 update_and_queue_param_u8(U8_CAN_STRUCT* can_param, U8 u8);
 void DAM_reset(void);
 void complete_DLM_handshake (void);
 BUCKET* get_bucket_by_id (U8 bucket_id);
@@ -49,7 +51,7 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params);
 void sensorCAN_service (void);
 void fill_can_subparams (CAN_SENSOR_PARAM* param, float newdata);
 void fill_analog_subparams (ANALOG_SENSOR_PARAM* param, float newdata);
-void fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data);
+S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data);
 
 
 void send_bucket_task (void* pvParameters);

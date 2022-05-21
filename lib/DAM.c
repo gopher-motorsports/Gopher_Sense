@@ -238,6 +238,111 @@ S8 lock_param_sending(CAN_INFO_STRUCT* can_param)
 }
 
 
+// update_and_queue_param_float
+//  Add data to the correct gcan variable and set the parameter to dirty
+//  if the data is different
+S8 update_and_queue_param_float(FLOAT_CAN_STRUCT* can_param, float f)
+{
+	if (can_param->data == f)
+	{
+		// we dont need to do anything as the data was not changed
+		return 0;
+	}
+	can_param->data = f;
+
+	BUCKET* bucket = bucket_list;
+	GENERAL_PARAMETER* param;
+	while (bucket - bucket_list < NUM_BUCKETS)
+	{
+		param = bucket->param_list.list;
+		while (param - bucket->param_list.list < bucket->param_list.len)
+		{
+			if (param->can_param->param_id == can_param->param_id)
+			{
+				// we found the correct parameter in a bucket
+				param->status = DIRTY;
+				return 0;
+			}
+			param++;
+		}
+
+		bucket++;
+	}
+
+	return -1;
+}
+
+
+// update_and_queue_param_u32
+//  Add data to the correct gcan variable and set the parameter to dirty
+//  if the data is different
+S8 update_and_queue_param_u32(U8_CAN_STRUCT* can_param, U32 u32)
+{
+	if (can_param->data == u32)
+	{
+		// we dont need to do anything as the data was not changed
+		return 0;
+	}
+	can_param->data = u32;
+
+	BUCKET* bucket = bucket_list;
+	GENERAL_PARAMETER* param;
+	while (bucket - bucket_list < NUM_BUCKETS)
+	{
+		param = bucket->param_list.list;
+		while (param - bucket->param_list.list < bucket->param_list.len)
+		{
+			if (param->can_param->param_id == can_param->param_id)
+			{
+				// we found the correct parameter in a bucket
+				param->status = DIRTY;
+				return 0;
+			}
+			param++;
+		}
+
+		bucket++;
+	}
+
+	return -1;
+}
+
+
+// update_and_queue_param_float
+//  Add data to the correct gcan variable and set the parameter to dirty
+//  if the data is different
+S8 update_and_queue_param_u8(U8_CAN_STRUCT* can_param, U8 u8)
+{
+	if (can_param->data == u8)
+	{
+		// we dont need to do anything as the data was not changed
+		return 0;
+	}
+	can_param->data = u8;
+
+	BUCKET* bucket = bucket_list;
+	GENERAL_PARAMETER* param;
+	while (bucket - bucket_list < NUM_BUCKETS)
+	{
+		param = bucket->param_list.list;
+		while (param - bucket->param_list.list < bucket->param_list.len)
+		{
+			if (param->can_param->param_id == can_param->param_id)
+			{
+				// we found the correct parameter in a bucket
+				param->status = DIRTY;
+				return 0;
+			}
+			param++;
+		}
+
+		bucket++;
+	}
+
+	return -1;
+}
+
+
 // DAM_reset
 //  Reset all of the sensor buffers and start the DLM-DAM initialization process
 //  over again
@@ -377,9 +482,10 @@ void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 		}
 
 		// fill the data and set this parameter to dirty. The last time this GCAN param was
-		// updated will be stored in the last_rx section
-		fill_gcan_param_data(param->bucket_param->can_param, converted_data);
-		if (param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
+		// updated will be stored in the last_rx section. Only set the status to dirty if
+		// fill_gcan_param_dirty returns 1, meaning the data has changed
+		if (fill_gcan_param_data(param->bucket_param->can_param, converted_data) &&
+			param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
 		param->bucket_param->can_param->last_rx = HAL_GetTick();
 		fill_analog_subparams(param, converted_data);
 		param++;
@@ -449,9 +555,11 @@ void sensorCAN_service (void)
 		}
 
 		// fill in the data and reflect that there is new data to be sent. The time that this
-		// CAN param was updated will be reflected in the last_rx section of the GCAN param
-		fill_gcan_param_data(param->bucket_param->can_param, converted_data);
-		if (param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
+		// CAN param was updated will be reflected in the last_rx section of the GCAN param.
+		// Only set the status to dirty if fill_gcan_param_dirty returns 1, meaning the data
+		// has changed
+		if (fill_gcan_param_data(param->bucket_param->can_param, converted_data) &&
+			param->bucket_param->status != LOCKED_SEND) param->bucket_param->status = DIRTY;
 		param->bucket_param->can_param->last_rx = HAL_GetTick();
 		param->new_buf_data = FALSE;
 
@@ -653,50 +761,92 @@ BUCKET* get_bucket_by_id (U8 bucket_id)
 }
 
 
-void fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data)
+// fill_gcan_param_data
+//  Fills in the data from a float using the correct type. Returns 1 if the parameter
+//  is changed, and 0 if it is not
+S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data)
 {
 	switch (parameter_data_types[can_param->param_id])
 	{
 	case UNSIGNED8:
-		((U8_CAN_STRUCT*)(can_param))->data = (U8)data;
-		break;
+		if (((U8_CAN_STRUCT*)(can_param))->data != (U8)data)
+		{
+			((U8_CAN_STRUCT*)(can_param))->data = (U8)data;
+			return TRUE;
+		}
+		return FALSE;
 
 	case UNSIGNED16:
-		((U16_CAN_STRUCT*)(can_param))->data = (U16)data;
-		break;
+		if (((U16_CAN_STRUCT*)(can_param))->data != (U16)data)
+		{
+			((U16_CAN_STRUCT*)(can_param))->data = (U16)data;
+			return TRUE;
+		}
+		return FALSE;
 
 	case UNSIGNED32:
-		((U32_CAN_STRUCT*)(can_param))->data = (U32)data;
-		break;
+		if (((U32_CAN_STRUCT*)(can_param))->data != (U32)data)
+		{
+			((U32_CAN_STRUCT*)(can_param))->data = (U32)data;
+			return TRUE;
+		}
+		return FALSE;
 
 	case UNSIGNED64:
-		((U64_CAN_STRUCT*)(can_param))->data = (U64)data;
-		break;
+		if (((U64_CAN_STRUCT*)(can_param))->data != (U64)data)
+		{
+			((U64_CAN_STRUCT*)(can_param))->data = (U64)data;
+			return TRUE;
+		}
+		return FALSE;
 
 	case SIGNED8:
-		((S8_CAN_STRUCT*)(can_param))->data = (S8)data;
-		break;
+		if (((S8_CAN_STRUCT*)(can_param))->data != (S8)data)
+		{
+			((S8_CAN_STRUCT*)(can_param))->data = (S8)data;
+			return TRUE;
+		}
+		return FALSE;
 
 	case SIGNED16:
-		((S16_CAN_STRUCT*)(can_param))->data = (S16)data;
-		break;
+		if (((S16_CAN_STRUCT*)(can_param))->data != (S16)data)
+		{
+			((S16_CAN_STRUCT*)(can_param))->data = (S16)data;
+			return TRUE;
+		}
+		return FALSE;
 
 	case SIGNED32:
-		((S32_CAN_STRUCT*)(can_param))->data = (S32)data;
-		break;
+		if (((S32_CAN_STRUCT*)(can_param))->data != (S32)data)
+		{
+			((S32_CAN_STRUCT*)(can_param))->data = (S32)data;
+			return TRUE;
+		}
+		return FALSE;
 
 	case SIGNED64:
-		((S64_CAN_STRUCT*)(can_param))->data = (S64)data;
-		break;
+		if (((S64_CAN_STRUCT*)(can_param))->data != (S64)data)
+		{
+			((S64_CAN_STRUCT*)(can_param))->data = (S64)data;
+			return TRUE;
+		}
+		return FALSE;
 
 	case FLOATING:
-		((FLOAT_CAN_STRUCT*)(can_param))->data = data;
+		if (((FLOAT_CAN_STRUCT*)(can_param))->data != data)
+		{
+			((FLOAT_CAN_STRUCT*)(can_param))->data = data;
+			return TRUE;
+		}
+		return FALSE;
 		break;
 
 	default:
 		handle_DAM_error(DATA_ASSIGNMENT_ERROR);
 		break;
 	}
+
+	return FALSE;
 }
 
 

@@ -27,10 +27,10 @@ TIM_HandleTypeDef* adc_timer = NULL;
 volatile U16 adc1_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
 #endif
 #if NUM_ADC2_PARAMS > 0
-volatile U16 adc2_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
+volatile U16 adc2_sample_buffer[ADC2_SAMPLE_BUFFER_SIZE] = {0};
 #endif
 #if NUM_ADC3_PARAMS > 0
-volatile U16 adc3_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
+volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
 #endif
 
 #define SCAN_RX_BUFFER_SIZE 32
