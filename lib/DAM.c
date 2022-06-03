@@ -43,7 +43,8 @@ static DAM_ERROR_STATE latched_error_state = NO_ERRORS;
 static boolean hasInitialized = FALSE;
 static GPIO_TypeDef* status_led_port;
 static U16 status_led_pin;
-static U32 last_bucket_req = 0;
+// BETTER_BUCKETS
+//static U32 last_bucket_req = 0;
 
 
 // DAM_init
@@ -185,7 +186,8 @@ DAM_ERROR_STATE DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
         // CAN commands for the communication with the DLM
         add_custom_can_func(SEND_BUCKET_PARAMS, &send_bucket_params, TRUE, NULL);
         add_custom_can_func(BUCKET_OK, &bucket_ok, TRUE, NULL);
-        add_custom_can_func(REQUEST_BUCKET, &bucket_requested, TRUE, NULL);
+        // BETTER_BUCKETS
+//        add_custom_can_func(REQUEST_BUCKET, &bucket_requested, TRUE, NULL);
 
         if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr))
 		{
@@ -617,7 +619,13 @@ void handle_DAM_LED(void)
 	while (bucket - bucket_list < NUM_BUCKETS)
 	{
 		// check if this bucket is not ready
-		if(bucket->state <= BUCKET_CONFIG_SENDING_FRQ)
+		// BETTER_BUCKETS
+//		if(bucket->state <= BUCKET_CONFIG_SENDING_FRQ)
+//		{
+//			all_buckets_ok = FALSE;
+//			break;
+//		}
+		if (bucket->state < BUCKET_GETTING_DATA)
 		{
 			all_buckets_ok = FALSE;
 			break;
@@ -626,28 +634,29 @@ void handle_DAM_LED(void)
 	}
 
 	// check if we still have comms from the DLM
-	DLM_comms_active = (HAL_GetTick() - last_bucket_req < NO_CONNECTION_TIMEOUT_ms);
-
-    // toggle the LED at 0.5 second intervals if the all of the buckets
-	// are working normally and there are no errors
-	if (all_buckets_ok && DLM_comms_active)
-	{
-		// blink at 500ms intervals to signal we are logging correctly
-		if ((HAL_GetTick() - last_blink_time) >= 500)
-		{
-			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
-			last_blink_time = HAL_GetTick();
-		}
-	}
-	else
-	{
-		// waiting for the DLM to complete the handshake. Blink at 2 sec intervals
-		if ((HAL_GetTick() - last_blink_time) >= 2000)
-		{
-			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
-			last_blink_time = HAL_GetTick();
-		}
-	}
+	// BETTER_BUCKETS
+//	DLM_comms_active = (HAL_GetTick() - last_bucket_req < NO_CONNECTION_TIMEOUT_ms);
+//
+//    // toggle the LED at 0.5 second intervals if the all of the buckets
+//	// are working normally and there are no errors
+//	if (all_buckets_ok && DLM_comms_active)
+//	{
+//		// blink at 500ms intervals to signal we are logging correctly
+//		if ((HAL_GetTick() - last_blink_time) >= 500)
+//		{
+//			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
+//			last_blink_time = HAL_GetTick();
+//		}
+//	}
+//	else
+//	{
+//		// waiting for the DLM to complete the handshake. Blink at 2 sec intervals
+//		if ((HAL_GetTick() - last_blink_time) >= 2000)
+//		{
+//			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
+//			last_blink_time = HAL_GetTick();
+//		}
+//	}
 }
 
 
@@ -690,24 +699,34 @@ void send_bucket_task (void* pvParameters)
 			osDelay(INIT_TX_DELAY_TIME_ms); // Delay to avoid flooding the TX_queue
     		break;
 
-    	case BUCKET_CONFIG_SENDING_FRQ:
-    		// Send the frequency until this bucket is requested the first time
-    		send_can_command(PRIO_HIGH, DLM_ID, ASSIGN_BUCKET_TO_FRQ,
-							 bucket->bucket_id,
-							 GET_U16_MSB(bucket->ms_between_req),
-							 GET_U16_LSB(bucket->ms_between_req), 0);
-
-    		// wait for twice the time this bucket expects to get the first request in before
-    		// sending the frequency again to minimize extra messages
-    		osDelay(bucket->ms_between_req << 1);
-    		break;
+		// BETTER_BUCKETS
+//    	case BUCKET_CONFIG_SENDING_FRQ:
+//    		// Send the frequency until this bucket is requested the first time
+//    		send_can_command(PRIO_HIGH, DLM_ID, ASSIGN_BUCKET_TO_FRQ,
+//							 bucket->bucket_id,
+//							 GET_U16_MSB(bucket->ms_between_req),
+//							 GET_U16_LSB(bucket->ms_between_req), 0);
+//
+//    		// wait for twice the time this bucket expects to get the first request in before
+//    		// sending the frequency again to minimize extra messages
+//    		osDelay(bucket->ms_between_req << 1);
+//    		break;
 
     	case BUCKET_GETTING_DATA:
+    		// BETTER_BUCKETS
+    		// check if this bucket is ready to be sent
+    		if (HAL_GetTick() - bucket->last_send >= bucket->ms_between_req)
+    		{
+    			bucket->state = BUCKET_SENDING;
+    		}
+
     		// yield the sending task when not requested
     		osDelay(1);
     		break;
 
-    	case BUCKET_REQUESTED:
+		// BETTER_BUCKETS
+//    	case BUCKET_REQUESTED:
+    	case BUCKET_SENDING:
     		// send the bucket parameters
 			param = bucket->param_list.list;
 			while (param - bucket->param_list.list < bucket->param_list.len)
@@ -733,6 +752,9 @@ void send_bucket_task (void* pvParameters)
 			   }
 				param++;
 			}
+
+			// BETTER_BUCKETS
+			bucket->last_send = HAL_GetTick();
 
 			bucket->state = BUCKET_GETTING_DATA;
 			osDelay(1);
@@ -885,12 +907,18 @@ void bucket_ok(MODULE_ID sender, void* parameter,
     	handle_DAM_error(BUCKET_NOT_RECOGNIZED);
     	return;
     }
-    if (bucket->state <= BUCKET_CONFIG_SENDING_FRQ )
+    // BETTER_BUCKETS
+//    if (bucket->state <= BUCKET_CONFIG_SENDING_FRQ )
+//    {
+//    	// dont reset the state of bucket getting data/sending
+//        bucket->state = BUCKET_CONFIG_SENDING_FRQ;
+//    }
+    if (bucket->state < BUCKET_GETTING_DATA)
     {
-    	// dont reset the state of bucket getting data/sending
-        bucket->state = BUCKET_CONFIG_SENDING_FRQ;
+    	// if this bucket isn't already getting/sending data, start
+    	bucket->state = BUCKET_GETTING_DATA;
+    	bucket->last_send = HAL_GetTick();
     }
-
 }
 
 
@@ -901,21 +929,22 @@ void bucket_ok(MODULE_ID sender, void* parameter,
  * the bucket until it is configured on the DLM, so to make
  * it here everything is ok
  */
-void bucket_requested (MODULE_ID sender, void* parameter,
-                       U8 bucket_id, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
-{
-    BUCKET* bucket = get_bucket_by_id(bucket_id);
-    if (bucket == NULL)
-    {
-        handle_DAM_error(BUCKET_NOT_RECOGNIZED);
-        return;
-    }
-
-    bucket->state = BUCKET_REQUESTED;
-
-    // note that a new bucket was requested
-    last_bucket_req = HAL_GetTick();
-}
+// BETTER_BUCKETS
+//void bucket_requested (MODULE_ID sender, void* parameter,
+//                       U8 bucket_id, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
+//{
+//    BUCKET* bucket = get_bucket_by_id(bucket_id);
+//    if (bucket == NULL)
+//    {
+//        handle_DAM_error(BUCKET_NOT_RECOGNIZED);
+//        return;
+//    }
+//
+//    bucket->state = BUCKET_REQUESTED;
+//
+//    // note that a new bucket was requested
+//    last_bucket_req = HAL_GetTick();
+//}
 
 
 /* custom_service_can_rx_hardware
