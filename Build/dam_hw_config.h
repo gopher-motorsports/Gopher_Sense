@@ -7,10 +7,10 @@
 #include "sensor_hal.h"
 
 
-#define NUM_ADC1_PARAMS 1
-#define NUM_ADC2_PARAMS 1
-#define NUM_ADC3_PARAMS 0
-#define NUM_CAN_SENSOR_PARAMS 35
+#define NUM_ADC1_PARAMS 8
+#define NUM_ADC2_PARAMS 8
+#define NUM_ADC3_PARAMS 8
+#define NUM_CAN_SENSOR_PARAMS 4
 #define NUM_BUCKETS 4
 
 // analog params must be in channel order
