@@ -43,6 +43,7 @@ static DAM_ERROR_STATE latched_error_state = NO_ERRORS;
 static boolean hasInitialized = FALSE;
 static GPIO_TypeDef* status_led_port;
 static U16 status_led_pin;
+static U32 last_dlm_heartbeat = 0;
 
 
 // DAM_init
@@ -184,6 +185,7 @@ DAM_ERROR_STATE DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
         // CAN commands for the communication with the DLM
         add_custom_can_func(SEND_BUCKET_PARAMS, &send_bucket_params, TRUE, NULL);
         add_custom_can_func(BUCKET_OK, &bucket_ok, TRUE, NULL);
+        add_custom_can_func(LOG_COMPLETE, &log_complete, TRUE, NULL);
 
         if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr))
 		{
@@ -606,7 +608,38 @@ void handle_DAM_LED(void)
     	return;
     }
 
-    // TODO: DLM heartbeat
+    // check if all the buckets are being filled
+    boolean all_buckets_ok = TRUE;
+    BUCKET* bucket = bucket_list;
+    while (bucket - bucket_list < NUM_BUCKETS)
+    {
+    	if (bucket->state < BUCKET_GETTING_DATA)
+		{
+			all_buckets_ok = FALSE;
+			break;
+		}
+		bucket++;
+    }
+
+    // check if we're getting a DLM heartbeat
+    boolean DLM_active = (HAL_GetTick() - last_dlm_heartbeat) < NO_CONNECTION_TIMEOUT_ms;
+
+    if (all_buckets_ok && DLM_active) {
+    	// buckets are collecting data and DLM is logging, blink every 500ms
+    	if ((HAL_GetTick() - last_blink_time) >= 500)
+		{
+			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
+			last_blink_time = HAL_GetTick();
+		}
+    }
+    else {
+    	// either a bucket isn't ready yet or DLM isn't logging, blink every 2s
+		if ((HAL_GetTick() - last_blink_time) >= 2000)
+		{
+			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
+			last_blink_time = HAL_GetTick();
+		}
+    }
 }
 
 
@@ -848,6 +881,17 @@ void bucket_ok(MODULE_ID sender, void* parameter,
     }
 }
 
+/* log_complete
+ * Handler for the LOG_COMPLETE gopherCAN command
+ * DLM is actively logging & communicating
+ */
+void log_complete(MODULE_ID sender, void* parameter,
+        U8 UNUSED1, U8 UNUSED2, U8 UNUSED3, U8 UNUSED4)
+{
+	if (sender != DLM_ID) return;
+
+	last_dlm_heartbeat = HAL_GetTick();
+}
 
 /* custom_service_can_rx_hardware
  * Definition for the ISR called on CAN message reception
