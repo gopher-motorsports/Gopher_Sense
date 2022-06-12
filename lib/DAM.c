@@ -43,7 +43,7 @@ static DAM_ERROR_STATE latched_error_state = NO_ERRORS;
 static boolean hasInitialized = FALSE;
 static GPIO_TypeDef* status_led_port;
 static U16 status_led_pin;
-static U32 last_bucket_req = 0;
+static U32 last_dlm_heartbeat = 0;
 
 
 // DAM_init
@@ -185,7 +185,7 @@ DAM_ERROR_STATE DAM_init(CAN_HandleTypeDef* gcan, CAN_HandleTypeDef* scan,
         // CAN commands for the communication with the DLM
         add_custom_can_func(SEND_BUCKET_PARAMS, &send_bucket_params, TRUE, NULL);
         add_custom_can_func(BUCKET_OK, &bucket_ok, TRUE, NULL);
-        add_custom_can_func(REQUEST_BUCKET, &bucket_requested, TRUE, NULL);
+        add_custom_can_func(LOG_COMPLETE, &log_complete, TRUE, NULL);
 
         if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr))
 		{
@@ -579,9 +579,6 @@ void handle_DAM_LED(void)
 {
 	static U8 num_led_blinks = 0;
 	static U32 last_blink_time = 0;
-	boolean all_buckets_ok;
-	boolean DLM_comms_active;
-	BUCKET* bucket;
 
     // if we are in an error state, use a blink pattern based on the number of
     // the error state enum
@@ -611,43 +608,38 @@ void handle_DAM_LED(void)
     	return;
     }
 
-    // check if all of the buckets are good
-	all_buckets_ok = TRUE;
-	bucket = bucket_list;
-	while (bucket - bucket_list < NUM_BUCKETS)
-	{
-		// check if this bucket is not ready
-		if(bucket->state <= BUCKET_CONFIG_SENDING_FRQ)
+    // check if all the buckets are being filled
+    boolean all_buckets_ok = TRUE;
+    BUCKET* bucket = bucket_list;
+    while (bucket - bucket_list < NUM_BUCKETS)
+    {
+    	if (bucket->state < BUCKET_GETTING_DATA)
 		{
 			all_buckets_ok = FALSE;
 			break;
 		}
 		bucket++;
-	}
+    }
 
-	// check if we still have comms from the DLM
-	DLM_comms_active = (HAL_GetTick() - last_bucket_req < NO_CONNECTION_TIMEOUT_ms);
+    // check if we're getting a DLM heartbeat
+    boolean DLM_active = (HAL_GetTick() - last_dlm_heartbeat) < NO_CONNECTION_TIMEOUT_ms;
 
-    // toggle the LED at 0.5 second intervals if the all of the buckets
-	// are working normally and there are no errors
-	if (all_buckets_ok && DLM_comms_active)
-	{
-		// blink at 500ms intervals to signal we are logging correctly
-		if ((HAL_GetTick() - last_blink_time) >= 500)
+    if (all_buckets_ok && DLM_active) {
+    	// buckets are collecting data and DLM is logging, blink every 500ms
+    	if ((HAL_GetTick() - last_blink_time) >= 500)
 		{
 			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
 			last_blink_time = HAL_GetTick();
 		}
-	}
-	else
-	{
-		// waiting for the DLM to complete the handshake. Blink at 2 sec intervals
+    }
+    else {
+    	// either a bucket isn't ready yet or DLM isn't logging, blink every 2s
 		if ((HAL_GetTick() - last_blink_time) >= 2000)
 		{
 			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
 			last_blink_time = HAL_GetTick();
 		}
-	}
+    }
 }
 
 
@@ -690,24 +682,18 @@ void send_bucket_task (void* pvParameters)
 			osDelay(INIT_TX_DELAY_TIME_ms); // Delay to avoid flooding the TX_queue
     		break;
 
-    	case BUCKET_CONFIG_SENDING_FRQ:
-    		// Send the frequency until this bucket is requested the first time
-    		send_can_command(PRIO_HIGH, DLM_ID, ASSIGN_BUCKET_TO_FRQ,
-							 bucket->bucket_id,
-							 GET_U16_MSB(bucket->ms_between_req),
-							 GET_U16_LSB(bucket->ms_between_req), 0);
-
-    		// wait for twice the time this bucket expects to get the first request in before
-    		// sending the frequency again to minimize extra messages
-    		osDelay(bucket->ms_between_req << 1);
-    		break;
-
     	case BUCKET_GETTING_DATA:
+    		// check if this bucket is ready to be sent
+    		if (HAL_GetTick() - bucket->last_send >= bucket->ms_between_req)
+    		{
+    			bucket->state = BUCKET_SENDING;
+    		}
+
     		// yield the sending task when not requested
     		osDelay(1);
     		break;
 
-    	case BUCKET_REQUESTED:
+    	case BUCKET_SENDING:
     		// send the bucket parameters
 			param = bucket->param_list.list;
 			while (param - bucket->param_list.list < bucket->param_list.len)
@@ -733,6 +719,8 @@ void send_bucket_task (void* pvParameters)
 			   }
 				param++;
 			}
+
+			bucket->last_send = HAL_GetTick();
 
 			bucket->state = BUCKET_GETTING_DATA;
 			osDelay(1);
@@ -885,38 +873,25 @@ void bucket_ok(MODULE_ID sender, void* parameter,
     	handle_DAM_error(BUCKET_NOT_RECOGNIZED);
     	return;
     }
-    if (bucket->state <= BUCKET_CONFIG_SENDING_FRQ )
+    if (bucket->state < BUCKET_GETTING_DATA)
     {
-    	// dont reset the state of bucket getting data/sending
-        bucket->state = BUCKET_CONFIG_SENDING_FRQ;
+    	// if this bucket isn't already getting/sending data, start
+    	bucket->state = BUCKET_GETTING_DATA;
+    	bucket->last_send = HAL_GetTick();
     }
-
 }
 
-
-/* bucket_requested
- * Handler for the RequestBucket gopherCAN command
- * Sets the state for this bucket to requested, regardless
- * of what state it was in before. The DLM will not request
- * the bucket until it is configured on the DLM, so to make
- * it here everything is ok
+/* log_complete
+ * Handler for the LOG_COMPLETE gopherCAN command
+ * DLM is actively logging & communicating
  */
-void bucket_requested (MODULE_ID sender, void* parameter,
-                       U8 bucket_id, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3)
+void log_complete(MODULE_ID sender, void* parameter,
+        U8 UNUSED1, U8 UNUSED2, U8 UNUSED3, U8 UNUSED4)
 {
-    BUCKET* bucket = get_bucket_by_id(bucket_id);
-    if (bucket == NULL)
-    {
-        handle_DAM_error(BUCKET_NOT_RECOGNIZED);
-        return;
-    }
+	if (sender != DLM_ID) return;
 
-    bucket->state = BUCKET_REQUESTED;
-
-    // note that a new bucket was requested
-    last_bucket_req = HAL_GetTick();
+	last_dlm_heartbeat = HAL_GetTick();
 }
-
 
 /* custom_service_can_rx_hardware
  * Definition for the ISR called on CAN message reception

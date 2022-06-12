@@ -63,8 +63,8 @@ void gopherCAN_rx_buffer_service_task (void);
 void send_bucket_params (U8 sender, void* param, U8 U1, U8 U2, U8 U3, U8 U4);
 void bucket_ok(MODULE_ID sender, void* parameter,
                U8 bucket_id, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3);
-void bucket_requested (MODULE_ID sender, void* parameter,
-                       U8 bucket_id, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3);
+void log_complete(MODULE_ID sender, void* parameter,
+        U8 UNUSED1, U8 UNUSED2, U8 UNUSED3, U8 UNUSED4);
 
 
 #define GET_U16_MSB(u16) ((u16 & 0xFF00) >> 8)

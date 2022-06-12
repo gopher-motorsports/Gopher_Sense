@@ -51,9 +51,8 @@ typedef struct
 typedef enum {
     BUCKET_CONFIG_INIT = 0,
     BUCKET_CONFIG_SENDING_PARAMS = 1,
-	BUCKET_CONFIG_SENDING_FRQ = 2,
-    BUCKET_GETTING_DATA = 3,
-    BUCKET_REQUESTED = 4
+	BUCKET_GETTING_DATA = 2,
+	BUCKET_SENDING = 3
 } BUCKET_STATE;
 
 
@@ -62,6 +61,7 @@ typedef struct
 {
     U8           bucket_id;
     U16          ms_between_req;
+    U32          last_send;
     BUCKET_STATE state;
     PARAM_LIST   param_list;
 } BUCKET;
