@@ -1,0 +1,28 @@
+module_name: "VCU"
+
+
+buckets:
+    bucket_1:
+        id: 1
+        frequency_hz: 50
+        parameters:
+            - vcu_apps2
+            - vcu_brake_pressure_front
+
+parameters_produced:
+# ADC1:
+    vcu_apps2:
+        produced_by: ADC1_IN10
+        sensor:
+            name: "linear_pos_sensor_25"
+            output: voltage
+        num_samples_buffered: 1     
+
+# ADC2:
+    vcu_brake_pressure_front:
+        produced_by: ADC1_IN11
+        sensor:
+            name: "brake_pressure_sensor"
+            output: voltage
+        num_samples_buffered: 1
+

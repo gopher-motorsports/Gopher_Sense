@@ -170,6 +170,7 @@ sensors:
                 rdiv: 19100
     "brake_pressure_sensor":
         # MLH03KPSB06A. special sensor for the brake pressure
+        # TODO wrong
         name_english: "Brake Pressure Sensor"
         outputs:
             voltage:
@@ -182,9 +183,9 @@ sensors:
                 table:
                     entries:
                         independent1: 0.5
-                        dependent1: 50
+                        dependent1: 0
                         independent2: 4.5
-                        dependent2: 8000
+                        dependent2: 2000
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
@@ -327,6 +328,7 @@ sensors:
                 rdiv: 19100
                 
     "brake_temp_sensor":
+        # TODO wrong
         name_english: "Brake Temperature Sensor"
         outputs:
             voltage:
@@ -350,7 +352,7 @@ sensors:
                 rdiv: 19100
 
     "tire_temp_sensor":
-        # TODO actually finish this. There are many channels
+        # actually finish this. There are many channels
         name_english: "Tire Temp Sensors"
         outputs:
             rear_right_1:
@@ -460,6 +462,7 @@ sensors:
 
     "steering_angle_sensor":
         # Texense RSL-75 with modified conversion to convert a linear pot to an angle
+        # TODO calebrate
         name_english: "Steering Angle Sensor"
         outputs:
             voltage:
@@ -471,11 +474,16 @@ sensors:
                 analog_subtype: Voltage
                 table:
                     entries:
-                        # TODO probably wont be 0-5V
                         independent1: 0
-                        dependent1: -90
-                        independent2: 5
+                        dependent1: 145
+                        independent2: 0.873
                         dependent2: 90
+                        independent3: 2.380
+                        dependent3: 0
+                        independent4: 3.630
+                        dependent4: -90
+                        independent5: 4.88
+                        dependent5: -180
                 rin: 0
                 rdown: RES_OPEN
                 r3v: RES_OPEN
@@ -533,23 +541,23 @@ sensors:
             yaw_rate:
                 unit: degrees per second
                 quantization: 0.005
-                offset: 0
+                offset: -163.84
             y_axis_accel:
                 unit: Gs
-                quantization: 0.001274
-                offset: 0
+                quantization: 0.0001274
+                offset: -4.1746432
             roll_rate:
                 unit: degrees per second
                 quantization: 0.005
-                offset: 0
+                offset: -163.84
             x_axis_accel:
                 unit: Gs
-                quantization: 0.001274
-                offset: 0
+                quantization: 0.0001274
+                offset: -4.1746432
             z_axis_accel:
                 unit: Gs
-                quantization: 0.001274
-                offset: 0
+                quantization: 0.0001274
+                offset: -4.1746432
         sensor_type:
             CAN:
                 messages:
@@ -956,3 +964,4 @@ sensors:
                         encoding: INT_MSB
                         data_byte_start: 4
                         data_byte_end: 7
+                        

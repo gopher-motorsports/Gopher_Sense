@@ -698,7 +698,8 @@ void send_bucket_task (void* pvParameters)
 			param = bucket->param_list.list;
 			while (param - bucket->param_list.list < bucket->param_list.len)
 			{
-				if (param->status == DIRTY || param->status == LOCKED_SEND)
+				if (param->status == DIRTY || param->status == LOCKED_SEND
+						|| HAL_GetTick() - param->last_tx >= MAX_TIME_BETWEEN_TX_ms)
 				{
 					U16 err_count = 0;
 					while (send_parameter(PRIO_HIGH, DLM_ID, param->can_param->param_id) != CAN_SUCCESS)
@@ -711,15 +712,15 @@ void send_bucket_task (void* pvParameters)
 						osDelay(1); // Delay due to error
 					}
 
-					// flush the TX buffer
-					service_can_tx_hardware(gcan_ptr);
-
 					// set this parameter to clean if it is ok too
 					if (param->status != LOCKED_SEND) param->status = CLEAN;
-			   }
-				param++;
+					param->last_tx = HAL_GetTick();
+			    }
+			    param++;
 			}
 
+			// flush the TX buffer
+			service_can_tx_hardware(gcan_ptr);
 			bucket->last_send = HAL_GetTick();
 
 			bucket->state = BUCKET_GETTING_DATA;

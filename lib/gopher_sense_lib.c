@@ -204,6 +204,7 @@ void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz)
 //  each one
 void service_scan_rx_buffer(void)
 {
+#if NUM_CAN_SENSOR_PARAMS > 0
 	CAN_MSG* current_message;
 
 	// run through each message in the RX buffer and service it with sensor_can_message_handle() (FIFO)
@@ -218,6 +219,7 @@ void service_scan_rx_buffer(void)
 		// move the head now that the first element has been removed
 		remove_from_front(&scan_rx_buffer);
 	}
+#endif
 }
 
 
@@ -293,6 +295,7 @@ void sensor_can_message_handle (CAN_MSG* message)
 //  message to the RX buffer for later servicing
 void add_scan_message_to_bufffer(CAN_HandleTypeDef* hcan, U32 rx_mailbox)
 {
+#if NUM_CAN_SENSOR_PARAMS > 0
 	CAN_RxHeaderTypeDef rx_header;
 	CAN_MSG* message;
 
@@ -317,6 +320,7 @@ void add_scan_message_to_bufffer(CAN_HandleTypeDef* hcan, U32 rx_mailbox)
 		message->dlc = rx_header.DLC;
 		message->id = (rx_header.IDE ? rx_header.ExtId : rx_header.StdId);
 	}
+#endif
 }
 
 

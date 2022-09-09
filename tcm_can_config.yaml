@@ -4,7 +4,7 @@ module_name: "TCM_with_ECU_Decoding"
 buckets:
     high_frequency_ecu:
         id: 1
-        frequency_hz: 25
+        frequency_hz: 100
         parameters:
             - rpm_ecu
             - wheel_slip_ecu
@@ -18,7 +18,7 @@ buckets:
             
     low_frequency_ecu:
         id: 2
-        frequency_hz: 10
+        frequency_hz: 20
         parameters:
             - bat_volts_ecu
             - engine_temp_ecu
@@ -49,7 +49,7 @@ buckets:
             
     high_frequency_tcm:
         id: 3
-        frequency_hz: 25
+        frequency_hz: 100
         parameters:
             - tcm_shifter_position
             - tcm_clutch_position
@@ -61,7 +61,7 @@ buckets:
             
     low_frequency_tcm:
         id: 4
-        frequency_hz: 10
+        frequency_hz: 50
         parameters:
             - sw_upshift
             - sw_downshift

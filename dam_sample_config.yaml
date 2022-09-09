@@ -6,53 +6,53 @@ buckets:
         id: 1
         frequency_hz: 100
         parameters:
-            - dam_chan_1
-            - dam_chan_2
+            - tire_temp_rr_1
+            - tire_temp_rr_2
 
     bucket_2:
         id: 2
         frequency_hz: 100
         parameters:
-            - dam_chan_3
-            - dam_chan_4
-            - dam_chan_5
-            - dam_chan_6
-            - dam_chan_7
-            - dam_chan_8
-            - dam_chan_9
-            - dam_chan_10
-            - dam_chan_11
-            - dam_chan_12
-            - dam_chan_13
-            - dam_chan_14
-            - dam_chan_15
-            - dam_chan_16
+            - tire_temp_rr_3
+            - tire_temp_rr_4
+            - tire_temp_rr_5
+            - tire_temp_rr_6
+            - tire_temp_rr_7
+            - tire_temp_rr_8
+            - tire_temp_rr_9
+            - tire_temp_rr_10
+            - tire_temp_rr_11
+            - tire_temp_rr_12
+            - tire_temp_rr_13
+            - tire_temp_rr_14
+            - tire_temp_rr_15
+            - tire_temp_rr_16
             
     bucket_3:
         id: 3
         frequency_hz: 100
         parameters:
-            - dam_chan_17
-            - dam_chan_18
-            - dam_chan_19
-            - dam_chan_20
-            - dam_chan_21
-            - dam_chan_22
-            - dam_chan_23
-            - dam_chan_24
+            - tire_temp_rl_1
+            - tire_temp_rl_2
+            - tire_temp_rl_3
+            - tire_temp_rl_4
+            - tire_temp_rl_5
+            - tire_temp_rl_6
+            - tire_temp_rl_7
+            - tire_temp_rl_8
             
     bucket_4:
         id: 4
         frequency_hz: 100
         parameters:
-            - float_tester
-            - float_tester_2
-            - float_tester_3
-            - float_tester_4
+            - tire_temp_rl_9
+            - tire_temp_rl_10
+            - tire_temp_rl_11
+            - tire_temp_rl_12
 
 parameters_produced:
 # DAM CHANNEL 1
-    dam_chan_1:
+    tire_temp_rr_1:
         produced_by: ADC3_IN9
         sensor:
             name: "test_voltage_sensor"
@@ -60,7 +60,7 @@ parameters_produced:
         num_samples_buffered: 10
        
 # DAM CHANNEL 2       
-    dam_chan_2:
+    tire_temp_rr_2:
         produced_by: ADC3_IN14
         sensor:
             name: "test_voltage_sensor"
@@ -68,7 +68,7 @@ parameters_produced:
         num_samples_buffered: 10
             
 # DAM CHANNEL 3
-    dam_chan_3:
+    tire_temp_rr_3:
         produced_by: ADC3_IN15
         sensor:
             name: "test_voltage_sensor"
@@ -76,7 +76,7 @@ parameters_produced:
         num_samples_buffered: 10
 
 # DAM CHANNEL 4
-    dam_chan_4:
+    tire_temp_rr_4:
         produced_by: ADC3_IN4
         sensor:
             name: "test_voltage_sensor"
@@ -84,7 +84,7 @@ parameters_produced:
         num_samples_buffered: 10
            
 # DAM CHANNEL 5           
-    dam_chan_5:
+    tire_temp_rr_5:
         produced_by: ADC3_IN5
         sensor:
             name: "test_voltage_sensor"
@@ -92,7 +92,7 @@ parameters_produced:
         num_samples_buffered: 10
             
 # DAM CHANNEL 6
-    dam_chan_6:
+    tire_temp_rr_6:
         produced_by: ADC3_IN6
         sensor:
             name: "test_voltage_sensor"
@@ -100,7 +100,7 @@ parameters_produced:
         num_samples_buffered: 10
 
 # DAM CHANNEL 7
-    dam_chan_7:
+    tire_temp_rr_7:
         produced_by: ADC3_IN7
         sensor:
             name: "test_voltage_sensor"
@@ -108,7 +108,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 8
-    dam_chan_8:
+    tire_temp_rr_8:
         produced_by: ADC3_IN8
         sensor:
             name: "test_voltage_sensor"
@@ -116,7 +116,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 9
-    dam_chan_9:
+    tire_temp_rr_9:
         produced_by: ADC2_IN10
         sensor:
             name: "test_voltage_sensor"
@@ -124,7 +124,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 10
-    dam_chan_10:
+    tire_temp_rr_10:
         produced_by: ADC2_IN11
         sensor:
             name: "test_voltage_sensor"
@@ -132,7 +132,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 11
-    dam_chan_11:
+    tire_temp_rr_11:
         produced_by: ADC2_IN12
         sensor:
             name: "test_voltage_sensor"
@@ -140,7 +140,7 @@ parameters_produced:
         num_samples_buffered: 10
             
 # DAM CHANNEL 12
-    dam_chan_12:
+    tire_temp_rr_12:
         produced_by: ADC2_IN13
         sensor:
             name: "test_voltage_sensor"
@@ -148,7 +148,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 13
-    dam_chan_13:
+    tire_temp_rr_13:
         produced_by: ADC2_IN0
         sensor:
             name: "test_voltage_sensor"
@@ -156,7 +156,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 14
-    dam_chan_14:
+    tire_temp_rr_14:
         produced_by: ADC2_IN1
         sensor:
             name: "test_voltage_sensor"
@@ -164,7 +164,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 15
-    dam_chan_15:
+    tire_temp_rr_15:
         produced_by: ADC2_IN2
         sensor:
             name: "test_voltage_sensor"
@@ -172,7 +172,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 16
-    dam_chan_16:
+    tire_temp_rr_16:
         produced_by: ADC2_IN3
         sensor:
             name: "test_voltage_sensor"
@@ -180,7 +180,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 17
-    dam_chan_17:
+    tire_temp_rl_1:
         produced_by: ADC1_IN4
         sensor:
             name: "test_voltage_sensor"
@@ -188,7 +188,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 18
-    dam_chan_18:
+    tire_temp_rl_2:
         produced_by: ADC1_IN5
         sensor:
             name: "test_voltage_sensor"
@@ -196,7 +196,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 19
-    dam_chan_19:
+    tire_temp_rl_3:
         produced_by: ADC1_IN6
         sensor:
             name: "test_voltage_sensor"
@@ -204,7 +204,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 20
-    dam_chan_20:
+    tire_temp_rl_4:
         produced_by: ADC1_IN7
         sensor:
             name: "test_voltage_sensor"
@@ -212,7 +212,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 21
-    dam_chan_21:
+    tire_temp_rl_5:
         produced_by: ADC1_IN14
         sensor:
             name: "test_voltage_sensor"
@@ -220,7 +220,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 22
-    dam_chan_22:
+    tire_temp_rl_6:
         produced_by: ADC1_IN15
         sensor:
             name: "test_voltage_sensor"
@@ -228,7 +228,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 23
-    dam_chan_23:
+    tire_temp_rl_7:
         produced_by: ADC1_IN8
         sensor:
             name: "test_voltage_sensor"
@@ -236,7 +236,7 @@ parameters_produced:
         num_samples_buffered: 10
         
 # DAM CHANNEL 24
-    dam_chan_24:
+    tire_temp_rl_8:
         produced_by: ADC1_IN9
         sensor:
             name: "test_voltage_sensor"
@@ -244,28 +244,28 @@ parameters_produced:
         num_samples_buffered: 10
 
 # CAN sensors:
-    float_tester:
+    tire_temp_rl_9:
         produced_by: CAN
         sensor:
             name: "test_can_sensor"
             output: d16_fixed
         num_samples_buffered: 1
             
-    float_tester_2:
+    tire_temp_rl_10:
         produced_by: CAN
         sensor:
             name: "test_can_sensor"
             output: u16_raw
         num_samples_buffered: 1
             
-    float_tester_3:
+    tire_temp_rl_11:
         produced_by: CAN
         sensor:
             name: "test_can_sensor"
             output: float_1_raw
         num_samples_buffered: 1
             
-    float_tester_4:
+    tire_temp_rl_12:
         produced_by: CAN
         sensor:
             name: "test_can_sensor"

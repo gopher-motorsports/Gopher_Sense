@@ -28,7 +28,8 @@ typedef enum
 typedef struct
 {
 	CAN_INFO_STRUCT* can_param;
-    DATA_STATUS  status;
+    DATA_STATUS      status;
+    U32              last_tx;
 } GENERAL_PARAMETER;
 
 

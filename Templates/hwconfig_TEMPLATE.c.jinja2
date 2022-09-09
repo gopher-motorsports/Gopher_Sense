@@ -4,6 +4,7 @@
 #include "dam_hw_config.h"
 #include "gopher_sense.h"
 #include "GopherCAN.h"
+#include "DAM.h"
 
 // string of the yaml:
 char hw_config_yaml[] = { {{configFileStr}} };
@@ -18,7 +19,8 @@ GENERAL_PARAMETER {{bucket.name}}_bucket_general_param_list[{{bucket.params|leng
   {% for param in bucket.params -%}
   {
     .can_param = (CAN_INFO_STRUCT*)(&{{param}}),
-    .status = CLEAN
+    .status = CLEAN,
+	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {% endfor %}
 };

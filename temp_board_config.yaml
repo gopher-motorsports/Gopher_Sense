@@ -1,0 +1,114 @@
+module_name: "temp_board"
+
+
+buckets:
+    bucket_1:
+        id: 1
+        frequency_hz: 2
+        parameters:
+            - bat_0_temp
+            - bat_1_temp
+            - bat_2_temp
+            - bat_3_temp
+            - bat_4_temp
+            - bat_5_temp
+            - bat_6_temp
+            - bat_7_temp
+            - bat_8_temp
+            - bat_9_temp
+            - bat_10_temp
+            - bat_11_temp
+            - bat_12_temp
+            - bat_13_temp
+            - bat_14_temp
+            - bat_15_temp
+            - bat_16_temp
+            - bat_17_temp
+            - bat_18_temp
+            - bat_19_temp
+            - bat_20_temp
+            - bat_21_temp
+            - bat_22_temp
+            - bat_23_temp
+            - bat_24_temp
+            - bat_25_temp
+            - bat_26_temp
+            - bat_27_temp
+            - bat_28_temp
+            - bat_29_temp
+            - bat_30_temp
+            - bat_31_temp
+            - bat_32_temp
+            - bat_33_temp
+            - bat_34_temp
+            - bat_35_temp
+            - bat_36_temp
+            - bat_37_temp
+            - bat_38_temp
+            - bat_39_temp
+            - bat_40_temp
+            - bat_41_temp
+            - bat_42_temp
+            - bat_43_temp
+            - bat_44_temp
+            - bat_45_temp
+            - bat_46_temp
+            - bat_47_temp
+            - bat_48_temp
+            - bat_49_temp
+            - bat_50_temp
+            - bat_51_temp
+            - bat_52_temp
+            - bat_53_temp
+            - bat_54_temp
+            - bat_55_temp
+            - bat_56_temp
+            - bat_57_temp
+            - bat_58_temp
+            - bat_59_temp
+            - bat_60_temp
+            - bat_61_temp
+            - bat_62_temp
+            - bat_63_temp
+            - bat_64_temp
+            - bat_65_temp
+            - bat_66_temp
+            - bat_67_temp
+            - bat_68_temp
+            - bat_69_temp
+            - bat_70_temp
+            - bat_71_temp
+            - bat_72_temp
+            - bat_73_temp
+            - bat_74_temp
+            - bat_75_temp
+            - bat_76_temp
+            - bat_77_temp
+            - bat_78_temp
+            - bat_79_temp
+            - bat_80_temp
+            - bat_81_temp
+            - bat_82_temp
+            - bat_83_temp
+            - bat_84_temp
+            - bat_85_temp
+            - bat_86_temp
+            - bat_87_temp
+            
+    bucket_2:
+        id: 2
+        frequency_hz: 25
+        parameters:
+            - bat_min_temp
+            - bat_ave_temp
+            - bat_max_temp
+            - dummy_param
+
+parameters_produced:
+    # bad code, no params produced does not work
+    dummy_param:
+        produced_by: CAN
+        sensor:
+            name: "test_can_sensor"
+            output: float_2_scaled
+        num_samples_buffered: 1
