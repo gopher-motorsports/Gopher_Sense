@@ -2,12 +2,17 @@ module_name: "front_dam"
 
 
 buckets:
-    bucket_1:
+    shock_pots:
         id: 1
-        frequency_hz: 25
+        frequency_hz: 250
         parameters:
             - front_left_shock_pot
             - front_right_shock_pot
+    
+    bucket_1:
+        id: 2
+        frequency_hz: 100
+        parameters:
             - steering_angle
             - brake_temp_fl
             - brake_temp_fr

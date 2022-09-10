@@ -4,7 +4,7 @@ module_name: "TCM_with_ECU_Decoding"
 buckets:
     high_frequency_ecu:
         id: 1
-        frequency_hz: 100
+        frequency_hz: 200
         parameters:
             - rpm_ecu
             - wheel_slip_ecu
@@ -49,19 +49,15 @@ buckets:
             
     high_frequency_tcm:
         id: 3
-        frequency_hz: 100
+        frequency_hz: 250
         parameters:
-            - tcm_shifter_position
-            - tcm_clutch_position
-            - tcm_trans_rpm
-            - tcm_throttle_blip
-            - tcm_using_clutch
-            - tcm_anti_stall
+            - rear_left_shock_pot
+            - rear_right_shock_pot
             
             
     low_frequency_tcm:
         id: 4
-        frequency_hz: 50
+        frequency_hz: 100
         parameters:
             - sw_upshift
             - sw_downshift
@@ -75,6 +71,12 @@ buckets:
             - tcm_target_gear
             - tcm_currently_moving
             - tcm_successful_shift
+            - tcm_shifter_position
+            - tcm_clutch_position
+            - tcm_trans_rpm
+            - tcm_throttle_blip
+            - tcm_using_clutch
+            - tcm_anti_stall
 
 parameters_produced:
 # Analog sensors
@@ -89,6 +91,20 @@ parameters_produced:
         produced_by: ADC1_IN10
         sensor:
             name: linear_pos_sensor_50
+            output: voltage
+        num_samples_buffered: 1
+        
+    rear_left_shock_pot:
+        produced_by: ADC1_IN2
+        sensor:
+            name: linear_pos_sensor_25
+            output: voltage
+        num_samples_buffered: 1
+        
+    rear_right_shock_pot:
+        produced_by: ADC1_IN3
+        sensor:
+            name: linear_pos_sensor_25
             output: voltage
         num_samples_buffered: 1
 
