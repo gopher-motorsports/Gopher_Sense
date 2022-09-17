@@ -968,4 +968,336 @@ sensors:
     "cascadia_inverter":
         name_english: "Inverter"
         outputs:
-           
+           sensor_type:
+            CAN:
+                messages:
+                    message1:
+                        output_measured: temp_igbt_a
+                        id: 0x0A0
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: temp_igbt_b
+                        id: 0x0A0
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: temp_igbt_c
+                        id: 0x0A0
+                        encoding: INT_LSB
+                        data_byte_start: 3
+                        data_byte_end: 4
+                    message1:
+                        output_measured: temp_gate_driver
+                        id: 0x0A0
+                        encoding: INT_LSB
+                        data_byte_start: 5
+                        data_byte_end: 6
+                    message1:
+                        output_measured: temp_ctrl_board
+                        id: 0x0A1
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: temp_rtd_1
+                        id: 0x0A1
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: temp_rtd_2
+                        id: 0x0A1
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: temp_rtd_3
+                        id: 0x0A1
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                    message1:
+                        output_measured: temp_rtd_4
+                        id: 0x0A2
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: temp_rtd_5
+                        id: 0x0A2
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: motor_temp
+                        id: 0x0A2
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: torque_shudder
+                        id: 0x0A2
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                    message1:
+                        output_measured: digital_in_1
+                        id: 0x0A4
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 0
+                    message1:
+                        output_measured: digital_in_2
+                        id: 0x0A4
+                        encoding: INT_LSB
+                        data_byte_start: 1
+                        data_byte_end: 1
+                    message1:
+                        output_measured: digital_in_3
+                        id: 0x0A4
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 2
+                    message1:
+                        output_measured: digital_in_4
+                        id: 0x0A4
+                        encoding: INT_LSB
+                        data_byte_start: 3
+                        data_byte_end: 3
+                    message1:
+                        output_measured: digital_in_5
+                        id: 0x0A4
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 4
+                    message1:
+                        output_measured: digital_in_6
+                        id: 0x0A4
+                        encoding: INT_LSB
+                        data_byte_start: 5
+                        data_byte_end: 5
+                    message1:
+                        output_measured: digital_in_7
+                        id: 0x0A4
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 6
+                    message1:
+                        output_measured: digital_in_8
+                        id: 0x0A4
+                        encoding: INT_LSB
+                        data_byte_start: 7
+                        data_byte_end: 7
+                    message1:
+                        output_measured: motor_angle
+                        id: 0x0A5
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: motor_speed
+                        id: 0x0A5
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: motor_ac_freq
+                        id: 0x0A5
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: delta_resolver_fitlered
+                        id: 0x0A5
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                    message1:
+                        output_measured: current_phase_a
+                        id: 0x0A6
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: current_phase_b
+                        id: 0x0A6
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: current_phase_c
+                        id: 0x0A6
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: current_dc_bus
+                        id: 0x0A6
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                    message1:
+                        output_measured: dc_bus_voltage
+                        id: 0x0A7
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: peak_output_voltage
+                        id: 0x0A7
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: vd_voltage
+                        id: 0x0A7
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: vq_voltage
+                        id: 0x0A7
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                    message1:
+                        output_measured: flux_command
+                        id: 0xA8
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: flux_feedback
+                        id: 0xA8
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: id_feedback
+                        id: 0xA8
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: iq_feedback
+                        id: 0xA8
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                    message1:
+                        output_measured: 1v5_ref
+                        id: 0x0A9
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: 2v5_ref
+                        id: 0x0A9
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: 5v_ref
+                        id: 0x0A9
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: 12v_ref
+                        id: 0x0A9
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                    message1:
+                        output_measured: post_fault_lo
+                        id: 0x0AB
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: post_fault_hi
+                        id: 0x0AB
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: run_fault_lo
+                        id: 0x0AB
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: run_fault_hi
+                        id: 0x0AB
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                    message1:
+                        output_measured: torque_cmd
+                        id: 0x0AC
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: torque_feedback
+                        id: 0x0AC
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: power_on_timer
+                        id: 0x0AC
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 7
+                    message1:
+                        output_measured: modulation_index
+                        id: 0x0AD
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: flux_weakening
+                        id: 0x0AD
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: id_cmd
+                        id: 0x0AD
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: iq_cmd
+                        id: 0x0AD
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
+                    message1:
+                        output_measured: torque_cmd_high
+                        id: 0x0B0
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 1
+                    message1:
+                        output_measured: torque_feedback_high
+                        id: 0x0B0
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 3
+                    message1:
+                        output_measured: motor_speed_high
+                        id: 0x0B0
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 5
+                    message1:
+                        output_measured: dc_bus_voltage_high
+                        id: 0x0B0
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 7
