@@ -25,3 +25,388 @@ parameters_produced:
             output: voltage
         num_samples_buffered: 1
 
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_igbt_a
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_igbt_b
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_igbt_c
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_gate_driver
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_ctrl_board
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_rtd_1
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_rtd_2
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_rtd_3
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_rtd_4
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: temp_rtd_5
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: motor_temp
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: torque_shudder
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: digital_in_1
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: digital_in_2
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: digital_in_3
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: digital_in_4
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: digital_in_5
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: digital_in_6
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: digital_in_7
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: digital_in_8
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: motor_angle
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: motor_speed
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: motor_ac_freq
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: delta_resolver_fitlered
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: current_phase_a
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: current_phase_b
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: current_phase_c
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: current_dc_bus
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: dc_bus_voltage
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: peak_output_voltage
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: vd_voltage
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: vq_voltage
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: flux_cmd
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: flux_feedback
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: id_feedback
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: iq_feedback
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: 1v5_ref
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: 2v5_ref
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: 5v_ref
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: 12v_ref
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: post_fault_lo
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: post_fault_hi
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: run_fault_lo
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: run_fault_hi
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: torque_cmd
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: torque_feedback
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: power_on_timer
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: modulation_index
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: flux_weakening
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: id_cmd
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: iq_cmd
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: torque_cmd_high
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: torque_feedback_high
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: motor_speed_high
+        num_samples_buffered: 1
+        
+    inv_temp_igbt_a:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: dc_bus_voltage_high
+        num_samples_buffered: 1
