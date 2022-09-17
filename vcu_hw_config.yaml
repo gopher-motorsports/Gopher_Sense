@@ -16,9 +16,8 @@ parameters_produced:
         sensor:
             name: "linear_pos_sensor_25"
             output: voltage
-        num_samples_buffered: 1     
+        num_samples_buffered: 1
 
-# ADC2:
     vcu_brake_pressure_front:
         produced_by: ADC1_IN11
         sensor:

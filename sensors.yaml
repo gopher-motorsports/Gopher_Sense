@@ -965,3 +965,7 @@ sensors:
                         data_byte_start: 4
                         data_byte_end: 7
                         
+    "cascadia_inverter":
+        name_english: "Inverter"
+        outputs:
+           
