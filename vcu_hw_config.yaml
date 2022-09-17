@@ -187,11 +187,11 @@ parameters_produced:
             output: motor_ac_freq
         num_samples_buffered: 1
         
-    inv_delta_resolver_fitlered:
+    inv_delta_resolver_filtered:
         produced_by: CAN
         sensor:
             name: "cascadia_inverter"
-            output: delta_resolver_fitlered
+            output: delta_resolver_filtered
         num_samples_buffered: 1
         
     inv_current_phase_a:
