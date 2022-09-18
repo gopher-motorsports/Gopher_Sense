@@ -5,7 +5,7 @@
 #include "sensor_hal.h"
 
 #define NUM_ANALOG_SENSORS 15
-#define NUM_CAN_SENSORS 7
+#define NUM_CAN_SENSORS 8
 
 
 extern ANALOG_SENSOR basic_voltage_sensor_for_testing;
@@ -32,6 +32,7 @@ extern CAN_SENSOR lambda_sensor;
 extern CAN_SENSOR five_axis_sensor;
 extern CAN_SENSOR m600_ecu_high_prio_data;
 extern CAN_SENSOR m600_ecu_low_prio_data;
+extern CAN_SENSOR inverter;
 
 
 #define RES_OPEN -1.0

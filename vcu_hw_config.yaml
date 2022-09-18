@@ -8,6 +8,66 @@ buckets:
         parameters:
             - vcu_apps2
             - vcu_brake_pressure_front
+            
+    bucket_2:
+        id: 2
+        frequency_hz: 25
+        parameters:
+            - inv_temp_igbt_a
+            - inv_temp_igbt_b
+            - inv_temp_igbt_c
+            - inv_temp_gate_driver
+            - inv_temp_ctrl_board
+            - inv_temp_rtd_1
+            - inv_temp_rtd_2
+            - inv_temp_rtd_3
+            - inv_temp_rtd_4
+            - inv_temp_rtd_5
+            - inv_motor_temp
+            - inv_torque_shudder
+            - inv_digital_in_1
+            - inv_digital_in_2
+            - inv_digital_in_3
+            - inv_digital_in_4
+            - inv_digital_in_5
+            - inv_digital_in_6
+            - inv_digital_in_7
+            - inv_digital_in_8
+            - inv_motor_angle
+            - inv_motor_speed
+            - inv_motor_ac_freq
+            - inv_delta_resolver_filtered
+            - inv_current_phase_a
+            - inv_current_phase_b
+            - inv_current_phase_c
+            - inv_current_dc_bus
+            - inv_dc_bus_voltage
+            - inv_peak_output_voltage
+            - inv_vd_voltage
+            - inv_vq_voltage
+            - inv_flux_cmd
+            - inv_flux_feedback
+            - inv_id_feedback
+            - inv_iq_feedback
+            - inv_1v5_ref
+            - inv_2v5_ref
+            - inv_5v_ref
+            - inv_12v_ref
+            - inv_post_fault_lo
+            - inv_post_fault_hi
+            - inv_run_fault_lo
+            - inv_run_fault_hi
+            - inv_torque_cmd
+            - inv_torque_feedback
+            - inv_power_on_timer
+            - inv_modulation_index
+            - inv_flux_weakening
+            - inv_id_cmd
+            - inv_iq_cmd
+            - inv_torque_cmd_high
+            - inv_torque_feedback_high
+            - inv_motor_speed_high
+            - inv_dc_bus_voltage_high
 
 parameters_produced:
 # ADC1:
@@ -25,7 +85,7 @@ parameters_produced:
             output: voltage
         num_samples_buffered: 1
 
-        
+# inverter parameters
     inv_temp_igbt_a:
         produced_by: CAN
         sensor:
