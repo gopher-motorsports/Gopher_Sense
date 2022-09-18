@@ -1188,6 +1188,38 @@ sensors:
                 unit: V
                 quantization: 0.1
                 offset: 0
+            vsm_state:
+                unit: ul
+                quantization: 1.0
+                offset: 0
+            pwm_freq:
+                unit: ul
+                quantization: 1.0
+                offset: 0
+            inverter_state:
+                unit: ul
+                quantization: 1.0
+                offset: 0
+            relay_state:
+                unit: ul
+                quantization: 1.0
+                offset: 0
+            states_byte4:
+                unit: ul
+                quantization: 1.0
+                offset: 0
+            states_byte5:
+                unit: ul
+                quantization: 1.0
+                offset: 0
+            states_byte6:
+                unit: ul
+                quantization: 1.0
+                offset: 0
+            states_byte7:
+                unit: ul
+                quantization: 1.0
+                offset: 0
         sensor_type:
             CAN:
                 messages:
@@ -1534,3 +1566,51 @@ sensors:
                         data_byte_start: 6
                         data_byte_end: 7
 
+                    message56:
+                        output_measured: vsm_state
+                        id: 0x0AA
+                        encoding: INT_LSB
+                        data_byte_start: 0
+                        data_byte_end: 0
+                    message57:
+                        output_measured: pwm_freq
+                        id: 0x0AA
+                        encoding: INT_LSB
+                        data_byte_start: 1
+                        data_byte_end: 1
+                    message58:
+                        output_measured: inverter_state
+                        id: 0x0AA
+                        encoding: INT_LSB
+                        data_byte_start: 2
+                        data_byte_end: 2
+                    message59:
+                        output_measured: relay_state
+                        id: 0x0AA
+                        encoding: INT_LSB
+                        data_byte_start: 3
+                        data_byte_end: 3
+                    message60:
+                        output_measured: states_byte4
+                        id: 0x0AA
+                        encoding: INT_LSB
+                        data_byte_start: 4
+                        data_byte_end: 4
+                    message61:
+                        output_measured: states_byte5
+                        id: 0x0AA
+                        encoding: INT_LSB
+                        data_byte_start: 5
+                        data_byte_end: 5
+                    message62:
+                        output_measured: states_byte6
+                        id: 0x0AA
+                        encoding: INT_LSB
+                        data_byte_start: 6
+                        data_byte_end: 6
+                    message63:
+                        output_measured: states_byte7
+                        id: 0x0AA
+                        encoding: INT_LSB
+                        data_byte_start: 7
+                        data_byte_end: 7

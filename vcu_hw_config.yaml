@@ -11,7 +11,7 @@ buckets:
             
     bucket_2:
         id: 2
-        frequency_hz: 25
+        frequency_hz: 10
         parameters:
             - inv_temp_igbt_a
             - inv_temp_igbt_b
@@ -68,6 +68,14 @@ buckets:
             - inv_torque_feedback_high
             - inv_motor_speed_high
             - inv_dc_bus_voltage_high
+            - inv_vsm_state
+            - inv_pwm_freq
+            - inv_inverter_state
+            - inv_relay_state
+            - inv_states_byte4
+            - inv_states_byte5
+            - inv_states_byte6
+            - inv_states_byte7
 
 parameters_produced:
 # ADC1:
@@ -470,3 +478,60 @@ parameters_produced:
             name: "cascadia_inverter"
             output: dc_bus_voltage_high
         num_samples_buffered: 1
+        
+    inv_vsm_state:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: vsm_state
+        num_samples_buffered: 1
+        
+    inv_pwm_freq:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: pwm_freq
+        num_samples_buffered: 1
+        
+    inv_inverter_state:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: inverter_state
+        num_samples_buffered: 1
+        
+    inv_relay_state:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: relay_state
+        num_samples_buffered: 1
+        
+    inv_states_byte4:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: states_byte4
+        num_samples_buffered: 1
+        
+    inv_states_byte5:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: states_byte5
+        num_samples_buffered: 1
+
+    inv_states_byte6:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: states_byte6
+        num_samples_buffered: 1
+        
+    inv_states_byte7:
+        produced_by: CAN
+        sensor:
+            name: "cascadia_inverter"
+            output: states_byte7
+        num_samples_buffered: 1
+        
