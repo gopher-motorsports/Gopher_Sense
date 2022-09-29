@@ -12,102 +12,102 @@
 GENERAL_PARAMETER currents_bucket_general_param_list[20] =
 {
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_0),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_0_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_1),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_1_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_2),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_2_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_3),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_3_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_4),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_4_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_5),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_5_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_6),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_6_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_7),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_7_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_8),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_8_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_9),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_9_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_10),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_10_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_11),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_11_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_12),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_12_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_13),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_13_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_14),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_14_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_15),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_15_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_16),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_16_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_17),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_17_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_18),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_18_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
   {
-    .can_param = (CAN_INFO_STRUCT*)(&pdm_current_19),
+    .can_param = (CAN_INFO_STRUCT*)(&pdm_19_current),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
@@ -189,7 +189,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param1
   {
     .bucket_param = currents_bucket_general_param_list + 0,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -206,7 +206,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param2
   {
     .bucket_param = currents_bucket_general_param_list + 1,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -223,7 +223,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param3
   {
     .bucket_param = currents_bucket_general_param_list + 2,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -240,7 +240,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param4
   {
     .bucket_param = currents_bucket_general_param_list + 3,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -257,7 +257,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param5
   {
     .bucket_param = currents_bucket_general_param_list + 4,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -274,7 +274,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param6
   {
     .bucket_param = currents_bucket_general_param_list + 5,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -291,7 +291,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param7
   {
     .bucket_param = currents_bucket_general_param_list + 6,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -308,7 +308,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param8
   {
     .bucket_param = currents_bucket_general_param_list + 7,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -325,7 +325,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param9
   {
     .bucket_param = currents_bucket_general_param_list + 8,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -342,7 +342,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param10
   {
     .bucket_param = currents_bucket_general_param_list + 9,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -419,7 +419,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param1
   {
     .bucket_param = currents_bucket_general_param_list + 10,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -436,7 +436,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param2
   {
     .bucket_param = currents_bucket_general_param_list + 11,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -453,7 +453,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param3
   {
     .bucket_param = currents_bucket_general_param_list + 12,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -470,7 +470,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param4
   {
     .bucket_param = currents_bucket_general_param_list + 13,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -487,7 +487,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param5
   {
     .bucket_param = currents_bucket_general_param_list + 14,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -504,7 +504,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param6
   {
     .bucket_param = currents_bucket_general_param_list + 15,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -521,7 +521,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param7
   {
     .bucket_param = currents_bucket_general_param_list + 16,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -538,7 +538,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param8
   {
     .bucket_param = currents_bucket_general_param_list + 17,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -555,7 +555,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param9
   {
     .bucket_param = currents_bucket_general_param_list + 18,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =
@@ -572,7 +572,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param10
   {
     .bucket_param = currents_bucket_general_param_list + 19,
-    .analog_sensor = &None,
+    .analog_sensor = &current_sensor_for_pdm,
     .num_filtered_subparams = 0, // not yet implemented
     .filtered_subparams = NULL, // not yet implemented
     .buffer =

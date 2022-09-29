@@ -6,168 +6,168 @@ buckets:
         id: 1
         frequency_hz: 1
         parameters:
-            - pdm_current_0
-            - pdm_current_1
-            - pdm_current_2
-            - pdm_current_3
-            - pdm_current_4
-            - pdm_current_5
-            - pdm_current_6
-            - pdm_current_7
-            - pdm_current_8
-            - pdm_current_9
-            - pdm_current_10
-            - pdm_current_11
-            - pdm_current_12
-            - pdm_current_13
-            - pdm_current_14
-            - pdm_current_15
-            - pdm_current_16
-            - pdm_current_17
-            - pdm_current_18
-            - pdm_current_19
+            - pdm_0_current
+            - pdm_1_current
+            - pdm_2_current
+            - pdm_3_current
+            - pdm_4_current
+            - pdm_5_current
+            - pdm_6_current
+            - pdm_7_current
+            - pdm_8_current
+            - pdm_9_current
+            - pdm_10_current
+            - pdm_11_current
+            - pdm_12_current
+            - pdm_13_current
+            - pdm_14_current
+            - pdm_15_current
+            - pdm_16_current
+            - pdm_17_current
+            - pdm_18_current
+            - pdm_19_current
             
             
 
 parameters_produced:
 # ADC1:
-    pdm_current_0:
+    pdm_0_current:
         produced_by: ADC1_IN0
         sensor:
-            name: "pdm_0_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
         
-    pdm_current_1:
+    pdm_1_current:
         produced_by: ADC1_IN1
         sensor:
-            name: "pdm_1_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
         
-    pdm_current_2:
+    pdm_2_current:
         produced_by: ADC1_IN2
         sensor:
-            name: "pdm_2_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
     
-    pdm_current_3:
+    pdm_3_current:
         produced_by: ADC1_IN3
         sensor:
-            name: "pdm_3_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_4:
+    pdm_4_current:
         produced_by: ADC1_IN4
         sensor:
-            name: "pdm_4_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_5:
+    pdm_5_current:
         produced_by: ADC1_IN5
         sensor:
-            name: "pdm_5_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_6:
+    pdm_6_current:
         produced_by: ADC1_IN6
         sensor:
-            name: "pdm_6_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_7:
+    pdm_7_current:
         produced_by: ADC1_IN7
         sensor:
-            name: "pdm_7_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_8:
+    pdm_8_current:
         produced_by: ADC1_IN12
         sensor:
-            name: "pdm_8_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_9:
+    pdm_9_current:
         produced_by: ADC1_IN13
         sensor:
-            name: "pdm_9_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 #ADC3
 
-    pdm_current_10:
+    pdm_10_current:
         produced_by: ADC3_IN4
         sensor:
-            name: "pdm_10_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_11:
+    pdm_11_current:
         produced_by: ADC3_IN5
         sensor:
-            name: "pdm_11_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_12:
+    pdm_12_current:
         produced_by: ADC3_IN6
         sensor:
-            name: "pdm_12_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_13:
+    pdm_13_current:
         produced_by: ADC3_IN7
         sensor:
-            name: "pdm_13_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_14:
+    pdm_14_current:
         produced_by: ADC3_IN8
         sensor:
-            name: "pdm_14_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_15:
+    pdm_15_current:
         produced_by: ADC3_IN9
         sensor:
-            name: "pdm_15_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_16:
+    pdm_16_current:
         produced_by: ADC3_IN10
         sensor:
-            name: "pdm_16_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_17:
+    pdm_17_current:
         produced_by: ADC3_IN11
         sensor:
-            name: "pdm_17_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_18:
+    pdm_18_current:
         produced_by: ADC3_IN14
         sensor:
-            name: "pdm_18_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
 
-    pdm_current_19:
+    pdm_19_current:
         produced_by: ADC3_IN15
         sensor:
-            name: "pdm_19_current"
+            name: "pdm_current_sensor"
             output: current
         num_samples_buffered: 100
