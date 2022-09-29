@@ -980,8 +980,8 @@ sensors:
                         # not valid need to calculate them
                         independent1: 0
                         dependent1: 0
-                        independent2: 5
-                        dependent2: 230
+                        independent2: 4096
+                        dependent2: 30.36
                 rin: 0
                 rdown: 160
                 r3v: RES_OPEN

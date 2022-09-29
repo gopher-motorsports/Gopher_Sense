@@ -747,12 +747,12 @@ ANALOG_SENSOR water_flow_sensor =
 
 float current_sensor_for_pdm_output_model_table_independent_vars[2] = {
     0,
-    5
+    4096
     
 };
 float current_sensor_for_pdm_output_model_table_dependent_vars[2] = {
     0,
-    230
+    30.36
     
 };
 TABLE current_sensor_for_pdm_output_model_table = 
