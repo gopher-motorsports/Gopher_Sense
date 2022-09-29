@@ -965,7 +965,7 @@ sensors:
                         data_byte_start: 4
                         data_byte_end: 7
 
-    "PDM current sensor":
+    "pdm_current_sensor":
         name_english: "Current sensor for pdm"
         outputs:
             current:

@@ -1,105 +1,173 @@
-module_name: "example_dam"
+module_name: "PDM"
 
 
 buckets:
-    pdm_currents:
+    currents:
         id: 1
-        frequency_hz: 2
-        parameters:
-            - dam_chan_1
-            - dam_chan_2
-            - dam_chan_3
-            
-    bucket_2:
-        id: 2
-        frequency_hz: 10
-        parameters:
-            - dam_chan_4
-            - dam_chan_5
-            - dam_chan_6
-
-    bucket_3:
-        id: 3
         frequency_hz: 1
         parameters:
-            - float_tester_4
-            - float_tester_5
-            - float_tester_6
-            - example_new_param
+            - pdm_current_0
+            - pdm_current_1
+            - pdm_current_2
+            - pdm_current_3
+            - pdm_current_4
+            - pdm_current_5
+            - pdm_current_6
+            - pdm_current_7
+            - pdm_current_8
+            - pdm_current_9
+            - pdm_current_10
+            - pdm_current_11
+            - pdm_current_12
+            - pdm_current_13
+            - pdm_current_14
+            - pdm_current_15
+            - pdm_current_16
+            - pdm_current_17
+            - pdm_current_18
+            - pdm_current_19
+            
+            
 
 parameters_produced:
 # ADC1:
-    dam_chan_1:
+    pdm_current_0:
         produced_by: ADC1_IN0
         sensor:
-            name: "test_voltage_sensor"
-            output: voltage
+            name: "pdm_0_current"
+            output: current
         num_samples_buffered: 100
         
-    dam_chan_2:
+    pdm_current_1:
         produced_by: ADC1_IN1
         sensor:
-            name: "test_voltage_sensor"
-            output: voltage
-        num_samples_buffered: 10       
-
-# ADC2:
-    dam_chan_3:
-        produced_by: ADC2_IN2
-        sensor:
-            name: "test_voltage_sensor"
-            output: voltage
+            name: "pdm_1_current"
+            output: current
         num_samples_buffered: 100
         
-    dam_chan_4:
-        produced_by: ADC2_IN3
+    pdm_current_2:
+        produced_by: ADC1_IN2
         sensor:
-            name: "test_voltage_sensor"
-            output: voltage
-        num_samples_buffered: 10
-            
-# ADC3:
-    dam_chan_5:
+            name: "pdm_2_current"
+            output: current
+        num_samples_buffered: 100
+    
+    pdm_current_3:
+        produced_by: ADC1_IN3
+        sensor:
+            name: "pdm_3_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_4:
+        produced_by: ADC1_IN4
+        sensor:
+            name: "pdm_4_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_5:
+        produced_by: ADC1_IN5
+        sensor:
+            name: "pdm_5_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_6:
+        produced_by: ADC1_IN6
+        sensor:
+            name: "pdm_6_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_7:
+        produced_by: ADC1_IN7
+        sensor:
+            name: "pdm_7_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_8:
+        produced_by: ADC1_IN12
+        sensor:
+            name: "pdm_8_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_9:
+        produced_by: ADC1_IN13
+        sensor:
+            name: "pdm_9_current"
+            output: current
+        num_samples_buffered: 100
+#ADC3
+
+    pdm_current_10:
         produced_by: ADC3_IN4
         sensor:
-            name: "test_voltage_sensor"
-            output: voltage
+            name: "pdm_10_current"
+            output: current
         num_samples_buffered: 100
-        
-    dam_chan_6:
+
+    pdm_current_11:
         produced_by: ADC3_IN5
         sensor:
-            name: "test_voltage_sensor"
-            output: voltage
-        num_samples_buffered: 10
-        
+            name: "pdm_11_current"
+            output: current
+        num_samples_buffered: 100
 
-# CAN sensors:
-    float_tester_4:
-        produced_by: CAN
+    pdm_current_12:
+        produced_by: ADC3_IN6
         sensor:
-            name: "test_can_sensor"
-            output: d16_fixed
-        num_samples_buffered: 1
-            
-    float_tester_5:
-        produced_by: CAN
-        sensor:
-            name: "test_can_sensor"
-            output: u16_raw
-        num_samples_buffered: 1
-            
-    float_tester_6:
-        produced_by: CAN
-        sensor:
-            name: "test_can_sensor"
-            output: float_1_raw
-        num_samples_buffered: 1
-            
-    example_new_param:
-        produced_by: CAN
-        sensor:
-            name: "test_can_sensor"
-            output: float_2_scaled
-        num_samples_buffered: 1
+            name: "pdm_12_current"
+            output: current
+        num_samples_buffered: 100
 
+    pdm_current_13:
+        produced_by: ADC3_IN7
+        sensor:
+            name: "pdm_13_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_14:
+        produced_by: ADC3_IN8
+        sensor:
+            name: "pdm_14_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_15:
+        produced_by: ADC3_IN9
+        sensor:
+            name: "pdm_15_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_16:
+        produced_by: ADC3_IN10
+        sensor:
+            name: "pdm_16_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_17:
+        produced_by: ADC3_IN11
+        sensor:
+            name: "pdm_17_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_18:
+        produced_by: ADC3_IN14
+        sensor:
+            name: "pdm_18_current"
+            output: current
+        num_samples_buffered: 100
+
+    pdm_current_19:
+        produced_by: ADC3_IN15
+        sensor:
+            name: "pdm_19_current"
+            output: current
+        num_samples_buffered: 100
