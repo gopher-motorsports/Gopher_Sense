@@ -8,11 +8,11 @@
 #ifndef INC_DAM_H_
 #define INC_DAM_H_
 
+#include "base_types.h"
 #include "sensor_hal.h"
 #include "GopherCAN.h"
 #include "dam_hw_config.h"
 #include "gopher_sense_lib.h"
-#include "base_types.h"
 
 typedef enum
 {
