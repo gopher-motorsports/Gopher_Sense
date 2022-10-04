@@ -4,7 +4,7 @@
 
 #include "sensor_hal.h"
 
-#define NUM_ANALOG_SENSORS 15
+#define NUM_ANALOG_SENSORS 16
 #define NUM_CAN_SENSORS 8
 
 
@@ -23,6 +23,7 @@ extern ANALOG_SENSOR linear_position_sensor_50mm;
 extern ANALOG_SENSOR linear_position_sensor_25mm;
 extern ANALOG_SENSOR steering_angle_sensor;
 extern ANALOG_SENSOR water_flow_sensor;
+extern ANALOG_SENSOR current_sensor_for_pdm;
 
 
 extern CAN_SENSOR can_sensor_for_testing;

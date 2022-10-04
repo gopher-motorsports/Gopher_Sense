@@ -743,6 +743,52 @@ ANALOG_SENSOR water_flow_sensor =
 };
 
 
+// Sensor definition current_sensor_for_pdm
+
+float current_sensor_for_pdm_output_model_table_independent_vars[2] = {
+    0,
+    5.0
+    
+};
+float current_sensor_for_pdm_output_model_table_dependent_vars[2] = {
+    0,
+    30.36
+    
+};
+TABLE current_sensor_for_pdm_output_model_table = 
+{
+    .num_entries = 2,
+    .independent_vars = current_sensor_for_pdm_output_model_table_independent_vars,
+    .dependent_vars = current_sensor_for_pdm_output_model_table_dependent_vars
+};
+ANALOG_SENSOR current_sensor_for_pdm = 
+{
+    .sensor_id = "pdm_current_sensor",
+    .model =
+    {
+        .input_type = VOLTAGE,
+        .rin = 0,
+        .rdown = RES_OPEN,
+        .r3v = RES_OPEN,
+        .r5v = RES_OPEN,
+        .rfilt = 10000,
+        .rdiv = 19100,
+        .table = &current_sensor_for_pdm_output_model_table
+    },
+    .output = 
+    {
+        .output_name = "voltage",
+        .output_unit = "Current",
+        .scalar = 
+        {
+            .quantization = continuous, //1 if continuous
+            .offset = 0
+        }
+    }
+    
+};
+
+
 
 // ********** CAN SENSORS **********
 
