@@ -516,6 +516,31 @@ sensors:
                 rfilt: 10000
                 rdiv: 19100
                 
+                
+    "pdm_current_sensor":
+        name_english: "Current sensor for pdm"
+        outputs:
+            voltage:
+                unit: Current
+                quantization: continuous
+                offset: 0
+        sensor_type:
+            analog:
+                analog_subtype: Voltage
+                table:
+                    entries:
+                        independent1: 0
+                        dependent1: 0
+                        independent2: 5.0
+                        dependent2: 30.36
+                rin: 0
+                rdown: RES_OPEN
+                r3v: RES_OPEN
+                r5v: RES_OPEN
+                rfilt: 10000
+                rdiv: 19100
+
+                
     "lambda_sensor":
         # TODO no datasheet
         name_english: "Lambda Sensor"
@@ -964,30 +989,6 @@ sensors:
                         encoding: INT_MSB
                         data_byte_start: 4
                         data_byte_end: 7
-
-    "pdm_current_sensor":
-        name_english: "Current sensor for pdm"
-        outputs:
-            current:
-                unit: Float_0-1
-                quantization: continuous
-                offset: 0
-        sensor_type:
-            analog:
-                analog_subtype: Current
-                table:
-                    entries:
-                        # not valid need to calculate them
-                        independent1: 0
-                        dependent1: 0
-                        independent2: 4096
-                        dependent2: 30.36
-                rin: 0
-                rdown: 160
-                r3v: RES_OPEN
-                r5v: RES_OPEN
-                rfilt: 10000
-                rdiv: RES_OPEN
 
     "cascadia_inverter":
         name_english: "Inverter"

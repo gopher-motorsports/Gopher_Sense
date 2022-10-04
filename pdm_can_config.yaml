@@ -2,9 +2,9 @@ module_name: "PDM"
 
 
 buckets:
-    currents:
+    bucket_1:
         id: 1
-        frequency_hz: 1
+        frequency_hz: 2
         parameters:
             - pdm_0_current
             - pdm_1_current
@@ -17,6 +17,7 @@ buckets:
             - pdm_8_current
             - pdm_9_current
             - pdm_10_current
+            
             - pdm_11_current
             - pdm_12_current
             - pdm_13_current
@@ -35,139 +36,141 @@ parameters_produced:
         produced_by: ADC1_IN0
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
         
     pdm_1_current:
         produced_by: ADC1_IN1
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
         
     pdm_2_current:
         produced_by: ADC1_IN2
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
     
     pdm_3_current:
         produced_by: ADC1_IN3
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_4_current:
         produced_by: ADC1_IN4
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_5_current:
         produced_by: ADC1_IN5
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_6_current:
         produced_by: ADC1_IN6
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_7_current:
         produced_by: ADC1_IN7
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_8_current:
         produced_by: ADC1_IN12
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_9_current:
         produced_by: ADC1_IN13
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 #ADC3
 
     pdm_10_current:
         produced_by: ADC3_IN4
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_11_current:
         produced_by: ADC3_IN5
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_12_current:
         produced_by: ADC3_IN6
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_13_current:
         produced_by: ADC3_IN7
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_14_current:
         produced_by: ADC3_IN8
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_15_current:
         produced_by: ADC3_IN9
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_16_current:
         produced_by: ADC3_IN10
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_17_current:
         produced_by: ADC3_IN11
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_18_current:
         produced_by: ADC3_IN14
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
 
     pdm_19_current:
         produced_by: ADC3_IN15
         sensor:
             name: "pdm_current_sensor"
-            output: current
-        num_samples_buffered: 100
+            output: voltage
+        num_samples_buffered: 10
+        
+        

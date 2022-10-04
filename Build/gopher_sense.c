@@ -747,7 +747,7 @@ ANALOG_SENSOR water_flow_sensor =
 
 float current_sensor_for_pdm_output_model_table_independent_vars[2] = {
     0,
-    4096
+    5.0
     
 };
 float current_sensor_for_pdm_output_model_table_dependent_vars[2] = {
@@ -766,19 +766,19 @@ ANALOG_SENSOR current_sensor_for_pdm =
     .sensor_id = "pdm_current_sensor",
     .model =
     {
-        .input_type = CURRENT,
+        .input_type = VOLTAGE,
         .rin = 0,
-        .rdown = 160,
+        .rdown = RES_OPEN,
         .r3v = RES_OPEN,
         .r5v = RES_OPEN,
         .rfilt = 10000,
-        .rdiv = RES_OPEN,
+        .rdiv = 19100,
         .table = &current_sensor_for_pdm_output_model_table
     },
     .output = 
     {
-        .output_name = "current",
-        .output_unit = "Float_0-1",
+        .output_name = "voltage",
+        .output_unit = "Current",
         .scalar = 
         {
             .quantization = continuous, //1 if continuous
