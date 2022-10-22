@@ -107,6 +107,7 @@ class Module():
             return None
         idx = 0
         for message in sensor.messages:
+            print(message)
             if sensor.messages[message]['output_measured'] == dependency:
                 return idx
             idx += 1
