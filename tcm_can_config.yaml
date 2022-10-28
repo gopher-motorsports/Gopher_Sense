@@ -49,7 +49,7 @@ buckets:
             
     high_frequency_tcm:
         id: 3
-        frequency_hz: 250
+        frequency_hz: 100
         parameters:
             - rear_left_shock_pot
             - rear_right_shock_pot
@@ -74,7 +74,7 @@ buckets:
             - tcm_shifter_position
             - tcm_clutch_position
             - tcm_trans_rpm
-            - tcm_throttle_blip
+            - tcm_shift_state
             - tcm_using_clutch
             - tcm_anti_stall
             - tcm_lap_timer

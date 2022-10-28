@@ -4,7 +4,7 @@ module_name: "front_dam"
 buckets:
     shock_pots:
         id: 1
-        frequency_hz: 250
+        frequency_hz: 100
         parameters:
             - front_left_shock_pot
             - front_right_shock_pot
