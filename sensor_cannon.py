@@ -10,18 +10,13 @@ import yaml
 import munch
 from jinja2 import Template
 
-
-
 TEMPLATES_DIRECTORY = "Templates"
 OUTPUT_DIRECTORY = "Build"
 SENSOR_CONFIG_FILE = "sensors.yaml"
-SENSOR_H_FILE = 'gopher_sense_TEMPLATE.h.jinja2'
-SENSOR_C_FILE = 'gopher_sense_TEMPLATE.c.jinja2'
+SENSOR_H_FILE = 'sensors_TEMPLATE.h.jinja2'
+SENSOR_C_FILE = 'sensors_TEMPLATE.c.jinja2'
 HWCONFIG_C_FILE = 'hwconfig_TEMPLATE.c.jinja2'
 HWCONFIG_H_FILE = 'hwconfig_TEMPLATE.h.jinja2'
-
-def C_ize_Name(name):
-    return name.replace(' ', '_').lower()
 
 def NoneOnValueError(d, k):
     try:
@@ -35,114 +30,88 @@ def getSensorNameFromID(id, sensors):
             return sensor.name
     return None
 
+# Object for sensors from the sensors.yaml file
+class AnalogSensor():
+    def __init__(self, name, name_english, analog_subtype, points):
+        self.name = name
+        self.name_english = name_english
+        self.analog_subtype = analog_subtype
+        self.points = points
+        self.tableEntries = ([],[]) #entries in order (independent, dependent)
+        self.numTableEntries = len(points)
+        if self.points != None:
+            for point in points:
+                # remove the parentheses and space, then break the string up into two
+                point = point.translate(str.maketrans('', '', '( )'))
+                split_point = point.split(',')
+                
+                # convert both into floating point numbers
+                self.tableEntries[0].append(float(split_point[0]))
+                self.tableEntries[1].append(float(split_point[1]))
 
-class Param():
-    def __init__(self, param_name, filtered_params, buffer_size, producer, filter, sen_name,  sen_output ):
-        self.param_name = param_name
-        self.filtered_params = filtered_params
-        self.buffer_size = buffer_size
-        self.producer = producer
-        self.filter = filter #(type, value) tuple
-        self.sensor_name = sen_name
-        self.sensor_output = sen_output
-        self.bucket_name = "[GCAN Param Not Found in Bucket]"
-        self.bucket_loc = 69
-
+# Objects for the module configuration file
 class Module():
-    def __init__(self, name, params, analog_sensors, can_sensors):
+    def __init__(self, name, buckets, analog_sensors):
         self.analog_sensors = analog_sensors
-        self.can_sensors = can_sensors
 
         self.name = name
 
+        self.all_params = []
         self.adc1_params = []
         self.adc2_params = []
         self.adc3_params = []
-
-        self.can_params = []
-
-
-        self.params = params
-        for p in self.params:
-            param = self.params[p]
-            producer = param['produced_by']
+        self.buckets = []
+        
+        for bucket in buckets:
+            # for each bucket, define the name and frequency. Dont pass in the parameters
+            # yet as we will link them up later
+            b = Bucket(bucket, buckets[bucket]['frequency_hz'])
+            self.buckets.append(b)
             
-            # Filtered params would go here if they existed
-
-            p = Param(p, None, param['num_samples_buffered'], producer, None, param['sensor']['name'], param['sensor']['output'] )
-            if ("ADC1" in producer):
-                self.adc1_params.append(p)
-            elif ("ADC2" in producer):
-                self.adc2_params.append(p)
-            elif ("ADC3" in producer):
-                self.adc3_params.append(p)
-            elif ("CAN" in producer):
-                self.can_params.append(p)
+            # convert the dictionary to a list in order to index easier
+            param_names = list(buckets[bucket]['parameters'])
+            param_vals = list(buckets[bucket]['parameters'].values())
+            
+            # add the parameters from this bucket to the master list of buckets
+            for param_name in param_names:
+                param_val = param_vals[param_names.index(param_name)]
+                p = Param(param_name, param_val['ADC'], param_val['sensor'], param_val['samples_buffered'])
+                
+                # add the details about what bucket this is in to the parameter
+                p.bucket_loc = param_names.index(param_name)
+                p.bucket_name = b.name
+                
+                # note which ADC is generating this parameter. If the ADC is 'NON_ADC' then items
+                # just wont get added to any of the lists and must be generated manually
+                if ("ADC1" in p.ADC):
+                    self.adc1_params.append(p)
+                elif ("ADC2" in p.ADC):
+                    self.adc2_params.append(p)
+                elif ("ADC3" in p.ADC):
+                    self.adc3_params.append(p)
+                    
+                # also keep a running list of all of the parameters in this bucket
+                b.params.append(p)
 
         # This sorting is to the ADC channels are in order
-        self.adc1_params.sort(key=lambda param:int(param.producer[7:]), reverse=False)
-        self.adc2_params.sort(key=lambda param:int(param.producer[7:]), reverse=False)
-        self.adc3_params.sort(key=lambda param:int(param.producer[7:]), reverse=False)
-
-
-    def getSensorName(self, param_sensor_name):
-        for asensor in self.analog_sensors:
-            if param_sensor_name == asensor.sensorID:
-                return asensor.name
-                
-        for csensor in self.can_sensors:
-            if param_sensor_name == csensor.sensorID:
-                return csensor.name
-        
-        return None
-
-
-    def getDependencyMessageIndex(self, name, dependency):
-        sensor = None
-        for s in self.can_sensors:
-            if s.name == name:
-                sensor = s
-                break
-        if sensor == None:
-            return None
-        idx = 0
-        for message in sensor.messages:
-            if sensor.messages[message]['output_measured'] == dependency:
-                return idx
-            idx += 1
-        return None
+        self.adc1_params.sort(key=lambda param:int(param.ADC[7:]), reverse=False)
+        self.adc2_params.sort(key=lambda param:int(param.ADC[7:]), reverse=False)
+        self.adc3_params.sort(key=lambda param:int(param.ADC[7:]), reverse=False)
 
 class Bucket():
-    def __init__(self, name, id, frequency, params):
+    def __init__(self, name, frequency):
         self.name = name
-        self.id = id
         self.ms_between_req = int(1000 / frequency)
-        self.params = params
-
-# convienient container for data
-class AnalogSensor():
-    def __init__(self, sensorID, name, outputs, analog):
-        self.sensorID = sensorID
-        self.name = C_ize_Name(name)
-        self.outputs = outputs
-        self.analog = analog
-        self.table = self.analog['table']
-        self.tableEntries = ([],[]) #entries in order (independent, dependent)
-        self.numTableEntries = None
-        if self.table != None:
-            self.numTableEntries = int(len(self.table['entries'])/2) #always even
-            for i in range(self.numTableEntries):
-                self.tableEntries[0].append(self.table['entries']["independent{}".format(i+1)])
-                self.tableEntries[1].append(self.table['entries']["dependent{}".format(i+1)])
-
-# convienient container for data
-class CANSensor():
-    def __init__(self, sensorID, name, outputs, messages):
-        self.sensorID = sensorID
-        self.name = C_ize_Name(name)
-        self.outputs = outputs
-        self.messages = messages
-        self.numMessages = len(messages)
+        self.params = []
+        
+class Param():
+    def __init__(self, param_name, ADC, sensor_name, samples_buffered):
+        self.param_name = param_name
+        self.ADC = ADC
+        self.sensor_name = sensor_name
+        self.samples_buffered = samples_buffered
+        self.bucket_name = "[GCAN Param Not Found in Bucket]"
+        self.bucket_loc = 1337
 
 def main():
     argv = sys.argv
@@ -150,6 +119,7 @@ def main():
         print("Pass the path to the hardware config file: somepath\\some_module_hwconfig.yaml")
         sys.exit()
 
+    # Get the details from all the required .yamls
     print("Gopher Motorsports Sensor Cannon")
     sensorFile = open(SENSOR_CONFIG_FILE)
     configFile = open(argv[1])
@@ -160,133 +130,55 @@ def main():
     sensors_munch = munch.Munch(sensor_raw)
     sensors = sensors_munch.sensors
     
-    # get the files as a string and process them as a bytestring
-    ascii_values = []
-    concat = ", "
-    sensorFileStr = open(SENSOR_CONFIG_FILE)
-    sensorFileStr = sensorFileStr.read()
-    for char in sensorFileStr:
-        ascii_values.append(hex(ord(char)))
-    sensorFileStr = concat.join(ascii_values)
-        
-    configFileStr = open(argv[1])
-    configFileStr = configFileStr.read()
-    for char in configFileStr:
-        ascii_values.append(hex(ord(char)))
-    configFileStr = concat.join(ascii_values)
-    
     # run the gcan auto gen script to make sure GopherCAN_ids.c/h is up to date
     # TODO
 
     # define sensor objects
     analog_sensors = []
-    can_sensors = []
     for s in sensors:
         sensor = sensors[s]
-        if 'analog' in sensor['sensor_type']:
-            a = AnalogSensor(s, sensor['name_english'], sensor['outputs'], sensor['sensor_type']['analog'])
-            analog_sensors.append(a)
-        if 'CAN' in sensor['sensor_type']:
-            c = CANSensor(s, sensor['name_english'], sensor['outputs'], sensor['sensor_type']['CAN']['messages'])
-            can_sensors.append(c)
-        # more sensors can be added here
-
+        a = AnalogSensor(s, sensor['name_english'], sensor['analog_subtype'], sensor['points'])
+        analog_sensors.append(a)
 
     # write the sensor templates
     os.makedirs(OUTPUT_DIRECTORY, exist_ok=True)
-    print("Generating ", SENSOR_H_FILE)
+    print("Generating......", SENSOR_H_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, SENSOR_H_FILE)) as file_:
         template = Template(file_.read())
-        output = template.render(analog_sensors=analog_sensors, can_sensors=can_sensors)
-        filename = "gopher_sense.h"
+        output = template.render(analog_sensors=analog_sensors)
+        filename = "sensors.h"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
-    print("Generating ", SENSOR_C_FILE)
+
+    print("Generating......", SENSOR_C_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, SENSOR_C_FILE)) as file_:
         template = Template(file_.read())
-        output = template.render(analog_sensors=analog_sensors, can_sensors=can_sensors, sensorFileStr=sensorFileStr)
-        filename = "gopher_sense.c"
+        output = template.render(analog_sensors=analog_sensors)
+        filename = "sensors.c"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
 
-    module = Module(hwconfig_munch.module_name, hwconfig_munch['parameters_produced'], analog_sensors, can_sensors)
-    buckets = []
-    for _b in hwconfig_munch.buckets:
-        b = hwconfig_munch.buckets[_b]
-        bucket_params = [bp for bp in b['parameters']]
-        buckets.append(Bucket(_b, b['id'], b['frequency_hz'], bucket_params))
-        
-
-    # link all the params with where they are in the buckets
-    for param in module.adc1_params:
-        found = False
-        for bucket in buckets:
-            for bucket_param in bucket.params:
-                if param.param_name == bucket_param:
-                    # this is the bucket to link the param to
-                    param.bucket_name = bucket.name
-                    param.bucket_loc = bucket.params.index(bucket_param)
-                    found = True
-        if not found:
-            print("Could not find the bucket for param: " + param.param_name)
-            quit()
-                    
-    for param in module.adc2_params:
-        found = False
-        for bucket in buckets:
-            for bucket_param in bucket.params:
-                if param.param_name == bucket_param:
-                    # this is the bucket to link the param to
-                    param.bucket_name = bucket.name
-                    param.bucket_loc = bucket.params.index(bucket_param)
-                    found = True
-        if not found:
-            print("Could not find the bucket for param: " + param.param_name)
-            quit()
-                    
-    for param in module.adc3_params:
-        found = False
-        for bucket in buckets:
-            for bucket_param in bucket.params:
-                if param.param_name == bucket_param:
-                    # this is the bucket to link the param to
-                    param.bucket_name = bucket.name
-                    param.bucket_loc = bucket.params.index(bucket_param)
-                    found = True
-        if not found:
-            print("Could not find the bucket for param: " + param.param_name)
-            quit()
-                    
-    for param in module.can_params:
-        found = False
-        for bucket in buckets:
-            for bucket_param in bucket.params:
-                if param.param_name == bucket_param:
-                    # this is the bucket to link the param to
-                    param.bucket_name = bucket.name
-                    param.bucket_loc = bucket.params.index(bucket_param)
-                    found = True
-        if not found:
-            print("Could not find the bucket for param: " + param.param_name)
-            quit()
-        
-
+    # define the module and start parsing the buckets
+    module = Module(hwconfig_munch.module_name, hwconfig_munch['buckets'], analog_sensors)
+    
     # write the HW config files
-    print("Generating ", HWCONFIG_C_FILE)
+    print("Generating......", HWCONFIG_C_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, HWCONFIG_C_FILE)) as file_:
         template = Template(file_.read())
-        output = template.render(module=module, buckets=buckets, configFileStr=configFileStr)
-        print("Configuring DAM from:", configFileName)
-        filename = "dam_hw_config.c"
+        output = template.render(module=module, buckets=module.buckets)
+        filename = "module_hw_config.c"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
-    print("Generating ", HWCONFIG_H_FILE)
+
+    print("Generating......", HWCONFIG_H_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, HWCONFIG_H_FILE)) as file_:
         template = Template(file_.read())
-        output = template.render(module=module, buckets=buckets)
-        filename = "dam_hw_config.h"
+        output = template.render(module=module, buckets=module.buckets)
+        filename = "module_hw_config.h"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
+            
+
 if __name__ == '__main__':
     main()
     print('Generation Complete.')

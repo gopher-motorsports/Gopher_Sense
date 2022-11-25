@@ -1,105 +1,88 @@
+
 module_name: "example_dam"
 
-
 buckets:
-    bucket_1:
-        id: 1
-        frequency_hz: 50
+    high_frequency_tcm:
+        # NOTE: frequency will be converted to an integer number of ms for a delay
+        frequency_hz: 250
         parameters:
-            - dam_chan_1
-            - dam_chan_2
-            - dam_chan_3
+            # these must directly be a variable defined in GopherCAN
+            rear_left_shock_pot:
+                ADC: ADC1_IN2
+                sensor: linear_pos_sensor_25
+                samples_buffered: 1
+            rear_right_shock_pot:
+                ADC: ADC1_IN3
+                sensor: linear_pos_sensor_25
+                samples_buffered: 1
+            front_left_shock_pot:
+                ADC: ADC2_IN2
+                sensor: linear_pos_sensor_25
+                samples_buffered: 1
+            front_right_shock_pot:
+                ADC: ADC2_IN3
+                sensor: linear_pos_sensor_25
+                samples_buffered: 1
+            engine_temp_ecu:
+                ADC: ADC3_IN2
+                sensor: temp_sensor
+                samples_buffered: 1
+            oil_temp_ecu:
+                ADC: ADC3_IN1
+                sensor: temp_sensor
+                samples_buffered: 1
             
-    bucket_2:
-        id: 2
-        frequency_hz: 10
+    low_frequency_tcm:
+        frequency_hz: 100
         parameters:
-            - dam_chan_4
-            - dam_chan_5
-            - dam_chan_6
+            tcm_shifter_position:
+                ADC: ADC2_IN11
+                sensor: linear_pos_sensor_50
+                samples_buffered: 1
+            tcm_clutch_position:
+                ADC: ADC1_IN10
+                sensor: linear_pos_sensor_50
+                samples_buffered: 1
+            tcm_neutral:
+                # NON_ADC sensors means the value is produced somewhere in the main software then put into the GopherCAN value manually
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcm_target_rpm:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcm_current_gear:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcm_target_gear:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcm_currently_moving:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcm_successful_shift:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcm_trans_rpm:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcm_lap_timer:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcm_using_clutch:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
+            tcm_anti_stall:
+                ADC: NON_ADC
+                sensor: NON_ADC
+                samples_buffered: 1
 
-    bucket_3:
-        id: 3
-        frequency_hz: 1
-        parameters:
-            - float_tester_4
-            - float_tester_5
-            - float_tester_6
-            - example_new_param
-
-parameters_produced:
-# ADC1:
-    dam_chan_1:
-        produced_by: ADC1_IN0
-        sensor:
-            name: "test_voltage_sensor"
-            output: voltage
-        num_samples_buffered: 100
-        
-    dam_chan_2:
-        produced_by: ADC1_IN1
-        sensor:
-            name: "test_voltage_sensor"
-            output: voltage
-        num_samples_buffered: 10       
-
-# ADC2:
-    dam_chan_3:
-        produced_by: ADC2_IN2
-        sensor:
-            name: "test_voltage_sensor"
-            output: voltage
-        num_samples_buffered: 100
-        
-    dam_chan_4:
-        produced_by: ADC2_IN3
-        sensor:
-            name: "test_voltage_sensor"
-            output: voltage
-        num_samples_buffered: 10
-            
-# ADC3:
-    dam_chan_5:
-        produced_by: ADC3_IN4
-        sensor:
-            name: "test_voltage_sensor"
-            output: voltage
-        num_samples_buffered: 100
-        
-    dam_chan_6:
-        produced_by: ADC3_IN5
-        sensor:
-            name: "test_voltage_sensor"
-            output: voltage
-        num_samples_buffered: 10
-        
-
-# CAN sensors:
-    float_tester_4:
-        produced_by: CAN
-        sensor:
-            name: "test_can_sensor"
-            output: d16_fixed
-        num_samples_buffered: 1
-            
-    float_tester_5:
-        produced_by: CAN
-        sensor:
-            name: "test_can_sensor"
-            output: u16_raw
-        num_samples_buffered: 1
-            
-    float_tester_6:
-        produced_by: CAN
-        sensor:
-            name: "test_can_sensor"
-            output: float_1_raw
-        num_samples_buffered: 1
-            
-    example_new_param:
-        produced_by: CAN
-        sensor:
-            name: "test_can_sensor"
-            output: float_2_scaled
-        num_samples_buffered: 1
 
