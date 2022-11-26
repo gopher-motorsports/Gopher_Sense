@@ -25,7 +25,7 @@ TABLE linear_pos_sensor_50_table =
 ANALOG_SENSOR linear_pos_sensor_50 = 
 {
     .type = VOLTAGE,
-	.conversion_table = linear_pos_sensor_50_table
+	.conversion_table = &linear_pos_sensor_50_table
 };
 
 
@@ -86,7 +86,7 @@ TABLE temp_sensor_table =
 ANALOG_SENSOR temp_sensor = 
 {
     .type = RESISTIVE,
-	.conversion_table = temp_sensor_table
+	.conversion_table = &temp_sensor_table
 };
 
 

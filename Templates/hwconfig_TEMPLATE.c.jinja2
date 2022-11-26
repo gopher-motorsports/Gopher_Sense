@@ -4,6 +4,7 @@
 #include "module_hw_config.h"
 #include "gopher_sense.h"
 #include "GopherCAN.h"
+#include "sensors.h"
 
 // BUCKETS
 {% if buckets|length > 0 -%}
@@ -63,7 +64,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param{{i}}
   {
     .bucket_param = {{param.bucket_name}}_bucket_general_param_list + {{param.bucket_loc}},
-    .analog_sensor = &{{param.param_name}},
+    .analog_sensor = &{{param.sensor_name}},
     .buffer =
     {
       .buffer = adc1_param{{i}}_buffer_mem,
@@ -97,7 +98,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   // adc2_param{{i}}
   {
     .bucket_param = {{param.bucket_name}}_bucket_general_param_list + {{param.bucket_loc}},
-    .analog_sensor = &{{param.param_name}},
+    .analog_sensor = &{{param.sensor_name}},
     .buffer =
     {
       .buffer = adc2_param{{i}}_buffer_mem,
@@ -131,7 +132,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param{{i}}
   {
     .bucket_param = {{param.bucket_name}}_bucket_general_param_list + {{param.bucket_loc}},
-    .analog_sensor = &{{param.param_name}},
+    .analog_sensor = &{{param.sensor_name}},
     .buffer =
     {
       .buffer = adc3_param{{i}}_buffer_mem,

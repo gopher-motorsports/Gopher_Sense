@@ -25,7 +25,7 @@ TABLE {{sensor.name}}_table =
 ANALOG_SENSOR {{sensor.name}} = 
 {
     .type = {{sensor.analog_subtype.upper()}},
-	.conversion_table = {{sensor.name}}_table
+	.conversion_table = &{{sensor.name}}_table
 };
 
 {% endfor %}

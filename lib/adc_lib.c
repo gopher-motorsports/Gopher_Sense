@@ -1,14 +1,10 @@
 // adc_lib.c
-// TODO DOCS
+//  Functions for handling the ADC buffers, DMA, and hardware timers
 
-#include <adc_lib.h>
-#include <gopher_sense.h>
+#include "adc_lib.h"
 #include "gopher_sense.h"
 #include "GopherCAN.h"
-#include "base_types.h"
-#include "main.h"
-#include "dam_hw_config.h"
-
+#include "module_hw_config.h"
 
 ADC_HandleTypeDef* adc1 = NULL;
 ADC_HandleTypeDef* adc2 = NULL;
@@ -39,9 +35,18 @@ volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
 #define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetPCLK1Freq() << 1) // APB1 Timer clock = PCLK1 * 2
 #define TIM_MAX_VAL 65536
 
+// static function declarations
+static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc);
+static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float data_in, float* data_out);
+static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float data_in, float* data_out);
+static inline float adc_to_volts(U16 adc_reading, U8 resolution_bits);
+static S8 interpolate_table_linear(TABLE* table, float data_in, float* data_out);
+static inline float interpolate(float x0, float y0, float x1, float y1, float x);
+
 
 //******************* ADC Config *******************
-S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleTypeDef* ad3)
+S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2,
+		        ADC_HandleTypeDef* ad3)
 {
 #if NUM_ADC1_PARAMS > 0
     if (!ad1) return ADC_NOT_CONFIGURED;
@@ -107,8 +112,10 @@ void stopDataAq(void)
 // DAQ_TimerCallback
 //  This is called by each timer when it overflows. This will take the data from the DMA
 //  buffer and put it in the parameter buffer
-void DAQ_TimerCallback (TIM_HandleTypeDef* timer)
+void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
 {
+	// TODO need a mutex for each ADC here
+
 	// put the data into the parameter buffer
 #if NUM_ADC1_PARAMS > 0
     add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
@@ -122,8 +129,11 @@ void DAQ_TimerCallback (TIM_HandleTypeDef* timer)
 }
 
 
-// for each parameter in this array, transfer the data from the sample buffer to the param buffer
-void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_buffer, U32 num_params)
+// add_data_to_buffer
+//  for each parameter in this array, transfer the data from the sample buffer
+//  to the param buffer
+void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array,
+		                volatile U16* sample_buffer, U32 num_params)
 {
 	ANALOG_SENSOR_PARAM* param = param_array;
 	volatile U16* buffer = sample_buffer;
@@ -144,7 +154,7 @@ void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_b
 		}
 
 		// calculate the average and add it to the buffer
-		add_to_buffer(&param->buffer, (U32)(total / ADC_SAMPLE_SIZE_PER_PARAM));
+		add_to_buffer(&param->buffer, (U16)(total / ADC_SAMPLE_SIZE_PER_PARAM));
 
 		// move on to the next param
 		param++;
@@ -154,6 +164,10 @@ void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array, volatile U16* sample_b
 
 
 //******************* Timer interaction *******************
+
+// configLibTimer
+//  to be called externally, this function will correctly set up the timer to run
+//  at the inputed frequency
 S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
 {
 #if NEED_HW_TIMER
@@ -167,7 +181,9 @@ S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
 }
 
 
-void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz)
+// configTimer
+//  static function, this will set up the timer with no error checking
+static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc)
 {
     __HAL_TIM_DISABLE(timer);
     __HAL_TIM_SET_COUNTER(timer, 0);
@@ -187,7 +203,9 @@ void configTimer(TIM_HandleTypeDef* timer, U16 psc,  U16 timer_int_freq_hz)
 
 // Note: Semaphore probably not needed for buffer interaction because reset is atomic
 
-S8 buffer_full (U16_BUFFER* buffer)
+// buffer_full
+//  pass in a buffer, returns 1 if it is full, 0 if it is not full
+S8 buffer_full(U16_BUFFER* buffer)
 {
     if (buffer == NULL)
     {
@@ -196,7 +214,11 @@ S8 buffer_full (U16_BUFFER* buffer)
     return buffer->fill_level == buffer->buffer_size;
 }
 
-S8 add_to_buffer (U16_BUFFER* buffer, U32 toadd)
+// add_to_buffer
+//  adds a value to the buffer at the next available spot. This is a ring
+//  buffer, so if no spots are available this will delete the oldest data
+//  in the buffer
+S8 add_to_buffer(U16_BUFFER* buffer, U16 toadd)
 {
     if (buffer == NULL)
     {
@@ -220,7 +242,10 @@ S8 add_to_buffer (U16_BUFFER* buffer, U32 toadd)
     return BUFFER_SUCCESS;
 }
 
-S8 reset_buffer (U16_BUFFER* buffer)
+// reset_buffer
+//  Set the head and fill level of the buffer to zero in order to consider the
+//  buffer empty
+S8 reset_buffer(U16_BUFFER* buffer)
 {
     if (buffer == NULL)
     {
@@ -232,14 +257,17 @@ S8 reset_buffer (U16_BUFFER* buffer)
     return BUFFER_SUCCESS;
 }
 
-S8 average_buffer (U16_BUFFER* buffer, U16* avg)
+// average_buffer
+//  average the buffer and put the number into avg. Will truncate to the nearest
+//  integer
+S8 average_buffer(U16_BUFFER* buffer, U16* avg)
 {
     if (buffer == NULL)
     {
         return BUFFER_ERR;
     }
 
-    U64 calc_avg = 0;
+    U32 calc_avg = 0;
     U16 c;
 
     if (buffer->fill_level == 0)
@@ -271,7 +299,9 @@ S8 average_buffer (U16_BUFFER* buffer, U16* avg)
 }
 
 
-S8 average_buffer_as_float (U16_BUFFER* buffer, float* avg)
+// average_buffer_as_float
+//  Takes in a buffer and puts the average in avg, this time casting to a float
+S8 average_buffer_as_float(U16_BUFFER* buffer, float* avg)
 {
 	if (buffer == NULL)
 	{
@@ -313,12 +343,15 @@ S8 average_buffer_as_float (U16_BUFFER* buffer, float* avg)
 }
 
 
-S8 apply_analog_sensor_conversion (ANALOG_SENSOR* sensor, float data_in, float* data_out)
+// apply_analog_sensor_conversion
+//  this will take a ADC integer value from a sensor and convert it to a
+//  real-world value
+S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor,
+		                          float data_in, float* data_out)
 {
-	// TODO this function needs some help
 	if (!sensor || !data_out) return CONV_ERR;
 
-    switch (sensor->model.input_type)
+    switch (sensor->type)
     {
 		case VOLTAGE:
 			return convert_voltage_load(sensor, data_in, data_out);
@@ -333,25 +366,38 @@ S8 apply_analog_sensor_conversion (ANALOG_SENSOR* sensor, float data_in, float* 
 }
 
 
-S8 convert_voltage_load (ANALOG_SENSOR* sensor, float data_in, float* data_out)
+// convert_voltage_load
+//  take in an average buffer value and return the real-world value based on
+//  the sensor and the data in the voltage conversion table
+static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float data_in, float* data_out)
 {
 	// TODO math based on no voltage divider
+	return interpolate_table_linear(sensor->conversion_table, data_in, data_out);
 }
 
 
-S8 convert_resistive_load (ANALOG_SENSOR* sensor, float data_in, float* data_out)
+// convert_resistive_load
+//  take in an average buffer value and return the real-world value based on
+//  the sensor and the data in the resistance conversion table
+static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float data_in, float* data_out)
 {
 	// TODO math based on a 1k resistor
+	return interpolate_table_linear(sensor->conversion_table, data_in, data_out);
 }
 
 
-inline float adc_to_volts(U16 adc_reading, U8 resolution_bits)
+// adc_to_volts
+//  do some math to transform the ADC reading into a voltage
+static inline float adc_to_volts(U16 adc_reading, U8 resolution_bits)
 {
 	return ((float)adc_reading / (1 << resolution_bits)) * ADC_VOLTAGE;
 }
 
 
-S8 interpolate_table_linear (TABLE* table, float data_in, float* data_out)
+// interpolate_table_linear
+//  take a table, and convert the input value to an output value based on the
+//  information and points stored in the table
+static S8 interpolate_table_linear(TABLE* table, float data_in, float* data_out)
 {
 	U16 entries = table->num_entries;
 	if (!table || !entries)
@@ -392,9 +438,12 @@ S8 interpolate_table_linear (TABLE* table, float data_in, float* data_out)
 	return CONV_ERR;
 }
 
-
-inline float interpolate(float x0, float y0, float x1, float y1, float x)
+// interpolate
+//  linearly interpolate between two points
+static inline float interpolate(float x0, float y0, float x1, float y1, float x)
 {
 	return ((y0 * (x1 - x)) + (y1 * (x - x0))) / (x1 - x0);
 }
 
+
+// End of adc_lib.c

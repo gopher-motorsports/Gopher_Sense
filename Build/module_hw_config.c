@@ -4,6 +4,7 @@
 #include "module_hw_config.h"
 #include "gopher_sense.h"
 #include "GopherCAN.h"
+#include "sensors.h"
 
 // BUCKETS
 // setup the param lists for each bucket
@@ -169,7 +170,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param1
   {
     .bucket_param = high_frequency_tcm_bucket_general_param_list + 0,
-    .analog_sensor = &rear_left_shock_pot,
+    .analog_sensor = &linear_pos_sensor_50,
     .buffer =
     {
       .buffer = adc1_param1_buffer_mem,
@@ -184,7 +185,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param2
   {
     .bucket_param = high_frequency_tcm_bucket_general_param_list + 1,
-    .analog_sensor = &rear_right_shock_pot,
+    .analog_sensor = &linear_pos_sensor_50,
     .buffer =
     {
       .buffer = adc1_param2_buffer_mem,
@@ -199,7 +200,7 @@ ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] =
   // adc1_param3
   {
     .bucket_param = low_frequency_tcm_bucket_general_param_list + 1,
-    .analog_sensor = &tcm_clutch_position,
+    .analog_sensor = &linear_pos_sensor_50,
     .buffer =
     {
       .buffer = adc1_param3_buffer_mem,
@@ -239,7 +240,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   // adc2_param1
   {
     .bucket_param = high_frequency_tcm_bucket_general_param_list + 2,
-    .analog_sensor = &front_left_shock_pot,
+    .analog_sensor = &linear_pos_sensor_50,
     .buffer =
     {
       .buffer = adc2_param1_buffer_mem,
@@ -254,7 +255,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   // adc2_param2
   {
     .bucket_param = high_frequency_tcm_bucket_general_param_list + 3,
-    .analog_sensor = &front_right_shock_pot,
+    .analog_sensor = &linear_pos_sensor_50,
     .buffer =
     {
       .buffer = adc2_param2_buffer_mem,
@@ -269,7 +270,7 @@ ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] =
   // adc2_param3
   {
     .bucket_param = low_frequency_tcm_bucket_general_param_list + 0,
-    .analog_sensor = &tcm_shifter_position,
+    .analog_sensor = &linear_pos_sensor_50,
     .buffer =
     {
       .buffer = adc2_param3_buffer_mem,
@@ -305,7 +306,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param1
   {
     .bucket_param = high_frequency_tcm_bucket_general_param_list + 5,
-    .analog_sensor = &oil_temp_ecu,
+    .analog_sensor = &temp_sensor,
     .buffer =
     {
       .buffer = adc3_param1_buffer_mem,
@@ -320,7 +321,7 @@ ANALOG_SENSOR_PARAM adc3_sensor_params[NUM_ADC3_PARAMS] =
   // adc3_param2
   {
     .bucket_param = high_frequency_tcm_bucket_general_param_list + 4,
-    .analog_sensor = &engine_temp_ecu,
+    .analog_sensor = &temp_sensor,
     .buffer =
     {
       .buffer = adc3_param2_buffer_mem,

@@ -1,7 +1,9 @@
-// TODO DOCS
+// gsense_strucs.h
+//  header file that stores all of the structs and some defines that are used
+//  all throughout the library
 
-#ifndef INC_SENSOR_HAL_H_
-#define INC_SENSOR_HAL_H_
+#ifndef GSENSE_STRUCTS_H
+#define GSENSE_STRUCTS_H
 
 #include "GopherCAN_structs.h"
 #include "base_types.h"
@@ -24,7 +26,7 @@ typedef struct
 {
 	CAN_INFO_STRUCT* can_param;
     DATA_STATUS      status;
-    U32              last_tx;
+    U32              last_tx; // TODO this can be deleted when this is stored in GCAN
 } GENERAL_PARAMETER;
 
 
@@ -48,7 +50,7 @@ typedef struct
 {
     U8           bucket_id; // TODO this can be deleted when buckets are less important
     U16          ms_between_req;
-    U32          last_send;
+    U32          last_send; // TODO this can be deleted when GCAN stores the last_TX
     BUCKET_STATE state;
     PARAM_LIST   param_list;
 } BUCKET;
@@ -80,7 +82,7 @@ typedef struct
 typedef struct
 {
 	ANALOG_SUBTYPE type;
-	TABLE          conversion_table;
+	TABLE*         conversion_table;
 } ANALOG_SENSOR;
 
 
@@ -93,5 +95,6 @@ typedef struct
 } ANALOG_SENSOR_PARAM;
 
 
+#endif // GSENSE_STRUCTS_H
 
-#endif /* INC_SENSOR_HAL_H_ */
+// End of gsense_struct.h
