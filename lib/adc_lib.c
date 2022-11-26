@@ -38,7 +38,9 @@ volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
 #define RES_SENSOR_PULL_UP_VOLTAGE_V 3.3
 
 // static function declarations
+#if NEED_HW_TIMER
 static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc);
+#endif // NEED_HW_TIMER
 static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);
 static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);
 static inline float adc_to_volts(U16 adc_reading, U8 resolution_bits);
@@ -185,6 +187,7 @@ S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
 
 // configTimer
 //  static function, this will set up the timer with no error checking
+#if NEED_HW_TIMER
 static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc)
 {
     __HAL_TIM_DISABLE(timer);
@@ -199,6 +202,7 @@ static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc
     __HAL_TIM_SET_AUTORELOAD(timer, reload);
     __HAL_TIM_ENABLE(timer);
 }
+#endif // NEED_HW_TIMER
 
 
 //******************* Buffer interaction *******************

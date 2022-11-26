@@ -35,7 +35,8 @@ typedef enum
 #define LED_NO_LOGGER_COMMS_BLINK_TIME 2000
 
 // general defines
-#define NEED_HW_TIMER ((NUM_ADC1_PARAMS > 0) || (NUM_ADC2_PARAMS > 0) || (NUM_ADC3_PARAMS > 0))
+#define NEED_ADC ((NUM_ADC1_PARAMS > 0) || (NUM_ADC2_PARAMS > 0) || (NUM_ADC3_PARAMS > 0))
+#define NEED_HW_TIMER NEED_ADC
 #define MAX_TIME_BETWEEN_TX_ms 2500
 
 #define GET_U16_MSB(u16) ((u16 & 0xFF00) >> 8)

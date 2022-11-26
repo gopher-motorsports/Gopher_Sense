@@ -43,7 +43,9 @@ static U32 last_dlm_heartbeat = 0;
 
 // static function declarations
 static void ADC_sensor_service(void);
+#if NEED_ADC > 0
 static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params);
+#endif
 static void handle_gsense_error(GSENSE_ERROR_STATE error_state);
 static BUCKET* get_bucket_by_id(U8 bucket_id);
 
@@ -405,6 +407,7 @@ static void ADC_sensor_service(void)
 
 // service_ADC
 //  function that can be called with any ADC to transfer the data
+#if NEED_ADC > 0
 static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 {
 	float converted_data;
@@ -439,6 +442,7 @@ static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 		param++;
 	}
 }
+#endif // NEED_ADC > 0
 
 
 // handle_gsense_led
