@@ -7,8 +7,8 @@
 #include "gsense_structs.h"
 
 
-#define NUM_ADC1_PARAMS 3
-#define NUM_ADC2_PARAMS 3
+#define NUM_ADC1_PARAMS 2
+#define NUM_ADC2_PARAMS 2
 #define NUM_ADC3_PARAMS 2
 #define NUM_BUCKETS 2
 

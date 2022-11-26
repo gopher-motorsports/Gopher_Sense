@@ -4,7 +4,11 @@ sensors:
         # Texense RSL-50
         name_english: "Linear Position Sensor 50mm"
         analog_subtype: Voltage
-        points: # Sensor voltage first, then what that value means in the real world. These points also must all be in the range of 0-3.3V for the input voltage. This means that the voltage divider must be done correctly on the PCB for a sensor that is not 0-3.3V
+        points: # Sensor voltage first, then what that value means in
+                # the real world. These points also must all be in the
+                # range of 0-3.3V for the input voltage. This means that
+                # the voltage divider must be done correctly on the PCB
+                # for a sensor that is not 0-3.3V
             - (0, 0)
             - (3.3, 50)
 
