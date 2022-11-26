@@ -37,7 +37,7 @@ S8 reset_buffer(U16_BUFFER* buffer);
 S8 average_buffer(U16_BUFFER* buffer, U16* avg);
 S8 average_buffer_as_float(U16_BUFFER* buffer, float* avg);
 S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor,
-		                          float data_in, float* data_out);
+		                          U16 data_in, float* data_out);
 
 
 #endif // ADC_LIB_H

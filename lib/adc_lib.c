@@ -34,11 +34,13 @@ volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
 #define ADC_VOLTAGE 3.3
 #define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetPCLK1Freq() << 1) // APB1 Timer clock = PCLK1 * 2
 #define TIM_MAX_VAL 65536
+#define RES_SENSOR_PULL_UP_RESISTANCE_R 1000.0
+#define RES_SENSOR_PULL_UP_VOLTAGE_V 3.3
 
 // static function declarations
 static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc);
-static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float data_in, float* data_out);
-static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float data_in, float* data_out);
+static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);
+static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);
 static inline float adc_to_volts(U16 adc_reading, U8 resolution_bits);
 static S8 interpolate_table_linear(TABLE* table, float data_in, float* data_out);
 static inline float interpolate(float x0, float y0, float x1, float y1, float x);
@@ -347,19 +349,21 @@ S8 average_buffer_as_float(U16_BUFFER* buffer, float* avg)
 //  this will take a ADC integer value from a sensor and convert it to a
 //  real-world value
 S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor,
-		                          float data_in, float* data_out)
+		                          U16 data_in, float* data_out)
 {
+	float voltage = adc_to_volts(data_in, ADC_BITS);
+
 	if (!sensor || !data_out) return CONV_ERR;
 
     switch (sensor->type)
     {
 		case VOLTAGE:
-			return convert_voltage_load(sensor, data_in, data_out);
+			return convert_voltage_load(sensor, voltage, data_out);
 		case RESISTIVE:
-			return convert_resistive_load(sensor, data_in, data_out);
+			return convert_resistive_load(sensor, voltage, data_out);
 		default:
-			// apply no conversion
-			*data_out = data_in;
+			// apply no conversion, just give out the voltage
+			*data_out = voltage;
     }
 
     return CONV_ERR;
@@ -367,22 +371,26 @@ S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor,
 
 
 // convert_voltage_load
-//  take in an average buffer value and return the real-world value based on
+//  take in a raw voltage value and return the real-world value based on
 //  the sensor and the data in the voltage conversion table
-static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float data_in, float* data_out)
+static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float voltage, float* data_out)
 {
-	// TODO math based on no voltage divider
-	return interpolate_table_linear(sensor->conversion_table, data_in, data_out);
+	// we just need to convert directly from the voltage to the output value
+	return interpolate_table_linear(sensor->conversion_table, voltage, data_out);
 }
 
 
 // convert_resistive_load
-//  take in an average buffer value and return the real-world value based on
+//  take in a raw voltage value and return the real-world value based on
 //  the sensor and the data in the resistance conversion table
-static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float data_in, float* data_out)
+static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float voltage, float* data_out)
 {
-	// TODO math based on a 1k resistor
-	return interpolate_table_linear(sensor->conversion_table, data_in, data_out);
+	float res;
+	// convert the voltage to a resistance with some math
+	res = (voltage * RES_SENSOR_PULL_UP_RESISTANCE_R) /
+			(RES_SENSOR_PULL_UP_VOLTAGE_V - voltage);
+
+	return interpolate_table_linear(sensor->conversion_table, res, data_out);
 }
 
 
@@ -400,6 +408,8 @@ static inline float adc_to_volts(U16 adc_reading, U8 resolution_bits)
 static S8 interpolate_table_linear(TABLE* table, float data_in, float* data_out)
 {
 	U16 entries = table->num_entries;
+	float x0, x1, y0, y1;
+
 	if (!table || !entries)
 	{
 		*data_out = data_in;
@@ -408,34 +418,43 @@ static S8 interpolate_table_linear(TABLE* table, float data_in, float* data_out)
 
 	if (data_in < table->independent_vars[0])
 	{
-		// if off bottom edge return bottom val
-		*data_out = table->dependent_vars[0];
-		return CONV_SUCCESS;
+		// linearly interpolate based on the bottom two points
+		x0 = table->independent_vars[0];
+		y0 = table->dependent_vars[0];
+		x1 = table->independent_vars[1];
+		y1 = table->dependent_vars[1];
 	}
-
-	if (data_in > table->independent_vars[entries-1])
+	else if (data_in > table->independent_vars[entries-1])
 	{
-		// if off top edge return top val
-		*data_out = table->dependent_vars[entries-1];
-		return CONV_SUCCESS;
+		// linearly interpolate based on the top two points
+		x0 = table->independent_vars[entries - 2];
+		y0 = table->dependent_vars[entries - 2];
+		x1 = table->independent_vars[entries - 1];
+		y1 = table->dependent_vars[entries - 1];
 	}
-
-	for (U16 i = 0; i < entries-1; i++)
+	else
 	{
-		float x0 = table->independent_vars[i];
-		float y0 = table->dependent_vars[i];
-		float x1 = table->independent_vars[i+1];
-		float y1 = table->dependent_vars[i+1];
+		// scan through all of the points in the table and find which two points
+		// this input is between
+		for (U16 i = 0; i < entries-1; i++)
+		{
+			x0 = table->independent_vars[i];
+			y0 = table->dependent_vars[i];
+			x1 = table->independent_vars[i+1];
+			y1 = table->dependent_vars[i+1];
 
-		if (data_in >= x0 && data_in <= x1) {
-			*data_out = interpolate(x0, y0, x1, y1, data_in);
-			return CONV_SUCCESS;
+			if (data_in >= x0 && data_in <= x1)
+			{
+				break;
+			}
+
 		}
-
 	}
 
-	*data_out = data_in;
-	return CONV_ERR;
+	// defaults are 0, 0, 3.3, 3.3 so this will just give a voltage if there
+	// is some issue getting the conversion
+	*data_out = interpolate(x0, y0, x1, y1, data_in);
+	return CONV_SUCCESS;
 }
 
 // interpolate

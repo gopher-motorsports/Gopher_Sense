@@ -3,7 +3,8 @@
 //  the data when it comes in from the data buffers and sending the data over
 //  GopherCAN to the data logger
 
-// TODO UPGRADE keyword is used when
+// TODO UPGRADE keyword is used when this is feature that should be changed
+// once the logging code is changed as well
 
 #include "gopher_sense.h"
 #include "gsense_structs.h"
@@ -22,7 +23,7 @@ CAN_HandleTypeDef* gcan_ptr;
 TIM_HandleTypeDef* tim10_ptr;
 
 #define TIMER_PSC 16
-#define ADC_READING_FREQUENCY_HZ 1000 // TODO test out with this at 10kHz
+#define ADC_READING_FREQUENCY_HZ 1000
 
 #define TASK_STACK_SIZE 512
 #define BUCKET_TASK_NAME_BASE "bucket_task_"
@@ -335,7 +336,7 @@ void gsense_reset(void)
 		if (!hasInitialized)
 		{
 			// create bucket tasks
-			// TODO we dont need a ton of these tasks with the new sending scheme
+			// UPGRADE we dont need a ton of these tasks with the new sending scheme
 			char name_buf[30];
 			sprintf(name_buf, "%s%d", BUCKET_TASK_NAME_BASE, bucket->bucket_id);
 			if (xTaskCreate(send_bucket_task, name_buf, TASK_STACK_SIZE,
@@ -406,7 +407,6 @@ static void ADC_sensor_service(void)
 //  function that can be called with any ADC to transfer the data
 static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 {
-	float data_in;
 	float converted_data;
 	U16 avg;
 	ANALOG_SENSOR_PARAM* param = adc_params;
@@ -420,11 +420,8 @@ static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 			continue;
 		}
 
-		// convert to a float to run the conversion. This is fine as floats
-		// have 24bits of precision, and the ADC is only 12bit
-		data_in = avg;
-
-		if (apply_analog_sensor_conversion(param->analog_sensor, data_in, &converted_data) != CONV_SUCCESS)
+		// convert the average of the ADC buffer to a float with the real world value
+		if (apply_analog_sensor_conversion(param->analog_sensor, avg, &converted_data) != CONV_SUCCESS)
 		{
 			// show there is an error on the LED but try again for the next one,
 			// as some might still work
