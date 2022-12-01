@@ -6,14 +6,8 @@
 
 #define NUM_ANALOG_SENSORS 2
 
-
 extern ANALOG_SENSOR linear_pos_sensor_50;
 extern ANALOG_SENSOR temp_sensor;
-
-
-
-void init_analog_sensors(void);
-void init_can_sensors(void);
 
 
 #endif // SENSORS_H

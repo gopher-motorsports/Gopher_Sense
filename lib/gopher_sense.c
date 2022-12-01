@@ -3,7 +3,8 @@
 //  the data when it comes in from the data buffers and sending the data over
 //  GopherCAN to the data logger
 
-// TODO UPGRADE keyword is used when
+// TODO UPGRADE keyword is used when this is feature that should be changed
+// once the logging code is changed as well
 
 #include "gopher_sense.h"
 #include "gsense_structs.h"
@@ -13,16 +14,20 @@
 #include "main.h"
 #include "module_hw_config.h"
 
+#if NEED_ADC
 ADC_HandleTypeDef* adc1_ptr;
 ADC_HandleTypeDef* adc2_ptr;
 ADC_HandleTypeDef* adc3_ptr;
+#endif
 
 CAN_HandleTypeDef* gcan_ptr;
 
+#if NEED_HW_TIMER
 TIM_HandleTypeDef* tim10_ptr;
+#endif
 
 #define TIMER_PSC 16
-#define ADC_READING_FREQUENCY_HZ 1000 // TODO test out with this at 10kHz
+#define ADC_READING_FREQUENCY_HZ 1000
 
 #define TASK_STACK_SIZE 512
 #define BUCKET_TASK_NAME_BASE "bucket_task_"
@@ -42,7 +47,9 @@ static U32 last_dlm_heartbeat = 0;
 
 // static function declarations
 static void ADC_sensor_service(void);
+#if NEED_ADC > 0
 static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params);
+#endif
 static void handle_gsense_error(GSENSE_ERROR_STATE error_state);
 static BUCKET* get_bucket_by_id(U8 bucket_id);
 
@@ -67,20 +74,30 @@ static BUCKET* get_bucket_by_id(U8 bucket_id);
 //  U16 stat_led_Pin:			  Pin for the LED for the library
 // returns:
 //  NO_ERRORS on ok init, INITIALIZATION_ERROR on bad init
+#if NEED_ADC
 GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
 						    ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
 						    TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
 							U16 stat_led_Pin)
+#else
+GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
+		                       GPIO_TypeDef* stat_led_GPIOx,
+							   U16 stat_led_Pin)
+#endif
 {
 
     if (!hasInitialized)
     {
     	// assign all of the pointers
     	gcan_ptr = gcan;
+#if NEED_ADC
     	adc1_ptr = adc1;
     	adc2_ptr = adc2;
     	adc3_ptr = adc3;
+#endif
+#if NEED_HW_TIMER
     	tim10_ptr = tim10;
+#endif
     	status_led_port = stat_led_GPIOx;
     	status_led_pin = stat_led_Pin;
 
@@ -135,6 +152,7 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
     		return INITIALIZATION_ERROR;
 		}
 #endif
+#if NEED_ADC
         if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr))
 		{
         	handle_gsense_error(INITIALIZATION_ERROR);
@@ -145,6 +163,7 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
         	handle_gsense_error(INITIALIZATION_ERROR);
         	return INITIALIZATION_ERROR;
         }
+#endif
     }
 
     gsense_reset();
@@ -335,7 +354,7 @@ void gsense_reset(void)
 		if (!hasInitialized)
 		{
 			// create bucket tasks
-			// TODO we dont need a ton of these tasks with the new sending scheme
+			// UPGRADE we dont need a ton of these tasks with the new sending scheme
 			char name_buf[30];
 			sprintf(name_buf, "%s%d", BUCKET_TASK_NAME_BASE, bucket->bucket_id);
 			if (xTaskCreate(send_bucket_task, name_buf, TASK_STACK_SIZE,
@@ -404,9 +423,9 @@ static void ADC_sensor_service(void)
 
 // service_ADC
 //  function that can be called with any ADC to transfer the data
+#if NEED_ADC > 0
 static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 {
-	float data_in;
 	float converted_data;
 	U16 avg;
 	ANALOG_SENSOR_PARAM* param = adc_params;
@@ -420,11 +439,8 @@ static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 			continue;
 		}
 
-		// convert to a float to run the conversion. This is fine as floats
-		// have 24bits of precision, and the ADC is only 12bit
-		data_in = avg;
-
-		if (apply_analog_sensor_conversion(param->analog_sensor, data_in, &converted_data) != CONV_SUCCESS)
+		// convert the average of the ADC buffer to a float with the real world value
+		if (apply_analog_sensor_conversion(param->analog_sensor, avg, &converted_data) != CONV_SUCCESS)
 		{
 			// show there is an error on the LED but try again for the next one,
 			// as some might still work
@@ -442,6 +458,7 @@ static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 		param++;
 	}
 }
+#endif // NEED_ADC > 0
 
 
 // handle_gsense_led
