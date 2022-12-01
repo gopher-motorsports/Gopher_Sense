@@ -20,13 +20,20 @@
 #define ADC_NOT_CONFIGURED -6
 #define CONV_SUCCESS 2
 
+// general defines
+#define NEED_ADC ((NUM_ADC1_PARAMS > 0) || (NUM_ADC2_PARAMS > 0) || (NUM_ADC3_PARAMS > 0))
+#define NEED_HW_TIMER NEED_ADC
 
 // Function prototypes
+#if NEED_ADC
 S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2,
 		        ADC_HandleTypeDef* ad3);
+#endif
 void startDataAq(void);
 void stopDataAq(void);
+#if NEED_HW_TIMER
 void DAQ_TimerCallback(TIM_HandleTypeDef* timer);
+#endif
 void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array,
 		                volatile U16* sample_buffer, U32 num_params);
 S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc);

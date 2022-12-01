@@ -6,9 +6,11 @@
 #include "GopherCAN.h"
 #include "module_hw_config.h"
 
+#if NEED_ADC
 ADC_HandleTypeDef* adc1 = NULL;
 ADC_HandleTypeDef* adc2 = NULL;
 ADC_HandleTypeDef* adc3 = NULL;
+#endif
 
 #if NEED_HW_TIMER
 TIM_HandleTypeDef* adc_timer = NULL;
@@ -49,6 +51,7 @@ static inline float interpolate(float x0, float y0, float x1, float y1, float x)
 
 
 //******************* ADC Config *******************
+#if NEED_ADC
 S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2,
 		        ADC_HandleTypeDef* ad3)
 {
@@ -67,6 +70,7 @@ S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2,
 
     return 0;
 }
+#endif
 
 
 // startDataAq
@@ -116,6 +120,7 @@ void stopDataAq(void)
 // DAQ_TimerCallback
 //  This is called by each timer when it overflows. This will take the data from the DMA
 //  buffer and put it in the parameter buffer
+#if NEED_HW_TIMER
 void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
 {
 	// TODO need a mutex for each ADC here
@@ -131,6 +136,7 @@ void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
     add_data_to_buffer(adc3_sensor_params, adc3_sample_buffer, NUM_ADC3_PARAMS);
 #endif // NUM_ADC3_PARAMS > 0
 }
+#endif
 
 
 // add_data_to_buffer
@@ -172,17 +178,17 @@ void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array,
 // configLibTimer
 //  to be called externally, this function will correctly set up the timer to run
 //  at the inputed frequency
+#if NEED_HW_TIMER
 S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
 {
-#if NEED_HW_TIMER
 	// config the timer
 	if (!tim) return TMR_NOT_CONFIGURED;
     adc_timer = tim;
     configTimer(adc_timer, psc, tim_freq);
-#endif
 
     return 0;
 }
+#endif
 
 
 // configTimer

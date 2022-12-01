@@ -14,13 +14,17 @@
 #include "main.h"
 #include "module_hw_config.h"
 
+#if NEED_ADC
 ADC_HandleTypeDef* adc1_ptr;
 ADC_HandleTypeDef* adc2_ptr;
 ADC_HandleTypeDef* adc3_ptr;
+#endif
 
 CAN_HandleTypeDef* gcan_ptr;
 
+#if NEED_HW_TIMER
 TIM_HandleTypeDef* tim10_ptr;
+#endif
 
 #define TIMER_PSC 16
 #define ADC_READING_FREQUENCY_HZ 1000
@@ -70,20 +74,30 @@ static BUCKET* get_bucket_by_id(U8 bucket_id);
 //  U16 stat_led_Pin:			  Pin for the LED for the library
 // returns:
 //  NO_ERRORS on ok init, INITIALIZATION_ERROR on bad init
+#if NEED_ADC
 GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
 						    ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
 						    TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
 							U16 stat_led_Pin)
+#else
+GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
+		                       GPIO_TypeDef* stat_led_GPIOx,
+							   U16 stat_led_Pin)
+#endif
 {
 
     if (!hasInitialized)
     {
     	// assign all of the pointers
     	gcan_ptr = gcan;
+#if NEED_ADC
     	adc1_ptr = adc1;
     	adc2_ptr = adc2;
     	adc3_ptr = adc3;
+#endif
+#if NEED_HW_TIMER
     	tim10_ptr = tim10;
+#endif
     	status_led_port = stat_led_GPIOx;
     	status_led_pin = stat_led_Pin;
 
@@ -138,6 +152,7 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
     		return INITIALIZATION_ERROR;
 		}
 #endif
+#if NEED_ADC
         if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr))
 		{
         	handle_gsense_error(INITIALIZATION_ERROR);
@@ -148,6 +163,7 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
         	handle_gsense_error(INITIALIZATION_ERROR);
         	return INITIALIZATION_ERROR;
         }
+#endif
     }
 
     gsense_reset();

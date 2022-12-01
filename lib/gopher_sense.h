@@ -34,19 +34,22 @@ typedef enum
 #define LED_NO_ERROR_BLINK_TIME 500
 #define LED_NO_LOGGER_COMMS_BLINK_TIME 2000
 
-// general defines
-#define NEED_ADC ((NUM_ADC1_PARAMS > 0) || (NUM_ADC2_PARAMS > 0) || (NUM_ADC3_PARAMS > 0))
-#define NEED_HW_TIMER NEED_ADC
 #define MAX_TIME_BETWEEN_TX_ms 2500
 
 #define GET_U16_MSB(u16) ((u16 & 0xFF00) >> 8)
 #define GET_U16_LSB(u16) (u16 & 0xFF)
 
 //---------------Function Prototypes---------------
+#if NEED_ADC
 GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
-						    ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-						    TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
-							U16 stat_led_Pin);
+						       ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
+						       TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
+							   U16 stat_led_Pin);
+#else
+GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
+		                       GPIO_TypeDef* stat_led_GPIOx,
+						       U16 stat_led_Pin);
+#endif
 S8 lock_param_sending(CAN_INFO_STRUCT* can_param);
 S8 update_and_queue_param_float(FLOAT_CAN_STRUCT* can_param, float f);
 S8 update_and_queue_param_u32(U32_CAN_STRUCT* can_param, U32 u32);

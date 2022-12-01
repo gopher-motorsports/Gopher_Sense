@@ -4,13 +4,25 @@ sensors:
         # Texense RSL-50
         name_english: "Linear Position Sensor 50mm"
         analog_subtype: Voltage
-        points: # Sensor voltage first, then what that value means in
-                # the real world. These points also must all be in the
-                # range of 0-3.3V for the input voltage. This means that
-                # the voltage divider must be done correctly on the PCB
-                # for a sensor that is not 0-3.3V
+        points: # Sensor voltage first, then what that value means in the real world. These points also must all be in the range of 0-3.3V for the input voltage. This means that the voltage divider must be done correctly on the PCB for a sensor that is not 0-3.3V
             - (0, 0)
             - (3.3, 50)
+            
+    linear_pos_sensor_25:
+        # Texense RSL-25
+        name_english: "Linear Position Sensor 25mm"
+        analog_subtype: Voltage
+        points:
+            - (0, 0)
+            - (3.3, 25)
+            
+    linear_pos_sensor_75:
+        # Texense RSL-75
+        name_english: "Linear Position Sensor 75mm"
+        analog_subtype: Voltage
+        points:
+            - (0, 0)
+            - (3.3, 75)
 
     temp_sensor:
         # 0 281 002 170 (Bosch)
@@ -38,3 +50,66 @@ sensors:
             - (71, 140)
             - (57, 150)
 
+    pressure_sensor:
+        # PX3AN2BS100PSAAX. We have lots of these on the car
+        name_english: "Honeywell Pressure Sensor"
+        analog_subtype: Voltage
+        points:
+            - (0.33, 0) # 0.5 * 3.3/5
+            - (2.97, 100) # 4.5 * 3.3/5
+            
+    brake_pressure_sensor:
+        # MLH03KPSB06A. special sensor for the brake pressure
+        name_english: "Honeywell Brake Pressure Sensor"
+        analog_subtype: Voltage
+        points:
+            - (0.33, 0) # 0.5 * 3.3/5
+            - (2.97, 2000) # 4.5 * 3.3/5
+            
+    air_tank_pressure_sensor:
+        # M3031-000005-05KPG
+        name_english: "Air Tank Pressure Sensor"
+        analog_subtype: Voltage
+        points:
+            - (0.33, 0) # 0.5 * 3.3/5
+            - (2.97, 5000) # 4.5 * 3.3/5
+        
+    brake_temp_sensor:
+        # INFKL 800°C IR brake temperature sensor
+        name_english: "IR Brake Temp Sensor"
+        analog_subtype: Voltage
+        points:
+            # all points are scaled from [0.5, 4.5] -> [0.33, 2.97]
+            - (0.33, 0)
+            - (0.396, 20)
+            - (0.462, 40)
+            - (0.538, 60)
+            - (0.594, 80)
+            - (0.66, 100)
+            - (0.726, 120)
+            - (0.792, 140)
+            - (0.858, 160)
+            - (0.924, 180)
+            - (0.99, 200)
+            - (1.32, 300)
+            - (1.65, 400)
+            - (1.98, 500)
+            - (2.31, 600)
+            - (2.64, 700)
+            - (2.97, 800)
+        
+    steering_angle_sensor:
+        # Electronic D8 Rotary Pos Sensor - RLS RM08VA0010B02L2G00
+        name_english: "Steering Angle Sensor"
+        analog_subtype: Voltage
+        points:
+            - (0.33, 0) # 0.5 * 3.3/5
+            - (2.97, 360) # 4.5 * 3.3/5
+        
+    exhaust_temp_sensor:
+        # Sensata HTS_0630_330
+        name_english: "Exhaust Gas Temp Sensor"
+        analog_subtype: Resistive
+        points:
+            - (785.7, -40) # datasheet says it draws 2.8mA from 5V and a 1KOhm pull up
+            - (190.4, 950) # datasheet says it draws 4.2mA from 5V and a 1KOhm pull up
