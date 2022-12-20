@@ -24,6 +24,14 @@ sensors:
             - (0, 0)
             - (3.3, 75)
 
+    linear_pos_sensor_5:
+        # Texense RSL-5
+        name_english: "Linear Position Sensor 5mm"
+        analog_subtype: Voltage
+        points:
+            - (0, 0)
+            - (3.3, 5)
+
     temp_sensor:
         # 0 281 002 170 (Bosch)
         name_english: "Resistive Temp Sensor"
