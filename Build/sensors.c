@@ -29,6 +29,56 @@ ANALOG_SENSOR linear_pos_sensor_50 =
 };
 
 
+// Sensor definition: Linear Position Sensor 25mm
+
+float linear_pos_sensor_25_table_independent_vars[2] = {
+    0.0,
+    3.3
+    
+};
+float linear_pos_sensor_25_table_dependent_vars[2] = {
+    0.0,
+    25.0
+    
+};
+TABLE linear_pos_sensor_25_table = 
+{
+    .num_entries = 2,
+    .independent_vars = linear_pos_sensor_25_table_independent_vars,
+    .dependent_vars = linear_pos_sensor_25_table_dependent_vars
+};
+ANALOG_SENSOR linear_pos_sensor_25 = 
+{
+    .type = VOLTAGE,
+	.conversion_table = &linear_pos_sensor_25_table
+};
+
+
+// Sensor definition: Linear Position Sensor 75mm
+
+float linear_pos_sensor_75_table_independent_vars[2] = {
+    0.0,
+    3.3
+    
+};
+float linear_pos_sensor_75_table_dependent_vars[2] = {
+    0.0,
+    75.0
+    
+};
+TABLE linear_pos_sensor_75_table = 
+{
+    .num_entries = 2,
+    .independent_vars = linear_pos_sensor_75_table_independent_vars,
+    .dependent_vars = linear_pos_sensor_75_table_dependent_vars
+};
+ANALOG_SENSOR linear_pos_sensor_75 = 
+{
+    .type = VOLTAGE,
+	.conversion_table = &linear_pos_sensor_75_table
+};
+
+
 // Sensor definition: Resistive Temp Sensor
 
 float temp_sensor_table_independent_vars[20] = {
@@ -87,6 +137,186 @@ ANALOG_SENSOR temp_sensor =
 {
     .type = RESISTIVE,
 	.conversion_table = &temp_sensor_table
+};
+
+
+// Sensor definition: Honeywell Pressure Sensor
+
+float pressure_sensor_table_independent_vars[2] = {
+    0.33,
+    2.97
+    
+};
+float pressure_sensor_table_dependent_vars[2] = {
+    0.0,
+    100.0
+    
+};
+TABLE pressure_sensor_table = 
+{
+    .num_entries = 2,
+    .independent_vars = pressure_sensor_table_independent_vars,
+    .dependent_vars = pressure_sensor_table_dependent_vars
+};
+ANALOG_SENSOR pressure_sensor = 
+{
+    .type = VOLTAGE,
+	.conversion_table = &pressure_sensor_table
+};
+
+
+// Sensor definition: Honeywell Brake Pressure Sensor
+
+float brake_pressure_sensor_table_independent_vars[2] = {
+    0.33,
+    2.97
+    
+};
+float brake_pressure_sensor_table_dependent_vars[2] = {
+    0.0,
+    2000.0
+    
+};
+TABLE brake_pressure_sensor_table = 
+{
+    .num_entries = 2,
+    .independent_vars = brake_pressure_sensor_table_independent_vars,
+    .dependent_vars = brake_pressure_sensor_table_dependent_vars
+};
+ANALOG_SENSOR brake_pressure_sensor = 
+{
+    .type = VOLTAGE,
+	.conversion_table = &brake_pressure_sensor_table
+};
+
+
+// Sensor definition: Air Tank Pressure Sensor
+
+float air_tank_pressure_sensor_table_independent_vars[2] = {
+    0.33,
+    2.97
+    
+};
+float air_tank_pressure_sensor_table_dependent_vars[2] = {
+    0.0,
+    5000.0
+    
+};
+TABLE air_tank_pressure_sensor_table = 
+{
+    .num_entries = 2,
+    .independent_vars = air_tank_pressure_sensor_table_independent_vars,
+    .dependent_vars = air_tank_pressure_sensor_table_dependent_vars
+};
+ANALOG_SENSOR air_tank_pressure_sensor = 
+{
+    .type = VOLTAGE,
+	.conversion_table = &air_tank_pressure_sensor_table
+};
+
+
+// Sensor definition: IR Brake Temp Sensor
+
+float brake_temp_sensor_table_independent_vars[17] = {
+    0.33,
+    0.396,
+    0.462,
+    0.538,
+    0.594,
+    0.66,
+    0.726,
+    0.792,
+    0.858,
+    0.924,
+    0.99,
+    1.32,
+    1.65,
+    1.98,
+    2.31,
+    2.64,
+    2.97
+    
+};
+float brake_temp_sensor_table_dependent_vars[17] = {
+    0.0,
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0,
+    160.0,
+    180.0,
+    200.0,
+    300.0,
+    400.0,
+    500.0,
+    600.0,
+    700.0,
+    800.0
+    
+};
+TABLE brake_temp_sensor_table = 
+{
+    .num_entries = 17,
+    .independent_vars = brake_temp_sensor_table_independent_vars,
+    .dependent_vars = brake_temp_sensor_table_dependent_vars
+};
+ANALOG_SENSOR brake_temp_sensor = 
+{
+    .type = VOLTAGE,
+	.conversion_table = &brake_temp_sensor_table
+};
+
+
+// Sensor definition: Steering Angle Sensor
+
+float steering_angle_sensor_table_independent_vars[2] = {
+    0.33,
+    2.97
+    
+};
+float steering_angle_sensor_table_dependent_vars[2] = {
+    0.0,
+    360.0
+    
+};
+TABLE steering_angle_sensor_table = 
+{
+    .num_entries = 2,
+    .independent_vars = steering_angle_sensor_table_independent_vars,
+    .dependent_vars = steering_angle_sensor_table_dependent_vars
+};
+ANALOG_SENSOR steering_angle_sensor = 
+{
+    .type = VOLTAGE,
+	.conversion_table = &steering_angle_sensor_table
+};
+
+
+// Sensor definition: Exhaust Gas Temp Sensor
+
+float exhaust_temp_sensor_table_independent_vars[2] = {
+    785.7,
+    190.4
+    
+};
+float exhaust_temp_sensor_table_dependent_vars[2] = {
+    -40.0,
+    950.0
+    
+};
+TABLE exhaust_temp_sensor_table = 
+{
+    .num_entries = 2,
+    .independent_vars = exhaust_temp_sensor_table_independent_vars,
+    .dependent_vars = exhaust_temp_sensor_table_dependent_vars
+};
+ANALOG_SENSOR exhaust_temp_sensor = 
+{
+    .type = RESISTIVE,
+	.conversion_table = &exhaust_temp_sensor_table
 };
 
 

@@ -7,10 +7,10 @@
 #include "gsense_structs.h"
 
 
-#define NUM_ADC1_PARAMS 2
-#define NUM_ADC2_PARAMS 2
-#define NUM_ADC3_PARAMS 2
-#define NUM_BUCKETS 2
+#define NUM_ADC1_PARAMS 0
+#define NUM_ADC2_PARAMS 0
+#define NUM_ADC3_PARAMS 0
+#define NUM_BUCKETS 1
 
 // analog params must be in channel order
 #if NUM_ADC1_PARAMS > 0
