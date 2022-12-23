@@ -4,11 +4,11 @@
 #ifndef GOPHER_SENSE_H
 #define GOPHER_SENSE_H
 
+#include "module_hw_config.h"
 #include "adc_lib.h"
 #include "gsense_structs.h"
 #include "base_types.h"
 #include "GopherCAN.h"
-#include "module_hw_config.h"
 
 typedef enum
 {
