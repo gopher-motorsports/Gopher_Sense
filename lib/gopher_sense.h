@@ -34,8 +34,6 @@ typedef enum
 #define LED_NO_ERROR_BLINK_TIME 500
 #define LED_NO_LOGGER_COMMS_BLINK_TIME 2000
 
-#define MAX_TIME_BETWEEN_TX_ms 2500
-
 #define GET_U16_MSB(u16) ((u16 & 0xFF00) >> 8)
 #define GET_U16_LSB(u16) (u16 & 0xFF)
 
@@ -56,16 +54,8 @@ S8 update_and_queue_param_u32(U32_CAN_STRUCT* can_param, U32 u32);
 S8 update_and_queue_param_u8(U8_CAN_STRUCT* can_param, U8 u8);
 void gsense_reset(void);
 void gsense_main_task(void* param);
-void handle_gsense_led(void);
-void send_bucket_task(void* pvParameters);
-S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data);
-void send_bucket_params(U8 sender, void* param, U8 U1, U8 U2, U8 U3, U8 U4);
-void bucket_ok(MODULE_ID sender, void* parameter,
-               U8 bucket_id, U8 UNUSED1, U8 UNUSED2, U8 UNUSED3);
 void log_complete(MODULE_ID sender, void* parameter,
                   U8 UNUSED1, U8 UNUSED2, U8 UNUSED3, U8 UNUSED4);
-void gopherCAN_tx_service_task(void);
-void gopherCAN_rx_buffer_service_task(void);
 
 #endif // GOPHER_SENSE_H
 

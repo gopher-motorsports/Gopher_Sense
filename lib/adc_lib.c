@@ -145,29 +145,26 @@ void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
 void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array,
 		                volatile U16* sample_buffer, U32 num_params)
 {
-	ANALOG_SENSOR_PARAM* param = param_array;
+	ANALOG_SENSOR_PARAM* param;
 	volatile U16* buffer = sample_buffer;
 	U32 total = 0;
 
 	// run through the DMA buffer and add up all of the samples to be averaged. The prameter
 	// samples are offset by the number of parameters in that ADC as the ADC goes through each
 	// channel one at a time
-	while (param - param_array < num_params)
+	for (param = param_array; param - param_array < num_params; param++)
 	{
 		// get all the samples for this parameter
 		total = 0;
-		buffer = sample_buffer + (param - param_array);
-		while (buffer - sample_buffer < (ADC_SAMPLE_SIZE_PER_PARAM*num_params))
+		for (buffer = sample_buffer + (param - param_array);
+			 buffer - sample_buffer < (ADC_SAMPLE_SIZE_PER_PARAM*num_params);
+			 buffer += num_params)
 		{
 			total += *buffer;
-			buffer += num_params;
 		}
 
 		// calculate the average and add it to the buffer
 		add_to_buffer(&param->buffer, (U16)(total / ADC_SAMPLE_SIZE_PER_PARAM));
-
-		// move on to the next param
-		param++;
 	}
 }
 

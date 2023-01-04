@@ -60,13 +60,12 @@ class Module():
         self.adc1_params = []
         self.adc2_params = []
         self.adc3_params = []
-        self.buckets = []
+        
+        index_counter = 0
         
         for bucket in buckets:
-            # for each bucket, define the name and frequency. Dont pass in the parameters
-            # yet as we will link them up later
-            b = Bucket(bucket, buckets[bucket]['frequency_hz'])
-            self.buckets.append(b)
+            # we only need the frequency from the bucket
+            ms_between_req = int(1000 / buckets[bucket]['frequency_hz'])
             
             # convert the dictionary to a list in order to index easier
             param_names = list(buckets[bucket]['parameters'])
@@ -75,11 +74,11 @@ class Module():
             # add the parameters from this bucket to the master list of buckets
             for param_name in param_names:
                 param_val = param_vals[param_names.index(param_name)]
-                p = Param(param_name, param_val['ADC'], param_val['sensor'], param_val['samples_buffered'])
+                p = Param(param_name, param_val['ADC'], param_val['sensor'], param_val['samples_buffered'], ms_between_req)
                 
-                # add the details about what bucket this is in to the parameter
-                p.bucket_loc = param_names.index(param_name)
-                p.bucket_name = b.name
+                # note the location of this parameter in the big param list
+                p.param_list_loc = index_counter
+                index_counter += 1
                 
                 # note which ADC is generating this parameter. If the ADC is 'NON_ADC' then items
                 # just wont get added to any of the lists and must be generated manually
@@ -89,29 +88,23 @@ class Module():
                     self.adc2_params.append(p)
                 elif ("ADC3" in p.ADC):
                     self.adc3_params.append(p)
-                    
-                # also keep a running list of all of the parameters in this bucket
-                b.params.append(p)
+                
+                # also list all of the parameters on the module
+                self.all_params.append(p)
 
         # This sorting is to the ADC channels are in order
         self.adc1_params.sort(key=lambda param:int(param.ADC[7:]), reverse=False)
         self.adc2_params.sort(key=lambda param:int(param.ADC[7:]), reverse=False)
         self.adc3_params.sort(key=lambda param:int(param.ADC[7:]), reverse=False)
-
-class Bucket():
-    def __init__(self, name, frequency):
-        self.name = name
-        self.ms_between_req = int(1000 / frequency)
-        self.params = []
         
 class Param():
-    def __init__(self, param_name, ADC, sensor_name, samples_buffered):
+    def __init__(self, param_name, ADC, sensor_name, samples_buffered, ms_between_req):
         self.param_name = param_name
         self.ADC = ADC
         self.sensor_name = sensor_name
         self.samples_buffered = samples_buffered
-        self.bucket_name = "[GCAN Param Not Found in Bucket]"
-        self.bucket_loc = 1337
+        self.ms_between_req = ms_between_req
+        self.param_list_loc = 1337
 
 def main():
     argv = sys.argv
@@ -165,7 +158,7 @@ def main():
     print("Generating......", HWCONFIG_C_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, HWCONFIG_C_FILE)) as file_:
         template = Template(file_.read())
-        output = template.render(module=module, buckets=module.buckets)
+        output = template.render(module=module)
         filename = "module_hw_config.c"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
@@ -173,7 +166,7 @@ def main():
     print("Generating......", HWCONFIG_H_FILE)
     with open(os.path.join(TEMPLATES_DIRECTORY, HWCONFIG_H_FILE)) as file_:
         template = Template(file_.read())
-        output = template.render(module=module, buckets=module.buckets)
+        output = template.render(module=module)
         filename = "module_hw_config.h"
         with open(os.path.join(OUTPUT_DIRECTORY, filename), "w") as fh:
             fh.write(output)
