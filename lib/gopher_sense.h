@@ -48,6 +48,7 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
 		                       GPIO_TypeDef* stat_led_GPIOx,
 						       U16 stat_led_Pin);
 #endif
+void set_all_param_sending(boolean enabled);
 S8 lock_param_sending(CAN_INFO_STRUCT* can_param);
 S8 update_and_queue_param_float(FLOAT_CAN_STRUCT* can_param, float f);
 S8 update_and_queue_param_u32(U32_CAN_STRUCT* can_param, U32 u32);

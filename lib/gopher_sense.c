@@ -41,6 +41,7 @@ static boolean hasInitialized = FALSE;
 static GPIO_TypeDef* status_led_port;
 static U16 status_led_pin;
 static U32 last_dlm_heartbeat = 0;
+static boolean send_data = TRUE;
 
 
 // static function declarations
@@ -168,6 +169,15 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
 
     gsense_reset();
     return NO_ERRORS;
+}
+
+
+// set_all_param_sending
+//  This enable or disable CAN sending of parameters. Use this if just the ADC
+//  functionality is needed
+void set_all_param_sending(boolean enabled)
+{
+	send_data = enabled;
 }
 
 
@@ -314,7 +324,7 @@ void gsense_main_task(void* param)
     	if (hasInitialized)
     	{
     		ADC_sensor_service();
-    		handle_param_sending();
+    		if (send_data) handle_param_sending();
     	}
 
     	handle_gsense_led();
@@ -432,6 +442,9 @@ static void handle_param_sending(void)
 			if (gsense_param->status != LOCKED_SEND) gsense_param->status = NO_SEND_NEEDED;
 		}
 	}
+
+	// Flush the TX buffer to maximise data rates
+	service_can_tx_hardware(gcan_ptr);
 }
 
 

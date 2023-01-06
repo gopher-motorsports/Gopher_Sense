@@ -35,7 +35,7 @@ volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
 #define ADC_BITS    12
 #define ADC_VOLTAGE 3.3
 #define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetPCLK1Freq() << 1) // APB1 Timer clock = PCLK1 * 2
-#define TIM_MAX_VAL 65536
+#define TIM_MAX_VAL (1<<24)
 #define RES_SENSOR_PULL_UP_RESISTANCE_R 1000.0
 #define RES_SENSOR_PULL_UP_VOLTAGE_V 3.3
 
@@ -181,7 +181,7 @@ S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
 	// config the timer
 	if (!tim) return TMR_NOT_CONFIGURED;
     adc_timer = tim;
-    configTimer(adc_timer, psc, tim_freq);
+    configTimer(adc_timer, tim_freq, psc);
 
     return 0;
 }
@@ -196,6 +196,7 @@ static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc
     __HAL_TIM_DISABLE(timer);
     __HAL_TIM_SET_COUNTER(timer, 0);
     U32 reload;
+
     do {
         reload = (U32)((TIM_CLOCK_BASE_FREQ/psc) / timer_int_freq_hz);
         psc <<= 1;
