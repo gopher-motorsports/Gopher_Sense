@@ -16,8 +16,8 @@
 
 typedef enum
 {
-    CLEAN = 0,
-    DIRTY = 1,
+    NO_SEND_NEEDED = 0,
+    SEND_NEEDED = 1,
     LOCKED_SEND = 2
 } DATA_STATUS;
 
@@ -26,7 +26,7 @@ typedef struct
 {
 	CAN_INFO_STRUCT* can_param;
     DATA_STATUS      status;
-    U32              last_tx; // TODO this can be deleted when this is stored in GCAN
+    U32              ms_between_requests;
 } GENERAL_PARAMETER;
 
 
@@ -35,25 +35,6 @@ typedef struct
     GENERAL_PARAMETER*  list;
     U16                 len;
 } PARAM_LIST;
-
-
-typedef enum {
-    BUCKET_CONFIG_INIT = 0,
-    BUCKET_CONFIG_SENDING_PARAMS = 1,
-	BUCKET_GETTING_DATA = 2,
-	BUCKET_SENDING = 3
-} BUCKET_STATE;
-
-
-// describes a bucket of parameters
-typedef struct
-{
-    U8           bucket_id; // TODO this can be deleted when buckets are less important
-    U16          ms_between_req;
-    U32          last_send; // TODO this can be deleted when GCAN stores the last_TX
-    BUCKET_STATE state;
-    PARAM_LIST   param_list;
-} BUCKET;
 
 
 typedef enum
@@ -89,7 +70,7 @@ typedef struct
 // link between gophercan parameter and analog sensor data
 typedef struct
 {
-    GENERAL_PARAMETER*  bucket_param;
+    GENERAL_PARAMETER*  gsense_param;
     ANALOG_SENSOR*      analog_sensor;
     U16_BUFFER          buffer;
 } ANALOG_SENSOR_PARAM;

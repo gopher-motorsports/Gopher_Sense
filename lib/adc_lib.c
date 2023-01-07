@@ -35,7 +35,7 @@ volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
 #define ADC_BITS    12
 #define ADC_VOLTAGE 3.3
 #define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetPCLK1Freq() << 1) // APB1 Timer clock = PCLK1 * 2
-#define TIM_MAX_VAL 65536
+#define TIM_MAX_VAL (1<<16)
 #define RES_SENSOR_PULL_UP_RESISTANCE_R 1000.0
 #define RES_SENSOR_PULL_UP_VOLTAGE_V 3.3
 
@@ -123,8 +123,6 @@ void stopDataAq(void)
 #if NEED_HW_TIMER
 void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
 {
-	// TODO need a mutex for each ADC here
-
 	// put the data into the parameter buffer
 #if NUM_ADC1_PARAMS > 0
     add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
@@ -145,29 +143,26 @@ void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
 void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array,
 		                volatile U16* sample_buffer, U32 num_params)
 {
-	ANALOG_SENSOR_PARAM* param = param_array;
+	ANALOG_SENSOR_PARAM* param;
 	volatile U16* buffer = sample_buffer;
 	U32 total = 0;
 
 	// run through the DMA buffer and add up all of the samples to be averaged. The prameter
 	// samples are offset by the number of parameters in that ADC as the ADC goes through each
 	// channel one at a time
-	while (param - param_array < num_params)
+	for (param = param_array; param - param_array < num_params; param++)
 	{
 		// get all the samples for this parameter
 		total = 0;
-		buffer = sample_buffer + (param - param_array);
-		while (buffer - sample_buffer < (ADC_SAMPLE_SIZE_PER_PARAM*num_params))
+		for (buffer = sample_buffer + (param - param_array);
+			 buffer - sample_buffer < (ADC_SAMPLE_SIZE_PER_PARAM*num_params);
+			 buffer += num_params)
 		{
 			total += *buffer;
-			buffer += num_params;
 		}
 
 		// calculate the average and add it to the buffer
 		add_to_buffer(&param->buffer, (U16)(total / ADC_SAMPLE_SIZE_PER_PARAM));
-
-		// move on to the next param
-		param++;
 	}
 }
 
@@ -184,7 +179,7 @@ S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
 	// config the timer
 	if (!tim) return TMR_NOT_CONFIGURED;
     adc_timer = tim;
-    configTimer(adc_timer, psc, tim_freq);
+    configTimer(adc_timer, tim_freq, psc);
 
     return 0;
 }
@@ -199,6 +194,7 @@ static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc
     __HAL_TIM_DISABLE(timer);
     __HAL_TIM_SET_COUNTER(timer, 0);
     U32 reload;
+
     do {
         reload = (U32)((TIM_CLOCK_BASE_FREQ/psc) / timer_int_freq_hz);
         psc <<= 1;
