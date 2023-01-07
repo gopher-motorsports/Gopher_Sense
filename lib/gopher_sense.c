@@ -7,7 +7,7 @@
 #include "gsense_structs.h"
 #include <stdio.h>
 #include <string.h>
-#include "cmsis_os.h"
+#include "cmsis_os2.h"
 #include "main.h"
 #include "module_hw_config.h"
 
@@ -15,7 +15,7 @@
 ADC_HandleTypeDef* adc1_ptr;
 ADC_HandleTypeDef* adc2_ptr;
 ADC_HandleTypeDef* adc3_ptr;
-#endif
+#endif // #if NEED_ADC
 
 CAN_HandleTypeDef* gcan_ptr;
 
@@ -341,8 +341,6 @@ void gsense_main_task(void* param)
 //  the data to the GCAN variable associated with this sensor
 static void ADC_sensor_service(void)
 {
-	// TODO need a mutex here for each ADC
-
 #if NUM_ADC1_PARAMS > 0
 	service_ADC(adc1_sensor_params, NUM_ADC1_PARAMS);
 #endif // NUM_ADC1_PARAMS > 0

@@ -123,8 +123,6 @@ void stopDataAq(void)
 #if NEED_HW_TIMER
 void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
 {
-	// TODO need a mutex for each ADC here
-
 	// put the data into the parameter buffer
 #if NUM_ADC1_PARAMS > 0
     add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
