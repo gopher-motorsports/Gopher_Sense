@@ -35,7 +35,7 @@ volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
 #define ADC_BITS    12
 #define ADC_VOLTAGE 3.3
 #define TIM_CLOCK_BASE_FREQ (HAL_RCC_GetPCLK1Freq() << 1) // APB1 Timer clock = PCLK1 * 2
-#define TIM_MAX_VAL (1<<24)
+#define TIM_MAX_VAL (1<<16)
 #define RES_SENSOR_PULL_UP_RESISTANCE_R 1000.0
 #define RES_SENSOR_PULL_UP_VOLTAGE_V 3.3
 

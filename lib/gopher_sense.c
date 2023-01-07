@@ -7,7 +7,7 @@
 #include "gsense_structs.h"
 #include <stdio.h>
 #include <string.h>
-#include "cmsis_os2.h"
+#include "cmsis_os.h"
 #include "main.h"
 #include "module_hw_config.h"
 
@@ -23,8 +23,11 @@ CAN_HandleTypeDef* gcan_ptr;
 TIM_HandleTypeDef* tim10_ptr;
 #endif
 
+// NOTE: Each timer interrupt (with 9 parameters across 9 ADCs), takes
+// ~69.2us. This means 1000Hz is ~6.9% of the CPU, 2000Hz is 13.8%, etc.
+// 2000Hz was considered a good sweet spot for most modules
 #define TIMER_PSC 16
-#define ADC_READING_FREQUENCY_HZ 1000
+#define ADC_READING_FREQUENCY_HZ 2000
 
 #define TASK_STACK_SIZE 512
 #define PARAM_SEND_MAX_ATTEMPTS 5
