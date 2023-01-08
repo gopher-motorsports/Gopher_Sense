@@ -113,3 +113,20 @@ sensors:
         points:
             - (785.7, -40) # datasheet says it draws 2.8mA from 5V and a 1KOhm pull up
             - (190.4, 950) # datasheet says it draws 4.2mA from 5V and a 1KOhm pull up
+
+
+    current_sensor_1:
+        # Channel 1 of the LEM DHAB S/133
+        name_english: "Current Sensor (Channel 1)"
+        analog_subtype: Voltage
+        points: 
+            - (0.0, -18.727)  
+            - (5.0, 18.727)
+            
+    current_sensor_2:
+        # Channel 2 of the LEM DHAB S/133
+        name_english: "Current Sensor (Channel 2)"
+        analog_subtype: Voltage
+        points: 
+            - (0.0, -370.370)
+            - (5.0, 370.370)
