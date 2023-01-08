@@ -121,7 +121,7 @@ sensors:
         analog_subtype: Voltage
         points: 
             - (0.0, -18.727)  
-            - (5.0, 18.727)
+            - (3.3, 18.727)
             
     current_sensor_2:
         # Channel 2 of the LEM DHAB S/133
@@ -129,4 +129,4 @@ sensors:
         analog_subtype: Voltage
         points: 
             - (0.0, -370.370)
-            - (5.0, 370.370)
+            - (3.3, 370.370)
