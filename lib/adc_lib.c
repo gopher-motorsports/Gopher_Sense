@@ -285,7 +285,7 @@ S8 average_buffer(U16_BUFFER* buffer, U16* avg)
     	return BUFFER_EMPTY;
     }
     else if (buffer->fill_level == buffer->buffer_size)
-    {
+    { // TODO this should be first for optimization reasons
     	// if the buffer is full, average up the entire buffer
     	for (c = 0; c < buffer->buffer_size; c++)
     	{
@@ -307,6 +307,7 @@ S8 average_buffer(U16_BUFFER* buffer, U16* avg)
 }
 
 
+// TODO this is no longer used
 // average_buffer_as_float
 //  Takes in a buffer and puts the average in avg, this time casting to a float
 S8 average_buffer_as_float(U16_BUFFER* buffer, float* avg)
@@ -422,6 +423,7 @@ static S8 interpolate_table_linear(TABLE* table, float data_in, float* data_out)
 		return CONV_ERR;
 	}
 
+	// TODO binary search is faster
 	if (data_in < table->independent_vars[0])
 	{
 		// linearly interpolate based on the bottom two points
