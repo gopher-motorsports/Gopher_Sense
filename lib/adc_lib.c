@@ -325,13 +325,11 @@ S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor,
 
     switch (sensor->type)
     {
+    	default:
 		case VOLTAGE:
 			return convert_voltage_load(sensor, voltage, data_out);
 		case RESISTIVE:
 			return convert_resistive_load(sensor, voltage, data_out);
-		default:
-			// apply no conversion, just give out the voltage
-			*data_out = voltage;
     }
 
     return CONV_ERR;

@@ -54,7 +54,7 @@ static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params);
 #endif
 static void handle_param_sending(void);
 static void handle_gsense_led(void);
-static void handle_gsense_error(GSENSE_ERROR_STATE error_state);
+static void handle_gsense_fatal_error(GSENSE_ERROR_STATE error_state);
 static GENERAL_PARAMETER* find_parameter_from_GCAN(CAN_INFO_STRUCT* can_param);
 static S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data);
 
@@ -121,7 +121,7 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
         // make sure a gcan peripheral was passed in and enable all parameters
     	if (!gcan_ptr)
     	{
-    		handle_gsense_error(INITIALIZATION_ERROR);
+    		handle_gsense_fatal_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
     	}
 
@@ -130,46 +130,47 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
 #if NEED_HW_TIMER
     	if (!tim10)
     	{
-    		handle_gsense_error(INITIALIZATION_ERROR);
+    		handle_gsense_fatal_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
     	}
 #endif
 #if NUM_ADC1_PARAMS > 0
     	if (!adc1)
 		{
-    		handle_gsense_error(INITIALIZATION_ERROR);
+    		handle_gsense_fatal_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
 		}
 #endif
 #if NUM_ADC2_PARAMS > 0
     	if (!adc2)
 		{
-    		handle_gsense_error(INITIALIZATION_ERROR);
+    		handle_gsense_fatal_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
 		}
 #endif
 #if NUM_ADC3_PARAMS > 0
     	if (!adc3)
 		{
-    		handle_gsense_error(INITIALIZATION_ERROR);
+    		handle_gsense_fatal_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
 		}
 #endif
 #if NEED_ADC
         if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr))
 		{
-        	handle_gsense_error(INITIALIZATION_ERROR);
+        	handle_gsense_fatal_error(INITIALIZATION_ERROR);
         	return INITIALIZATION_ERROR;
 		}
         if (configLibTIM(tim10_ptr, ADC_READING_FREQUENCY_HZ, TIMER_PSC))
         {
-        	handle_gsense_error(INITIALIZATION_ERROR);
+        	handle_gsense_fatal_error(INITIALIZATION_ERROR);
         	return INITIALIZATION_ERROR;
         }
 #endif
     }
 
     gsense_reset();
+	hasInitialized = TRUE;
     return NO_ERRORS;
 }
 
@@ -308,7 +309,6 @@ void gsense_reset(void)
 
 	// start collecting data!
 	startDataAq();
-	hasInitialized = TRUE;
 }
 
 
@@ -333,7 +333,7 @@ void gsense_main_task(void* param)
     }
 
     // This should not be reached. Panic
-    handle_gsense_error(TASK_EXIT_ERROR);
+    handle_gsense_fatal_error(TASK_EXIT_ERROR);
 }
 
 
@@ -379,7 +379,7 @@ static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 		{
 			// show there is an error on the LED but try again for the next one,
 			// as some might still work
-			handle_gsense_error(CONVERSION_ERROR);
+			handle_gsense_fatal_error(CONVERSION_ERROR);
 			continue;
 		}
 
@@ -431,7 +431,7 @@ static void handle_param_sending(void)
 			{
 				if (++err_count > PARAM_SEND_MAX_ATTEMPTS)
 				{
-					handle_gsense_error(GCAN_TX_FAILED);
+					handle_gsense_fatal_error(GCAN_TX_FAILED);
 				}
 				return;
 			}
@@ -505,10 +505,10 @@ static void handle_gsense_led(void)
 }
 
 
-// handle_gsense_error
+// handle_gsense_fatal_error
 //  This will set an error state in the library, which will set a blink code
 //  and stop collecting data
-static void handle_gsense_error(GSENSE_ERROR_STATE error_state)
+static void handle_gsense_fatal_error(GSENSE_ERROR_STATE error_state)
 {
 	// TODO send some CAN thing that lets the driver know that logging is not
 	// working? Possibly also just restart the library
@@ -618,7 +618,7 @@ static S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data)
 		break;
 
 	default:
-		handle_gsense_error(DATA_ASSIGNMENT_ERROR);
+		handle_gsense_fatal_error(DATA_ASSIGNMENT_ERROR);
 		break;
 	}
 
