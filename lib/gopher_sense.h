@@ -28,6 +28,9 @@ typedef enum
 
 } GSENSE_ERROR_STATE;
 
+#define GSENSE_SUCCESS 0
+#define GSESNE_FAIL -1
+
 // LED #defines
 #define LED_ERROR_OFF_TIME 800
 #define LED_ERROR_BLINK_TIME 200

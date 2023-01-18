@@ -39,7 +39,7 @@ TIM_HandleTypeDef* tim10_ptr;
 
 #define MAX_TIME_BETWEEN_TX_ms 2500
 
-static GSENSE_ERROR_STATE latched_error_state = NO_ERRORS;
+static GSENSE_ERROR_STATE critical_error_state = NO_ERRORS;
 static boolean hasInitialized = FALSE;
 static GPIO_TypeDef* status_led_port;
 static U16 status_led_pin;
@@ -124,7 +124,6 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
     		handle_gsense_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
     	}
-        set_all_params_state(TRUE);
 
     	// check to make sure if there are params in the ADCs or SCAN the correct
     	// handles were passed in
@@ -195,10 +194,10 @@ S8 lock_param_sending(CAN_INFO_STRUCT* can_param)
 {
 	GENERAL_PARAMETER* param;
 	param = find_parameter_from_GCAN(can_param);
-	if (!param) return -1;
+	if (!param) return GSESNE_FAIL;
 
 	param->status = LOCKED_SEND;
-	return 0;
+	return GSENSE_SUCCESS;
 }
 
 
@@ -212,17 +211,17 @@ S8 update_and_queue_param_float(FLOAT_CAN_STRUCT* can_param, float f)
 	if (can_param->data == f)
 	{
 		// we dont need to do anything as the data was not changed
-		return 0;
+		return GSENSE_SUCCESS;
 	}
 	can_param->data = f;
 
 	param = find_parameter_from_GCAN((CAN_INFO_STRUCT*)can_param);
-	if (!param) return -1;
+	if (!param) return GSESNE_FAIL;
 
 	// note that we now need to send the updated value for this parameter
 	param->status = SEND_NEEDED;
 
-	return 0;
+	return GSENSE_SUCCESS;
 }
 
 
@@ -236,17 +235,17 @@ S8 update_and_queue_param_u32(U32_CAN_STRUCT* can_param, U32 u32)
 	if (can_param->data == u32)
 	{
 		// we dont need to do anything as the data was not changed
-		return 0;
+		return GSENSE_SUCCESS;
 	}
 	can_param->data = u32;
 
 	param = find_parameter_from_GCAN((CAN_INFO_STRUCT*)can_param);
-	if (!param) return -1;
+	if (!param) return GSESNE_FAIL;
 
 	// note that we now need to send the updated value for this parameter
 	param->status = SEND_NEEDED;
 
-	return 0;
+	return GSENSE_SUCCESS;
 }
 
 
@@ -260,17 +259,17 @@ S8 update_and_queue_param_u8(U8_CAN_STRUCT* can_param, U8 u8)
 	if (can_param->data == u8)
 	{
 		// we dont need to do anything as the data was not changed
-		return 0;
+		return GSENSE_SUCCESS;
 	}
 	can_param->data = u8;
 
 	param = find_parameter_from_GCAN((CAN_INFO_STRUCT*)can_param);
-	if (!param) return -1;
+	if (!param) return GSESNE_FAIL;
 
 	// note that we now need to send the updated value for this parameter
 	param->status = SEND_NEEDED;
 
-	return 0;
+	return GSENSE_SUCCESS;
 }
 
 
@@ -304,7 +303,6 @@ void gsense_reset(void)
 	for (param = param_list; param - param_list < NUM_CAN_PARAMS; param++)
 	{
 		if (param->status != LOCKED_SEND) param->status = NO_SEND_NEEDED;
-		param->can_param->update_enabled = TRUE;
 		fill_gcan_param_data(param->can_param, INITIAL_DATA); // Set some initial value
 	}
 
@@ -429,7 +427,7 @@ static void handle_param_sending(void)
 			// try to send, if it fails it is most likely due to bus saturation, meaning it is fine
 			// to return out of the function and wait for the next osTick to try
 			// and send parameters again
-			while (send_parameter(PRIO_HIGH, DLM_ID, gsense_param->can_param->param_id) != CAN_SUCCESS)
+			while (send_parameter(gsense_param->can_param) != CAN_SUCCESS)
 			{
 				if (++err_count > PARAM_SEND_MAX_ATTEMPTS)
 				{
@@ -445,7 +443,7 @@ static void handle_param_sending(void)
 	}
 
 	// Flush the TX buffer to maximise data rates
-	service_can_tx_hardware(gcan_ptr);
+	service_can_tx(gcan_ptr);
 }
 
 
@@ -459,7 +457,7 @@ static void handle_gsense_led(void)
 
     // if we are in an error state, use a blink pattern based on the number of
     // the error state enum
-    if (latched_error_state != NO_ERRORS)
+    if (critical_error_state != NO_ERRORS)
     {
     	// there is an error active
     	if (!num_led_blinks)
@@ -469,7 +467,7 @@ static void handle_gsense_led(void)
     		{
     			HAL_GPIO_WritePin(status_led_port, status_led_pin, RESET);
     			last_blink_time = HAL_GetTick();
-    			num_led_blinks = (U8)latched_error_state << 1; // double so there is an on and off for each blink number
+    			num_led_blinks = (U8)critical_error_state << 1; // double so there is an on and off for each blink number
     		}
     	}
     	else
@@ -514,7 +512,7 @@ static void handle_gsense_error(GSENSE_ERROR_STATE error_state)
 {
 	// TODO send some CAN thing that lets the driver know that logging is not
 	// working? Possibly also just restart the library
-	latched_error_state = error_state;
+	critical_error_state = error_state;
 	if (hasInitialized) stopDataAq();
 }
 
@@ -528,7 +526,7 @@ static GENERAL_PARAMETER* find_parameter_from_GCAN(CAN_INFO_STRUCT* can_param)
 
 	for (param = param_list; param - param_list < NUM_CAN_PARAMS; param++)
 	{
-		if (param->can_param->param_id == can_param->param_id)
+		if (param->can_param->ID == can_param->ID)
 		{
 			return param;
 		}
@@ -544,7 +542,7 @@ static GENERAL_PARAMETER* find_parameter_from_GCAN(CAN_INFO_STRUCT* can_param)
 //  is changed, and 0 if it is not
 static S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data)
 {
-	switch (parameter_data_types[can_param->param_id])
+	switch (can_param->TYPE)
 	{
 	case UNSIGNED8:
 		if (((U8_CAN_STRUCT*)(can_param))->data != (U8)data)

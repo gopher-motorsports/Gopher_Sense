@@ -5,14 +5,12 @@
 #ifndef GSENSE_STRUCTS_H
 #define GSENSE_STRUCTS_H
 
-#include "GopherCAN_structs.h"
+#include "GopherCAN.h"
 #include "base_types.h"
 
 #ifndef NULL
 #define NULL ((void*)0)
 #endif
-
-#define STR_LEN 50
 
 typedef enum
 {
@@ -67,7 +65,9 @@ typedef struct
 } ANALOG_SENSOR;
 
 
-// link between gophercan parameter and analog sensor data
+// link between gophercan parameter and analog sensor data. Averaged data
+// from the DMA buffer is put here during the timer interrupt, then the
+// main task averages what is in this buffer to put in the GCAN variable
 typedef struct
 {
     GENERAL_PARAMETER*  gsense_param;

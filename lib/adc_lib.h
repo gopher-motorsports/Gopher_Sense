@@ -19,6 +19,7 @@
 #define TMR_NOT_CONFIGURED -5
 #define ADC_NOT_CONFIGURED -6
 #define CONV_SUCCESS 2
+#define ADC_LIB_CONFIG_SUCCESS 0
 
 // general defines
 #define NEED_ADC ((NUM_ADC1_PARAMS > 0) || (NUM_ADC2_PARAMS > 0) || (NUM_ADC3_PARAMS > 0))
@@ -42,7 +43,6 @@ S8 add_to_buffer(U16_BUFFER* buffer, U16 toadd);
 S8 reset_buffer(U16_BUFFER* buffer);
 S8 reset_buffer(U16_BUFFER* buffer);
 S8 average_buffer(U16_BUFFER* buffer, U16* avg);
-S8 average_buffer_as_float(U16_BUFFER* buffer, float* avg);
 S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor,
 		                          U16 data_in, float* data_out);
 

@@ -16,6 +16,8 @@ ADC_HandleTypeDef* adc3 = NULL;
 TIM_HandleTypeDef* adc_timer = NULL;
 #endif
 
+// The number of samples from the DMA buffer averaged into the parameter
+// buffer
 #define ADC_SAMPLE_SIZE_PER_PARAM 64
 
 #define ADC1_SAMPLE_BUFFER_SIZE NUM_ADC1_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
@@ -68,7 +70,7 @@ S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2,
     adc3 = ad3;
 #endif // NUM_ADC3_PARAMS > 0
 
-    return 0;
+    return ADC_LIB_CONFIG_SUCCESS;
 }
 #endif
 
@@ -91,6 +93,7 @@ void startDataAq(void)
 
     // start the timers to begin moving data to the param buffers
 #if NEED_HW_TIMER
+    __HAL_TIM_SET_COUNTER(adc_timer, 0);
     HAL_TIM_Base_Start_IT(adc_timer);
 #endif
 }
@@ -123,6 +126,9 @@ void stopDataAq(void)
 #if NEED_HW_TIMER
 void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
 {
+	// make sure the correct timer is being used
+	if (timer != adc_timer) return;
+
 	// put the data into the parameter buffer
 #if NUM_ADC1_PARAMS > 0
     add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
@@ -181,7 +187,7 @@ S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
     adc_timer = tim;
     configTimer(adc_timer, tim_freq, psc);
 
-    return 0;
+    return ADC_LIB_CONFIG_SUCCESS;
 }
 #endif
 
@@ -278,20 +284,20 @@ S8 average_buffer(U16_BUFFER* buffer, U16* avg)
     U32 calc_avg = 0;
     U16 c;
 
-    if (buffer->fill_level == 0)
+    if (buffer->fill_level == buffer->buffer_size)
+	{
+		// if the buffer is full, average up the entire buffer
+		for (c = 0; c < buffer->buffer_size; c++)
+		{
+			calc_avg += buffer->buffer[c];
+		}
+		*avg = (U16)(calc_avg / buffer->buffer_size);
+	}
+    else if (buffer->fill_level == 0)
     {
     	// just set the average to 0 if the buffer is empty
     	*avg = 0;
     	return BUFFER_EMPTY;
-    }
-    else if (buffer->fill_level == buffer->buffer_size)
-    { // TODO this should be first for optimization reasons
-    	// if the buffer is full, average up the entire buffer
-    	for (c = 0; c < buffer->buffer_size; c++)
-    	{
-    		calc_avg += buffer->buffer[c];
-    	}
-    	*avg = (U16)(calc_avg / buffer->buffer_size);
     }
     else
     {
@@ -304,51 +310,6 @@ S8 average_buffer(U16_BUFFER* buffer, U16* avg)
     }
 
     return BUFFER_SUCCESS;
-}
-
-
-// TODO this is no longer used
-// average_buffer_as_float
-//  Takes in a buffer and puts the average in avg, this time casting to a float
-S8 average_buffer_as_float(U16_BUFFER* buffer, float* avg)
-{
-	if (buffer == NULL)
-	{
-		return BUFFER_ERR;
-	}
-
-	double calc_avg = 0;
-	FLOAT_CONVERTER flt_con;
-	U16 c;
-
-	if (buffer->fill_level == 0)
-	{
-		// just set the average to 0 if the buffer is empty
-		*avg = 0;
-		return BUFFER_EMPTY;
-	}
-	else if (buffer->fill_level == buffer->buffer_size)
-	{
-		// if the buffer is full, average up the entire buffer
-		for (c = 0; c < buffer->buffer_size; c++)
-		{
-			flt_con.u32 = buffer->buffer[c];
-			calc_avg += flt_con.f;
-		}
-		*avg = (float)(calc_avg / buffer->buffer_size);
-	}
-	else
-	{
-		// the buffer is partially full
-		for (c = 0; c < buffer->fill_level; c++)
-		{
-			flt_con.u32 = buffer->buffer[(buffer->buffer_head + c) % buffer->buffer_size];
-			calc_avg += flt_con.f;
-		}
-		*avg = (float)(calc_avg / buffer->fill_level);
-	}
-
-	return BUFFER_SUCCESS;
 }
 
 
@@ -423,7 +384,6 @@ static S8 interpolate_table_linear(TABLE* table, float data_in, float* data_out)
 		return CONV_ERR;
 	}
 
-	// TODO binary search is faster
 	if (data_in < table->independent_vars[0])
 	{
 		// linearly interpolate based on the bottom two points
