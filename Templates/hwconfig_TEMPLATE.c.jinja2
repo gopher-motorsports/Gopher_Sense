@@ -13,7 +13,7 @@ GENERAL_PARAMETER param_list[NUM_CAN_PARAMS] =
 {
   {% for param in module.all_params -%}
   {
-    .can_param = (CAN_INFO_STRUCT*)(&{{param.param_name}}),
+    .can_param = (&({{param.param_name}}.info)),
     .status = SEND_NEEDED,
 	.ms_between_requests = {{param.ms_between_req}}
   },
