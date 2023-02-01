@@ -9,7 +9,7 @@
 // BUCKETS
 // setup the param lists for each bucket
 
-GENERAL_PARAMETER low_frequency_tcm_bucket_general_param_list[3] =
+GENERAL_PARAMETER low_frequency_tcm_bucket_general_param_list[11] =
 {
   {
     .can_param = (CAN_INFO_STRUCT*)(&tcm_gear_position),
@@ -23,6 +23,46 @@ GENERAL_PARAMETER low_frequency_tcm_bucket_general_param_list[3] =
   },
   {
     .can_param = (CAN_INFO_STRUCT*)(&tcm_clutch_position),
+    .status = CLEAN,
+	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&tcm_target_rpm),
+    .status = CLEAN,
+	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&tcm_trans_rpm),
+    .status = CLEAN,
+	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&tcm_current_gear),
+    .status = CLEAN,
+	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&tcm_currently_moving),
+    .status = CLEAN,
+	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&tcm_shift_state),
+    .status = CLEAN,
+	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&tcm_using_clutch),
+    .status = CLEAN,
+	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&tcm_successful_shift),
+    .status = CLEAN,
+	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
+  },
+  {
+    .can_param = (CAN_INFO_STRUCT*)(&tcm_anti_stall),
     .status = CLEAN,
 	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
   },
@@ -42,7 +82,7 @@ BUCKET bucket_list[NUM_BUCKETS] =
     .state = BUCKET_CONFIG_INIT,
     .param_list = 
     {
-      .len = 3,
+      .len = 11,
       .list = low_frequency_tcm_bucket_general_param_list
     }
   },
