@@ -9,23 +9,8 @@
 // BUCKETS
 // setup the param lists for each bucket
 
-GENERAL_PARAMETER low_frequency_tcm_bucket_general_param_list[11] =
+GENERAL_PARAMETER low_frequency_tcm_bucket_general_param_list[8] =
 {
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&tcm_gear_position),
-    .status = CLEAN,
-	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&tcm_shifter_position),
-    .status = CLEAN,
-	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
-  },
-  {
-    .can_param = (CAN_INFO_STRUCT*)(&tcm_clutch_position),
-    .status = CLEAN,
-	.last_tx = (U32)(-1*MAX_TIME_BETWEEN_TX_ms)
-  },
   {
     .can_param = (CAN_INFO_STRUCT*)(&tcm_target_rpm),
     .status = CLEAN,
@@ -82,7 +67,7 @@ BUCKET bucket_list[NUM_BUCKETS] =
     .state = BUCKET_CONFIG_INIT,
     .param_list = 
     {
-      .len = 11,
+      .len = 8,
       .list = low_frequency_tcm_bucket_general_param_list
     }
   },
@@ -93,85 +78,12 @@ BUCKET bucket_list[NUM_BUCKETS] =
 
 
 
-// BEGIN ADC1 PARAMS
-
-// give memory to the buffers
-
-
-#define ADC1_PARAM1_BUF_SIZE 1
-U16 adc1_param1_buffer_mem[ADC1_PARAM1_BUF_SIZE];
-
-
-#define ADC1_PARAM2_BUF_SIZE 1
-U16 adc1_param2_buffer_mem[ADC1_PARAM2_BUF_SIZE];
-
-// Fill out the array with all of the sensor params
-ANALOG_SENSOR_PARAM adc1_sensor_params[NUM_ADC1_PARAMS] = 
-{
-  
-  
-  // adc1_param1
-  {
-    .bucket_param = low_frequency_tcm_bucket_general_param_list + 1,
-    .analog_sensor = &linear_pos_sensor_50,
-    .buffer =
-    {
-      .buffer = adc1_param1_buffer_mem,
-      .buffer_size = ADC1_PARAM1_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC1_PARAM1_BUF_SIZE
-  
-  
-  // adc1_param2
-  {
-    .bucket_param = low_frequency_tcm_bucket_general_param_list + 0,
-    .analog_sensor = &linear_pos_sensor_5,
-    .buffer =
-    {
-      .buffer = adc1_param2_buffer_mem,
-      .buffer_size = ADC1_PARAM2_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC1_PARAM2_BUF_SIZE
-  
-};
+// No parameters on ADC1
 
 // ***************************************************************************
 
 
-// BEGIN ADC2 PARAMS
-
-// give memory to the buffers
-
-
-#define ADC2_PARAM1_BUF_SIZE 1
-U16 adc2_param1_buffer_mem[ADC2_PARAM1_BUF_SIZE];
-
-// Fill out the array with all of the sensor params
-ANALOG_SENSOR_PARAM adc2_sensor_params[NUM_ADC2_PARAMS] = 
-{
-  
-  
-  // adc2_param1
-  {
-    .bucket_param = low_frequency_tcm_bucket_general_param_list + 2,
-    .analog_sensor = &linear_pos_sensor_50,
-    .buffer =
-    {
-      .buffer = adc2_param1_buffer_mem,
-      .buffer_size = ADC2_PARAM1_BUF_SIZE,
-      .fill_level = 0,
-	  .buffer_head = 0
-    }
-  },
-  #undef ADC2_PARAM1_BUF_SIZE
-  
-};
+// No parameters on ADC2
 
 // ***************************************************************************
 
