@@ -108,6 +108,9 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
     	// we need the LED to do anything
     	if (!stat_led_GPIOx) return INITIALIZATION_ERROR;
 
+    	// add the CAN command for the heartbeat from the logger
+    	add_custom_can_func(LOG_COMPLETE, &log_complete, TRUE, NULL);
+
     	// create the main task. This wont start until things are initialized
     	// but the LED will be run
     	char name_buf[] = "gsense_main_task";
