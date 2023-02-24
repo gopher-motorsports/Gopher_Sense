@@ -408,7 +408,6 @@ static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params)
 static void handle_param_sending(void)
 {
 	GENERAL_PARAMETER* gsense_param;
-	U32 this_tick = HAL_GetTick();
 	U16 err_count = 0;
 
 	// for each parameter in the param_list
@@ -419,13 +418,13 @@ static void handle_param_sending(void)
 		// check if this parameter needs to be sent. If it has been a long time
 		// between sending then just send this parameter anyway
 		if (gsense_param->status == NO_SEND_NEEDED &&
-			this_tick - gsense_param->can_param->last_tx < MAX_TIME_BETWEEN_TX_ms)
+			HAL_GetTick() - gsense_param->can_param->last_tx < MAX_TIME_BETWEEN_TX_ms)
 		{
 			continue;
 		}
 
 		// if it has been long enough since parameter has been sent, send the parameter
-		if (this_tick - gsense_param->can_param->last_tx >= gsense_param->ms_between_requests)
+		if (HAL_GetTick() - gsense_param->can_param->last_tx >= gsense_param->ms_between_requests)
 		{
 			// try to send, if it fails it is most likely due to bus saturation, meaning it is fine
 			// to return out of the function and wait for the next osTick to try
