@@ -47,7 +47,7 @@ static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc
 #endif // NEED_HW_TIMER
 static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);
 static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);
-static inline float adc_to_volts(U16 adc_reading, U8 resolution_bits);
+static inline float adc_to_volts(U16 adc_reading);
 static S8 interpolate_table_linear(TABLE* table, float data_in, float* data_out);
 static inline float interpolate(float x0, float y0, float x1, float y1, float x);
 
@@ -319,7 +319,7 @@ S8 average_buffer(U16_BUFFER* buffer, U16* avg)
 S8 apply_analog_sensor_conversion(ANALOG_SENSOR* sensor,
 		                          U16 data_in, float* data_out)
 {
-	float voltage = adc_to_volts(data_in, ADC_BITS);
+	float voltage = adc_to_volts(data_in);
 
 	if (!sensor || !data_out) return CONV_ERR;
 
@@ -362,9 +362,9 @@ static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float voltage, float* da
 
 // adc_to_volts
 //  do some math to transform the ADC reading into a voltage
-static inline float adc_to_volts(U16 adc_reading, U8 resolution_bits)
+static inline float adc_to_volts(U16 adc_reading)
 {
-	return ((float)adc_reading / (1 << resolution_bits)) * ADC_VOLTAGE;
+	return ((float)adc_reading / (1 << ADC_BITS)) * ADC_VOLTAGE;
 }
 
 
