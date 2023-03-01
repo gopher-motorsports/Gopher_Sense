@@ -130,3 +130,36 @@ sensors:
         points: 
             - (0.0, -370.370)
             - (3.3, 370.370)
+            
+    vbat_channel_current:
+        # PLM VBat Channels
+        name_english: "PLM VBat Channel"
+        analog_subtype: Voltage
+        points:
+            - (0.0, 0)
+            - (3.3, 30.36)
+            
+    five_volt_channel_current:
+        # PLM 5V Channels
+        name_english: "PLM VBat Channel"
+        analog_subtype: Voltage
+        points:
+            - (0.0, 0)
+            - (3.3, 8.032)
+            
+    vbat_voltage_reading:
+        # PLM Battery voltage measurement
+        name_english: "PLM VBat Voltage"
+        analog_subtype: Voltage
+        points:
+            - (0.0, 0)
+            - (3.3, 20.728)
+            
+    five_volt_voltage_reading:
+        # PLM 5V channel voltage measurement
+        name_english: "PLM 5V Voltage"
+        analog_subtype: Voltage
+        points:
+            - (0.0, 0)
+            - (3.3, 8.004)
+            
