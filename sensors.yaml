@@ -23,6 +23,14 @@ sensors:
         points:
             - (0, 0)
             - (3.3, 75)
+            
+    linear_pos_sensor_5:
+        # Texense RSL-5
+        name_english: "Linear Position Sensor 5mm"
+        analog_subtype: Voltage
+        points:
+            - (0, 0)
+            - (3.3, 5)
 
     temp_sensor:
         # 0 281 002 170 (Bosch)
@@ -50,7 +58,7 @@ sensors:
             - (71, 140)
             - (57, 150)
 
-    pressure_sensor:
+    pressure_sensor_absolute:
         # PX3AN2BS100PSAAX. We have lots of these on the car
         name_english: "Honeywell Pressure Sensor"
         analog_subtype: Voltage
@@ -58,6 +66,48 @@ sensors:
             - (0.33, 0) # 0.5 * 3.3/5
             - (2.97, 100) # 4.5 * 3.3/5
             
+    pressure_sensor_sealed_gauge:
+        # PX3AN2BS100PSAAX. We have lots of these on the car
+        name_english: "Honeywell Pressure Sensor"
+        analog_subtype: Voltage
+        points:
+            - (0.33, 14.7) # 0.5 * 3.3/5
+            - (2.97, 114.7) # 4.5 * 3.3/5
+            
+    combined_temp_sensor:
+        # 0 261 K00 654-000
+        name_english: "Combined Bosch Temp Sensor"
+        analog_subtype: Resistive
+        points: # all resistive sensors must use a 1KOhm pull-up to 3.3V for this table to work
+            - (45313, -40)
+            - (26114, -30)
+            - (15462, -20)
+            - (9397, -10)
+            - (5896, 0)
+            - (3792, 10)
+            - (2500, 20)
+            - (1707, 30)
+            - (1175, 40)
+            - (834, 50)
+            - (596, 60)
+            - (436, 70)
+            - (323, 80)
+            - (243, 90)
+            - (187, 100)
+            - (144, 110)
+            - (113, 120)
+            - (89, 130)
+            - (71, 140)
+            - (57, 150)
+            
+    combined_pressure_sensor:
+        # 0 261 K00 654-000
+        name_english: "Combined Bosch Pressure Sensor"
+        analog_subtype: Voltage
+        points:
+            - (0.264, 10) # 0.4 * 3.3/5
+            - (3.069, 115) # 4.65 * 3.3/5
+
     brake_pressure_sensor:
         # MLH03KPSB06A. special sensor for the brake pressure
         name_english: "Honeywell Brake Pressure Sensor"
@@ -162,4 +212,13 @@ sensors:
         points:
             - (0.0, 0)
             - (3.3, 8.004)
+            
+    raw_voltage_sensor:
+        # Sensor that just maps the input from 0-1
+        name_english: "Raw Voltage Sensor"
+        analog_subtype: Voltage
+        points:
+            - (0.0, 0)
+            - (3.3, 1)
+            
             
