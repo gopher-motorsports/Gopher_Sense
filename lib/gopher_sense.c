@@ -636,7 +636,7 @@ static S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data)
 void log_complete(MODULE_ID sender, void* parameter,
                   U8 UNUSED1, U8 UNUSED2, U8 UNUSED3, U8 UNUSED4)
 {
-	if (sender != DLM_ID) return;
+	if (sender != PLM_ID) return;
 
 	last_dlm_heartbeat = HAL_GetTick();
 }
