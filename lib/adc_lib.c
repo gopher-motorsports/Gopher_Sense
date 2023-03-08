@@ -374,7 +374,7 @@ static inline float adc_to_volts(U16 adc_reading)
 static S8 interpolate_table_linear(TABLE* table, float data_in, float* data_out)
 {
 	U16 entries = table->num_entries;
-	float x0, x1, y0, y1;
+	float x0 = 0, x1 = 0, y0 = 0, y1 = 0;
 
 	if (!table || !entries)
 	{
