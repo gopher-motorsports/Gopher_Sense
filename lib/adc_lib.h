@@ -26,7 +26,9 @@
 
 // Enable this to update ADC data based off hardware timer interrupt
 // Disable this to update ADC data inside gsense main task
-#define NEED_HW_TIMER 1
+#define UPDATE_ADC_FROM_INTERRPT 1
+
+#define NEED_HW_TIMER NEED_ADC && UPDATE_ADC_FROM_INTERRPT
 
 // Function prototypes
 #if NEED_ADC
