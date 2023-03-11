@@ -164,11 +164,13 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
         	handle_gsense_fatal_error(INITIALIZATION_ERROR);
         	return INITIALIZATION_ERROR;
 		}
+		#if NEED_HW_TIMER
         if (configLibTIM(tim10_ptr, ADC_READING_FREQUENCY_HZ, TIMER_PSC))
         {
         	handle_gsense_fatal_error(INITIALIZATION_ERROR);
         	return INITIALIZATION_ERROR;
         }
+		#endif
 #endif
     }
 
@@ -327,6 +329,9 @@ void gsense_main_task(void* param)
     {
     	if (hasInitialized)
     	{
+			#if NEED_HW_TIMER == 0
+			DAQ_UpdateADC();
+			#endif
     		ADC_sensor_service();
     		if (send_data) handle_param_sending();
     	}

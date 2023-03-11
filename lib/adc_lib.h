@@ -23,21 +23,28 @@
 
 // general defines
 #define NEED_ADC ((NUM_ADC1_PARAMS > 0) || (NUM_ADC2_PARAMS > 0) || (NUM_ADC3_PARAMS > 0))
-#define NEED_HW_TIMER NEED_ADC
+
+// Enable this to update ADC data based off hardware timer interrupt
+// Disable this to update ADC data inside gsense main task
+#define NEED_HW_TIMER 0
 
 // Function prototypes
 #if NEED_ADC
 S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2,
 		        ADC_HandleTypeDef* ad3);
+
+#if NEED_HW_TIMER
+void DAQ_TimerCallback(TIM_HandleTypeDef* timer);
+S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc);
+#else
+void DAQ_UpdateADC();
+#endif
+
 #endif
 void startDataAq(void);
 void stopDataAq(void);
-#if NEED_HW_TIMER
-void DAQ_TimerCallback(TIM_HandleTypeDef* timer);
-#endif
 void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array,
 		                volatile U16* sample_buffer, U32 num_params);
-S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc);
 S8 buffer_full(U16_BUFFER* buffer);
 S8 add_to_buffer(U16_BUFFER* buffer, U16 toadd);
 S8 reset_buffer(U16_BUFFER* buffer);

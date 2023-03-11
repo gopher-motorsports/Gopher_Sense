@@ -123,12 +123,16 @@ void stopDataAq(void)
 // DAQ_TimerCallback
 //  This is called by each timer when it overflows. This will take the data from the DMA
 //  buffer and put it in the parameter buffer
+#if NEED_ADC
 #if NEED_HW_TIMER
 void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
 {
 	// make sure the correct timer is being used
 	if (timer != adc_timer) return;
-
+#else
+void DAQ_UpdateADC()
+{
+#endif
 	// put the data into the parameter buffer
 #if NUM_ADC1_PARAMS > 0
     add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
