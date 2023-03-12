@@ -10,6 +10,7 @@
 #define IC_BUF_SIZE 64
 #define MS_IN_A_MINUTE 60000
 #define DMA_STOPPED_TIMEOUT_MS 10
+#define ONE_MHZ 1000000
 
 typedef struct
 {
@@ -20,15 +21,19 @@ typedef struct
 	U32 timerPeriodNs;
 	U32 lastDMAReadValueTimeMs;
 	U16 DMA_lastReadValue;
-	float conversionRatio;
+	U16 conversionRatio;
 	float* resultStoreLocation;
 	bool stopped;
 	bool useVariableSpeedSampling;
-	U16 lowTimeDeltaValue;
-	U16 highTimeDeltaValue;
+	U16 lowResultingValue;
+	U16 highResultingValue;
+	U16 minSamples;
+	U16 timerSize;
+
 } PulseSensor;
 
-void setupTimerAndStartDMA(TIM_HandleTypeDef* htim, U32 channel, U32 timerPeriodNs, float conversionRatio, float* resultStoreLocation, bool useVariableSpeedSampling, U16 lowSamples, U16 highSamples);
+void setup_timer_and_start_dma_vss(TIM_HandleTypeDef* htim, U32 channel, U32 timerPeriodNs, U16 conversionRatio, float* resultStoreLocation, bool useVariableSpeedSampling, U16 lowSamples, U16 highSamples, U16 minSamples);
+//void setup_timer_and_start_dma(TIM_HandleTypeDef* htim, U32 channel, U32 timerPeriodNs, float conversionRatio, float* resultStoreLocation);
 void checkTransSpeedDMAs();
 //void test8888();
 
