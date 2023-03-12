@@ -30,5 +30,6 @@ typedef struct
 
 void setupTimerAndStartDMA(TIM_HandleTypeDef* htim, U32 channel, U32 timerPeriodNs, float conversionRatio, float* resultStoreLocation, bool useVariableSpeedSampling, U16 lowSamples, U16 highSamples);
 void checkTransSpeedDMAs();
+//void test8888();
 
 #endif
