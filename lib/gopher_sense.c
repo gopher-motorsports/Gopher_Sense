@@ -252,8 +252,30 @@ S8 update_and_queue_param_u32(U32_CAN_STRUCT* can_param, U32 u32)
 	return GSENSE_SUCCESS;
 }
 
+// update_and_queue_param_u8
+//  Add data to the correct gcan variable and set the parameter to SEND_NEEDED
+//  if the data is different
+S8 update_and_queue_param_u16(U16_CAN_STRUCT* can_param, U16 u16)
+{
+	GENERAL_PARAMETER* param;
 
-// update_and_queue_param_float
+	if (can_param->data == u16)
+	{
+		// we dont need to do anything as the data was not changed
+		return GSENSE_SUCCESS;
+	}
+	can_param->data = u16;
+
+	param = find_parameter_from_GCAN((CAN_INFO_STRUCT*)can_param);
+	if (!param) return GSESNE_FAIL;
+
+	// note that we now need to send the updated value for this parameter
+	param->status = SEND_NEEDED;
+
+	return GSENSE_SUCCESS;
+}
+
+// update_and_queue_param_u8
 //  Add data to the correct gcan variable and set the parameter to SEND_NEEDED
 //  if the data is different
 S8 update_and_queue_param_u8(U8_CAN_STRUCT* can_param, U8 u8)
