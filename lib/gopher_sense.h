@@ -55,6 +55,7 @@ void set_all_param_sending(boolean enabled);
 S8 lock_param_sending(CAN_INFO_STRUCT* can_param);
 S8 update_and_queue_param_float(FLOAT_CAN_STRUCT* can_param, float f);
 S8 update_and_queue_param_u32(U32_CAN_STRUCT* can_param, U32 u32);
+S8 update_and_queue_param_u16(U16_CAN_STRUCT* can_param, U16 u16);
 S8 update_and_queue_param_u8(U8_CAN_STRUCT* can_param, U8 u8);
 void gsense_reset(void);
 void gsense_main_task(void* param);
