@@ -37,17 +37,14 @@ static U32 TrackedDeltaTotal = 0;
 static U16 TrackedSignalRate = 0;
 static float TrackedResult = 0;
 static U32 lastTick = 0;
-static S16 DMACurrentPosition2;
-static U32 TIMEVAL = 0;
 static bool error = false;
-
 // Debug Variables End
 
 int numSensors = 0;
 
 static void check_timer_dma(int sensorNumber);
 static U16 convert_delta_time_to_rpm(U16 value, float conversionRatio);
-static U16 clear_buffer_and_reset_dma();
+static void clear_buffer_and_reset_dma();
 
 void setup_timer_and_start_dma_vss(
 		TIM_HandleTypeDef* htim,
@@ -73,12 +70,13 @@ void setup_timer_and_start_dma_vss(
 	pulseSensor[timerCount].lowResultingValue = lowResultingValue; // set to desired number of samples if not using variable speed sampling, or 0 for max samples
 	pulseSensor[timerCount].highResultingValue = highResultingValue; // set to 0 if not using variable speed sampling
 	pulseSensor[timerCount].minSamples = minSamples;
-	// Check the size of the timer
-//	if (htim->Instance->CNT == 0xFFFF) {
-//		pulseSensor[timerCount].timerSize = 16;
-//	} else {
-//		pulseSensor[timerCount].timerSize = 32;
-//	}
+
+	// TODO: Check the size of the timer
+	if (htim->Instance->ARR == 0xFFFF) {
+		pulseSensor[timerCount].timerSize = 16;
+	} else {
+		pulseSensor[timerCount].timerSize = 32;
+	}
 	pulseSensor[timerCount].timerSize = 16;
 
 	// Clear the sensor's buffer
@@ -96,27 +94,26 @@ void setup_timer_and_start_dma_vss(
 	numSensors++; // Track how many sensors have been set up
 }
 
-//void setup_timer_and_start_dma(
-//		TIM_HandleTypeDef* htim,
-//		U32 channel,
-//		U32 timerPeriodNs,
-//		float conversionRatio,
-//		float* resultStoreLocation
-//		)
-//{
-//	setup_timer_and_start_dma_vss(
-//			htim,
-//			channel,
-//			timerPeriodNs,
-//			conversionRatio,
-//			resultStoreLocation,
-//			false,
-//			0,
-//			0,
-//			0 // Min samples
-//			);
-//}
-
+void setup_timer_and_start_dma(
+		TIM_HandleTypeDef* htim,
+		U32 channel,
+		U32 timerPeriodNs,
+		float conversionRatio,
+		float* resultStoreLocation
+		)
+{
+	setup_timer_and_start_dma_vss(
+		htim,
+		channel,
+		timerPeriodNs,
+		conversionRatio,
+		resultStoreLocation,
+		false,
+		0,
+		0,
+		0 // Min samples
+		);
+}
 
 // Function for going through all of the currently set up pulse sensors
 void check_all_dmas() {
@@ -278,7 +275,7 @@ static void check_timer_dma(int sensorNumber) {
 				if (i == DMACurrentPosition) {
 					printf("- ");
 				}
-				printf("%u\n", bufferCopy[i]);
+				printf("%lu\n", bufferCopy[i]);
 			}
 			printf("DELTAS ===\n");
 			for (int i = 0; i < IC_BUF_SIZE; i++) {
@@ -297,7 +294,7 @@ static void check_timer_dma(int sensorNumber) {
 	TrackedRPM = convert_delta_time_to_rpm(result, pulseSensor[sensorNumber].conversionRatio);
 }
 
-static U16 clear_buffer_and_reset_dma(int sensorNumber) {
+static void clear_buffer_and_reset_dma(int sensorNumber) {
 	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
 	for (U16 c = 0; c < IC_BUF_SIZE - 1; c++)
 	{
