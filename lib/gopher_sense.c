@@ -12,15 +12,15 @@
 #include "module_hw_config.h"
 
 #if NEED_ADC
-	ADC_HandleTypeDef* adc1_ptr;
-	ADC_HandleTypeDef* adc2_ptr;
-	ADC_HandleTypeDef* adc3_ptr;
+ADC_HandleTypeDef* adc1_ptr;
+ADC_HandleTypeDef* adc2_ptr;
+ADC_HandleTypeDef* adc3_ptr;
 #endif // #if NEED_ADC
 
 CAN_HandleTypeDef* gcan_ptr;
 
 #if NEED_HW_TIMER
-	TIM_HandleTypeDef* tim10_ptr;
+TIM_HandleTypeDef* tim10_ptr;
 #endif // NEED_HW_TIMER
 
 // NOTE: Each timer interrupt (with 9 parameters across 9 ADCs), takes
@@ -80,18 +80,18 @@ static S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data);
 //  NO_ERRORS on ok init, INITIALIZATION_ERROR on bad init
 #if NEED_ADC
 #if NEED_HW_TIMER
-	GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
-						       		ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-						       		TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
-							   		U16 stat_led_Pin)
+GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
+						       	ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
+						       	TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
+							   	U16 stat_led_Pin)
 #else // NEED_HW_TIMER
-	GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
-						       		ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-						    		GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin)
+GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
+						       	ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
+						    	GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin)
 #endif // NEED_HW_TIMER
 #else // NEED_ADC
-	GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, GPIO_TypeDef* stat_led_GPIOx,
-						       		U16 stat_led_Pin)
+GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, GPIO_TypeDef* stat_led_GPIOx,
+						       	U16 stat_led_Pin)
 #endif // NEED_ADC
 {
 
@@ -335,7 +335,7 @@ void gsense_main_task(void* param)
     	if (hasInitialized)
     	{
 #if NEED_HW_TIMER == 0
-			DAQ_UpdateADC();
+			 DAQ_UpdateADC();
 #endif // NEED_HW_TIMER == 0
     		ADC_sensor_service();
     		if (send_data) handle_param_sending();

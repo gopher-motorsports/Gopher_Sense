@@ -43,18 +43,18 @@ typedef enum
 //---------------Function Prototypes---------------
 #if NEED_ADC
 #if NEED_HW_TIMER
-	GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
-						       		ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-						       		TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
-							   		U16 stat_led_Pin);
+GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
+						       	ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
+						       	TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
+							   	U16 stat_led_Pin);
 #else // NEED_HW_TIMER
-	GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
-						       		ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-						    		GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin);
+GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
+						       	ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
+						    	GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin);
 #endif // NEED_HW_TIMER
 #else // NEED_ADC
-	GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, GPIO_TypeDef* stat_led_GPIOx,
-						       		U16 stat_led_Pin);
+GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, GPIO_TypeDef* stat_led_GPIOx,
+						       	U16 stat_led_Pin);
 #endif // NEED_ADC
 
 void set_all_param_sending(boolean enabled);

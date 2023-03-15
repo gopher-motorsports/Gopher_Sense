@@ -7,13 +7,13 @@
 #include "module_hw_config.h"
 
 #if NEED_ADC
-	ADC_HandleTypeDef* adc1 = NULL;
-	ADC_HandleTypeDef* adc2 = NULL;
-	ADC_HandleTypeDef* adc3 = NULL;
+ADC_HandleTypeDef* adc1 = NULL;
+ADC_HandleTypeDef* adc2 = NULL;
+ADC_HandleTypeDef* adc3 = NULL;
 #endif // NEED_ADC
 
 #if NEED_HW_TIMER
-	TIM_HandleTypeDef* adc_timer = NULL;
+TIM_HandleTypeDef* adc_timer = NULL;
 #endif // NEED_HW_TIMER
 
 // The number of samples from the DMA buffer averaged into the parameter
@@ -25,13 +25,13 @@
 #define ADC3_SAMPLE_BUFFER_SIZE NUM_ADC3_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
 
 #if NUM_ADC1_PARAMS > 0
-	volatile U16 adc1_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
+volatile U16 adc1_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
 #endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
-	volatile U16 adc2_sample_buffer[ADC2_SAMPLE_BUFFER_SIZE] = {0};
+volatile U16 adc2_sample_buffer[ADC2_SAMPLE_BUFFER_SIZE] = {0};
 #endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
-	volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
+volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
 #endif // NUM_ADC3_PARAMS > 0
 
 #define ADC_BITS    12
@@ -43,7 +43,7 @@
 
 // static function declarations
 #if NEED_HW_TIMER
-	static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc);
+static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc);
 #endif // NEED_HW_TIMER
 static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);
 static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);

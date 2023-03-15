@@ -29,12 +29,12 @@
 
 // Function prototypes
 #if NEED_ADC
-	S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleTypeDef* ad3);
+S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleTypeDef* ad3);
 #if NEED_HW_TIMER
-	void DAQ_TimerCallback(TIM_HandleTypeDef* timer);
-	S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc);
+void DAQ_TimerCallback(TIM_HandleTypeDef* timer);
+S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc);
 #else // NEED_HW_TIMER
-	void DAQ_UpdateADC();
+void DAQ_UpdateADC();
 #endif // NEED_HW_TIMER
 #endif // NEED_ADC
 
