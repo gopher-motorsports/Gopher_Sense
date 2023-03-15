@@ -25,8 +25,8 @@ typedef struct
 	float* resultStoreLocation;
 	bool stopped;
 	bool useVariableSpeedSampling;
-	U16 lowResultingValue;
-	U16 highResultingValue;
+	U16 lowResultingRPMValue;
+	U16 highResultingRPMValue;
 	U16 minSamples;
 	U16 timerSize;
 
@@ -35,6 +35,6 @@ typedef struct
 void setup_timer_and_start_dma_vss(TIM_HandleTypeDef* htim, U32 channel, U32 timerPeriodNs, float conversionRatio, float* resultStoreLocation, bool useVariableSpeedSampling, U16 lowSamples, U16 highSamples, U16 minSamples);
 void setup_timer_and_start_dma(TIM_HandleTypeDef* htim, U32 channel, U32 timerPeriodNs, float conversionRatio, float* resultStoreLocation);
 void check_all_dmas();
-void checkTransSpeedDMAs();
+void check_timer_dma(int sensorNumber);
 
 #endif
