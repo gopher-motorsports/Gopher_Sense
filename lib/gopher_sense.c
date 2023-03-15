@@ -12,16 +12,16 @@
 #include "module_hw_config.h"
 
 #if NEED_ADC
-ADC_HandleTypeDef* adc1_ptr;
-ADC_HandleTypeDef* adc2_ptr;
-ADC_HandleTypeDef* adc3_ptr;
+	ADC_HandleTypeDef* adc1_ptr;
+	ADC_HandleTypeDef* adc2_ptr;
+	ADC_HandleTypeDef* adc3_ptr;
 #endif // #if NEED_ADC
 
 CAN_HandleTypeDef* gcan_ptr;
 
 #if NEED_HW_TIMER
-TIM_HandleTypeDef* tim10_ptr;
-#endif
+	TIM_HandleTypeDef* tim10_ptr;
+#endif // NEED_HW_TIMER
 
 // NOTE: Each timer interrupt (with 9 parameters across 9 ADCs), takes
 // ~69.2us. This means 1000Hz is ~6.9% of the CPU, 2000Hz is 13.8%, etc.
@@ -51,7 +51,7 @@ static boolean send_data = TRUE;
 static void ADC_sensor_service(void);
 #if NEED_ADC > 0
 static void service_ADC(ANALOG_SENSOR_PARAM* adc_params, U32 num_params);
-#endif
+#endif // NEED_ADC > 0
 static void handle_param_sending(void);
 static void handle_gsense_led(void);
 static void handle_gsense_fatal_error(GSENSE_ERROR_STATE error_state);
@@ -79,15 +79,20 @@ static S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data);
 // returns:
 //  NO_ERRORS on ok init, INITIALIZATION_ERROR on bad init
 #if NEED_ADC
-GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
-						    ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
-						    TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
-							U16 stat_led_Pin)
-#else
-GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
-		                       GPIO_TypeDef* stat_led_GPIOx,
-							   U16 stat_led_Pin)
-#endif
+#if NEED_HW_TIMER
+	GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
+						       		ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
+						       		TIM_HandleTypeDef* tim10, GPIO_TypeDef* stat_led_GPIOx,
+							   		U16 stat_led_Pin)
+#else // NEED_HW_TIMER
+	GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, ADC_HandleTypeDef* adc1,
+						       		ADC_HandleTypeDef* adc2, ADC_HandleTypeDef* adc3,
+						    		GPIO_TypeDef* stat_led_GPIOx, U16 stat_led_Pin)
+#endif // NEED_HW_TIMER
+#else // NEED_ADC
+	GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, GPIO_TypeDef* stat_led_GPIOx,
+						       		U16 stat_led_Pin)
+#endif // NEED_ADC
 {
 
     if (!hasInitialized)
@@ -98,10 +103,10 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
     	adc1_ptr = adc1;
     	adc2_ptr = adc2;
     	adc3_ptr = adc3;
-#endif
+#endif // NEED_ADC
 #if NEED_HW_TIMER
     	tim10_ptr = tim10;
-#endif
+#endif // NEED_HW_TIMER
     	status_led_port = stat_led_GPIOx;
     	status_led_pin = stat_led_Pin;
 
@@ -136,42 +141,42 @@ GSENSE_ERROR_STATE gsense_init(CAN_HandleTypeDef* gcan,
     		handle_gsense_fatal_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
     	}
-#endif
+#endif // NEED_HW_TIMER
 #if NUM_ADC1_PARAMS > 0
     	if (!adc1)
 		{
     		handle_gsense_fatal_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
 		}
-#endif
+#endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
     	if (!adc2)
 		{
     		handle_gsense_fatal_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
 		}
-#endif
+#endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
     	if (!adc3)
 		{
     		handle_gsense_fatal_error(INITIALIZATION_ERROR);
     		return INITIALIZATION_ERROR;
 		}
-#endif
+#endif // NUM_ADC3_PARAMS > 0
 #if NEED_ADC
         if (configLibADC(adc1_ptr, adc2_ptr, adc3_ptr))
 		{
         	handle_gsense_fatal_error(INITIALIZATION_ERROR);
         	return INITIALIZATION_ERROR;
 		}
-		#if NEED_HW_TIMER
+#if NEED_HW_TIMER
         if (configLibTIM(tim10_ptr, ADC_READING_FREQUENCY_HZ, TIMER_PSC))
         {
         	handle_gsense_fatal_error(INITIALIZATION_ERROR);
         	return INITIALIZATION_ERROR;
         }
-		#endif
-#endif
+#endif // NEED_HW_TIMER
+#endif // NEED_ADC
     }
 
     gsense_reset();
@@ -329,9 +334,9 @@ void gsense_main_task(void* param)
     {
     	if (hasInitialized)
     	{
-			#if NEED_HW_TIMER == 0
+#if NEED_HW_TIMER == 0
 			DAQ_UpdateADC();
-			#endif
+#endif // NEED_HW_TIMER == 0
     		ADC_sensor_service();
     		if (send_data) handle_param_sending();
     	}

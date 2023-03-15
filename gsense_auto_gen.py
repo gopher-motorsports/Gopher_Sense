@@ -51,10 +51,12 @@ class AnalogSensor():
 
 # Objects for the module configuration file
 class Module():
-    def __init__(self, name, buckets, analog_sensors):
+    def __init__(self, name, use_hw_timer, buckets, analog_sensors):
         self.analog_sensors = analog_sensors
 
         self.name = name
+
+        self.use_hw_timer = int(use_hw_timer)
 
         self.all_params = []
         self.adc1_params = []
@@ -152,7 +154,7 @@ def main():
             fh.write(output)
 
     # define the module and start parsing the buckets
-    module = Module(hwconfig_munch.module_name, hwconfig_munch['buckets'], analog_sensors)
+    module = Module(hwconfig_munch.module_name, hwconfig_munch.get('use_hw_timer', 1), hwconfig_munch['buckets'], analog_sensors)
     
     # write the HW config files
     print("Generating......", HWCONFIG_C_FILE)

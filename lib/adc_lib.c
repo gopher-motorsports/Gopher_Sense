@@ -7,14 +7,14 @@
 #include "module_hw_config.h"
 
 #if NEED_ADC
-ADC_HandleTypeDef* adc1 = NULL;
-ADC_HandleTypeDef* adc2 = NULL;
-ADC_HandleTypeDef* adc3 = NULL;
-#endif
+	ADC_HandleTypeDef* adc1 = NULL;
+	ADC_HandleTypeDef* adc2 = NULL;
+	ADC_HandleTypeDef* adc3 = NULL;
+#endif // NEED_ADC
 
 #if NEED_HW_TIMER
-TIM_HandleTypeDef* adc_timer = NULL;
-#endif
+	TIM_HandleTypeDef* adc_timer = NULL;
+#endif // NEED_HW_TIMER
 
 // The number of samples from the DMA buffer averaged into the parameter
 // buffer
@@ -25,14 +25,14 @@ TIM_HandleTypeDef* adc_timer = NULL;
 #define ADC3_SAMPLE_BUFFER_SIZE NUM_ADC3_PARAMS*ADC_SAMPLE_SIZE_PER_PARAM
 
 #if NUM_ADC1_PARAMS > 0
-volatile U16 adc1_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
-#endif
+	volatile U16 adc1_sample_buffer[ADC1_SAMPLE_BUFFER_SIZE] = {0};
+#endif // NUM_ADC1_PARAMS > 0
 #if NUM_ADC2_PARAMS > 0
-volatile U16 adc2_sample_buffer[ADC2_SAMPLE_BUFFER_SIZE] = {0};
-#endif
+	volatile U16 adc2_sample_buffer[ADC2_SAMPLE_BUFFER_SIZE] = {0};
+#endif // NUM_ADC2_PARAMS > 0
 #if NUM_ADC3_PARAMS > 0
-volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
-#endif
+	volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
+#endif // NUM_ADC3_PARAMS > 0
 
 #define ADC_BITS    12
 #define ADC_VOLTAGE 3.3
@@ -43,7 +43,7 @@ volatile U16 adc3_sample_buffer[ADC3_SAMPLE_BUFFER_SIZE] = {0};
 
 // static function declarations
 #if NEED_HW_TIMER
-static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc);
+	static void configTimer(TIM_HandleTypeDef* timer, U16 timer_int_freq_hz, U16 psc);
 #endif // NEED_HW_TIMER
 static S8 convert_voltage_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);
 static S8 convert_resistive_load(ANALOG_SENSOR* sensor, float voltage, float* data_out);
@@ -54,8 +54,7 @@ static inline float interpolate(float x0, float y0, float x1, float y1, float x)
 
 //******************* ADC Config *******************
 #if NEED_ADC
-S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2,
-		        ADC_HandleTypeDef* ad3)
+S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2, ADC_HandleTypeDef* ad3)
 {
 #if NUM_ADC1_PARAMS > 0
     if (!ad1) return ADC_NOT_CONFIGURED;
@@ -72,7 +71,7 @@ S8 configLibADC(ADC_HandleTypeDef* ad1, ADC_HandleTypeDef* ad2,
 
     return ADC_LIB_CONFIG_SUCCESS;
 }
-#endif
+#endif // NEED_ADC
 
 
 // startDataAq
@@ -95,7 +94,7 @@ void startDataAq(void)
 #if NEED_HW_TIMER
     __HAL_TIM_SET_COUNTER(adc_timer, 0);
     HAL_TIM_Base_Start_IT(adc_timer);
-#endif
+#endif // NEED_HW_TIMER
 }
 
 
@@ -106,7 +105,7 @@ void stopDataAq(void)
 #if NEED_HW_TIMER
 	HAL_TIM_Base_Stop_IT(adc_timer);
 	__HAL_TIM_SET_COUNTER(adc_timer, 0);
-#endif
+#endif // NEED_HW_TIMER
 
 #if NUM_ADC1_PARAMS > 0
     HAL_ADC_Stop_DMA(adc1);
@@ -129,10 +128,10 @@ void DAQ_TimerCallback(TIM_HandleTypeDef* timer)
 {
 	// make sure the correct timer is being used
 	if (timer != adc_timer) return;
-#else
+#else // NEED_HW_TIMER
 void DAQ_UpdateADC()
 {
-#endif
+#endif // NEED_HW_TIMER
 	// put the data into the parameter buffer
 #if NUM_ADC1_PARAMS > 0
     add_data_to_buffer(adc1_sensor_params, adc1_sample_buffer, NUM_ADC1_PARAMS);
@@ -144,7 +143,7 @@ void DAQ_UpdateADC()
     add_data_to_buffer(adc3_sensor_params, adc3_sample_buffer, NUM_ADC3_PARAMS);
 #endif // NUM_ADC3_PARAMS > 0
 }
-#endif
+#endif // NEED_ADC
 
 
 // add_data_to_buffer
@@ -193,7 +192,7 @@ S8 configLibTIM(TIM_HandleTypeDef* tim, U16 tim_freq, U16 psc)
 
     return ADC_LIB_CONFIG_SUCCESS;
 }
-#endif
+#endif // NEED_HW_TIMER
 
 
 // configTimer
