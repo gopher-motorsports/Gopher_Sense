@@ -3,10 +3,6 @@
  *
  * Alex Tong
  *
- * Testing list -
- * - Timer size setup
- * - RPM conversion works correctly
- * - Variable sampling works correctly
  */
 
 // TODO: Decrease jittering
@@ -19,9 +15,6 @@
 
 //static U16 buffer[IC_BUF_SIZE] = {0};
 PulseSensor pulseSensor[TIMER_COUNT] = {0};
-
-static U16 averageSpeedTimerTicks = 0;
-static U16 averageSpeedMsPerTick = 0;
 
 // Debug Variables Start
 static S16 TrackedDMACurrentPosition = 0;
@@ -43,14 +36,15 @@ static bool error = false;
 int numSensors = 0;
 
 static void check_timer_dma(int sensorNumber);
-static U16 convert_delta_time_to_rpm(U16 value, float conversionRatio);
+static U16 convert_delta_time_to_rpm(U16 deltaTime, float conversionRatio);
 static void clear_buffer_and_reset_dma();
 
+// Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
 void setup_timer_and_start_dma_vss(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
 		U32 timerPeriodNs,
-		U16 conversionRatio,
+		float conversionRatio,
 		float* resultStoreLocation,
 		bool useVariableSpeedSampling,
 		U16 lowResultingValue,
@@ -69,22 +63,22 @@ void setup_timer_and_start_dma_vss(
 	pulseSensor[timerCount].useVariableSpeedSampling = useVariableSpeedSampling;
 	pulseSensor[timerCount].lowResultingValue = lowResultingValue; // set to desired number of samples if not using variable speed sampling, or 0 for max samples
 	pulseSensor[timerCount].highResultingValue = highResultingValue; // set to 0 if not using variable speed sampling
-	pulseSensor[timerCount].minSamples = minSamples;
+	pulseSensor[timerCount].minSamples = minSamples;	// Minimum amount of samples to take if using variable speed sampling
 
-	// TODO: Check the size of the timer
+	// Evaluate the size of the given timer by checking if the Auto reload value is the max size of a 16bit value 0xFFFF
 	if (htim->Instance->ARR == 0xFFFF) {
 		pulseSensor[timerCount].timerSize = 16;
 	} else {
 		pulseSensor[timerCount].timerSize = 32;
 	}
-	pulseSensor[timerCount].timerSize = 16;
 
 	// Clear the sensor's buffer
 	for(int i = 0; i < IC_BUF_SIZE; i++) {
 		pulseSensor[timerCount].buffer[i] = 0;
 	}
 
-	pulseSensor[timerCount].averageSpeedTimerTicks = 0;
+	// Default other values to 0
+	pulseSensor[timerCount].averageDeltaTimerTicks = 0;
 	pulseSensor[timerCount].lastDMAReadValueTimeMs = 0;
 	pulseSensor[timerCount].DMA_lastReadValue = 0;
 	pulseSensor[timerCount].stopped = true;
@@ -94,6 +88,7 @@ void setup_timer_and_start_dma_vss(
 	numSensors++; // Track how many sensors have been set up
 }
 
+// Function for setting up timer without variable speed sampling (vss)
 void setup_timer_and_start_dma(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
@@ -109,9 +104,9 @@ void setup_timer_and_start_dma(
 		conversionRatio,
 		resultStoreLocation,
 		false,
-		0,
-		0,
-		0 // Min samples
+		0,	// Low Value
+		0,	// High Value
+		0 	// Min samples
 		);
 }
 
@@ -126,29 +121,37 @@ void check_all_dmas() {
 
 // Function that goes through the buffer of the given pulse sensor, handling edge cases, and setting the return value to the found speed value.
 static void check_timer_dma(int sensorNumber) {
-	// Copy all the values so they can't change while doing calculations, starting at the DMA position because we know stopping the buffer resets its position.
+
 	U32 bufferCopy[IC_BUF_SIZE] = {0};
+
+	// Stop DMA so we know that values won't change when copying them to bufferCopy
 	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
 	// Find the current position of DMA for the current sensor  - Note: Important this happens after DMA stops or weird values will randomly occur
 	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[1])->Instance->NDTR);
 
+	// Copy all the values to bufferCopy so they can't change while doing calculations,
+	// starting at the DMA position because we know stopping the buffer resets its position.
 	for (U16 c = 0; c < IC_BUF_SIZE; c++)
 	{
 		S16 i = (DMACurrentPosition + c) % IC_BUF_SIZE;
 		bufferCopy[c] = pulseSensor[sensorNumber].buffer[i];
 	}
-	// Copy values of buffer copy into original buffer so its values start at 0
+
+	// Copy values of buffer copy into original buffer so its oldest values start at position 0,
+	// which is where the DMA position will be placed after restarting.
 	for (U16 i = 0; i < IC_BUF_SIZE; i++) {
 		pulseSensor[sensorNumber].buffer[i] = bufferCopy[i];
 	}
+
+	// Restart DMA before doing calculations so we lose as little values as possible.
 	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE); // Note: Resets DMA position
 
 	// Find the value in question, which is 1 position backwards from the DMA's current position, which is the end of the buffer copy.
 	U32 valueInQuestion = bufferCopy[IC_BUF_SIZE - 1];
 
-	if (pulseSensor[sensorNumber].stopped) {	// If we already know we're stopped potentially end early.
+	if (pulseSensor[sensorNumber].stopped) {	// If we already know we're stopped, check if we should end early
 		if (valueInQuestion != 0) {	// If we were previously stopped but may be moving again.
-			// Check if this is just really slow occasional
+			// Check if this is just really a slow and occasional value
 			if (valueInQuestion == pulseSensor[sensorNumber].DMA_lastReadValue) {
 				// Clear the random values that aren't fast enough so they don't sit and become stale
 				clear_buffer_and_reset_dma(sensorNumber);
@@ -161,7 +164,7 @@ static void check_timer_dma(int sensorNumber) {
 				return;
 			}
 		} else {
-			*(pulseSensor[sensorNumber].resultStoreLocation) = 0; // Otherwise make sure the store location vlaue is 0 and leave.
+			*(pulseSensor[sensorNumber].resultStoreLocation) = 0; // Otherwise make sure the store location value is 0 and leave.
 			return;
 		}
 	}
@@ -173,16 +176,16 @@ static void check_timer_dma(int sensorNumber) {
 			// Clear buffer so any non-zero values will be quickly identified that the car is moving again. This will also reset the DMA position.
 			clear_buffer_and_reset_dma(sensorNumber);
 
-			// TODO: VERIFY
 			*(pulseSensor[sensorNumber].resultStoreLocation) = 0;
 			return;
 		}
-		*(pulseSensor[sensorNumber].resultStoreLocation) = pulseSensor[sensorNumber].averageSpeedTimerTicks;
+		*(pulseSensor[sensorNumber].resultStoreLocation) = pulseSensor[sensorNumber].averageDeltaTimerTicks;
 		return;
 	}
 
 	// --- Passed All Breakpoint Checks ---
 	pulseSensor[sensorNumber].DMA_lastReadValue = valueInQuestion;
+	pulseSensor[sensorNumber].lastDMAReadValueTimeMs = HAL_GetTick();
 
 	// Calculate the amount of samples to take to get the speed based on the delta between the last 2 values
 	U32 value2 = bufferCopy[IC_BUF_SIZE - 2];
@@ -254,16 +257,15 @@ static void check_timer_dma(int sensorNumber) {
 	TrackedSignalRate = 0;
 	// Debug end
 
-	pulseSensor[sensorNumber].lastDMAReadValueTimeMs = HAL_GetTick();
-
-	float result = deltaTotal / numDeltas;
+	// Calculate average
+	float resultingAverageDelta = deltaTotal / numDeltas;
 
 	if (error) {
 		error = false;
 	} else {
-		if(result >= TrackedResult * 1.3 || result <= TrackedResult * 0.7) {
+		if(resultingAverageDelta >= TrackedResult * 1.3 || resultingAverageDelta <= TrackedResult * 0.7) {
 			printf("--- Anomaly Detected! ---\n");
-			printf("Current Value: %f\n", result);
+			printf("Current Value: %f\n", resultingAverageDelta);
 			printf("Previous Value: %f\n", TrackedResult);
 			printf("DMA Position: %u\n", TrackedDMACurrentPosition);
 			printf("Amount of Samples: %u\n", TrackedAmountOfSamples);
@@ -287,11 +289,16 @@ static void check_timer_dma(int sensorNumber) {
 		}
 	}
 
-	TrackedResult = result;
-	pulseSensor[sensorNumber].averageSpeedTimerTicks = result;
-	*pulseSensor[sensorNumber].resultStoreLocation = result; //TODO: Check
+	TrackedResult = resultingAverageDelta;
+	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
 
-	TrackedRPM = convert_delta_time_to_rpm(result, pulseSensor[sensorNumber].conversionRatio);
+	// Calculate RPM from average delta
+	U16 RPM = convert_delta_time_to_rpm(resultingAverageDelta, pulseSensor[sensorNumber].conversionRatio);
+
+	// Send result to store location
+	*pulseSensor[sensorNumber].resultStoreLocation = RPM;
+
+	TrackedRPM = RPM;
 }
 
 static void clear_buffer_and_reset_dma(int sensorNumber) {
@@ -310,10 +317,11 @@ static void clear_buffer_and_reset_dma(int sensorNumber) {
 //static double TrackedSecondsFor1Revolution = 0;
 // Debug End
 
-static U16 convert_delta_time_to_rpm(U16 value, float conversionRatio) {
-	double lengthOfDeltaSeconds = (float)value / ONE_MHZ;
+static U16 convert_delta_time_to_rpm(U16 deltaTime, float conversionRatio) {
+	// TODO: Implement timer period in here once I figure out how that factors in
+	double lengthOfDeltaSeconds = (float)deltaTime / ONE_MHZ;
 	double secondsFor1Revolution = lengthOfDeltaSeconds * conversionRatio;
-	U16 rpm = (U16)(60 / secondsFor1Revolution); // 60 is to get from seconds to minutes
+	float rpm = (60 / secondsFor1Revolution); // 60 is to get from seconds to minutes
 
 	// Debug
 //	TrackedValue = value;

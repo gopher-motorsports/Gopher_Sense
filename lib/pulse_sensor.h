@@ -17,11 +17,11 @@ typedef struct
 	TIM_HandleTypeDef* htim;
 	U32 channel;
 	U16 buffer[IC_BUF_SIZE];
-	U16 averageSpeedTimerTicks;
+	U16 averageDeltaTimerTicks;
 	U32 timerPeriodNs;
 	U32 lastDMAReadValueTimeMs;
 	U16 DMA_lastReadValue;
-	U16 conversionRatio;
+	float conversionRatio;
 	float* resultStoreLocation;
 	bool stopped;
 	bool useVariableSpeedSampling;
@@ -32,7 +32,7 @@ typedef struct
 
 } PulseSensor;
 
-void setup_timer_and_start_dma_vss(TIM_HandleTypeDef* htim, U32 channel, U32 timerPeriodNs, U16 conversionRatio, float* resultStoreLocation, bool useVariableSpeedSampling, U16 lowSamples, U16 highSamples, U16 minSamples);
+void setup_timer_and_start_dma_vss(TIM_HandleTypeDef* htim, U32 channel, U32 timerPeriodNs, float conversionRatio, float* resultStoreLocation, bool useVariableSpeedSampling, U16 lowSamples, U16 highSamples, U16 minSamples);
 void setup_timer_and_start_dma(TIM_HandleTypeDef* htim, U32 channel, U32 timerPeriodNs, float conversionRatio, float* resultStoreLocation);
 void check_all_dmas();
 void checkTransSpeedDMAs();
