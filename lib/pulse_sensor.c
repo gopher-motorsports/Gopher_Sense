@@ -1,5 +1,5 @@
 /**
- * Library for operating pulse one or multiple sensors and returning an RPM through a float pointer.
+ * Library for operating pulse one or multiple sensors and returning an result through a float pointer.
  *
  * Alex Tong
  */
@@ -11,12 +11,14 @@
 #include "base_types.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 PulseSensor pulseSensor[TIMER_COUNT] = {0};
-int numSensors = 0;
+U16 zeroArray[IC_BUF_SIZE] = {0};
+U8 numSensors = 0;
 
-static void clear_buffer_and_reset_dma();
-static U16 convert_delta_time_to_rpm(U16 deltaTime, float conversionRatio);
+static void clear_buffer_and_reset_dma(U8 sensorNumber);
+static U16 convert_delta_time_to_output(U32 deltaTime, float conversionRatio, float timerPeriodSeconds);
 
 // Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
 void setup_timer_and_start_dma_vss(
@@ -26,42 +28,42 @@ void setup_timer_and_start_dma_vss(
 		float conversionRatio,
 		float* resultStoreLocation,
 		bool useVariableSpeedSampling,
-		U16 lowResultingRPMValue,
-		U16 highResultingRPMValue,
+		U16 lowResultingValue,
+		U16 highResultingValue,
 		U16 minSamples
 		)
 {
-	int timerCount = numSensors;
+	PulseSensor* newSensor = &pulseSensor[numSensors];
 
 	// Set the local values of the pulse sensor data struct to the given parameters
-	pulseSensor[timerCount].htim = htim; // Timer that was used to set up input capture and DMA on
-	pulseSensor[timerCount].channel = channel; // Channel of the given timer
-	pulseSensor[timerCount].timerPeriodNs = timerPeriodNs; // Period of timer ticks (they can be different between different timers)
-	pulseSensor[timerCount].conversionRatio = conversionRatio; // ticks per rev
-	pulseSensor[timerCount].resultStoreLocation = resultStoreLocation; // Float pointer to a location you want the resulting RPM to update
-	pulseSensor[timerCount].useVariableSpeedSampling = useVariableSpeedSampling; // Bool for weather or not to vary the amount of samples taken from the buffer to determine the resulting RPM average
-	pulseSensor[timerCount].lowResultingRPMValue = lowResultingRPMValue; // RPM at which the min samples will be used from the buffer behind the DMA position. Set to desired number of samples if not using variable speed sampling, or 0 for max samples
-	pulseSensor[timerCount].highResultingRPMValue = highResultingRPMValue; // RPM value at which all 64 values in the buffer are sampled to get the resulting speed value. Set to 0 if not using variable speed sampling
-	pulseSensor[timerCount].minSamples = minSamples;	// Minimum amount of samples to take if using variable speed sampling
+	newSensor->htim = htim;
+	newSensor->channel = channel;
+	newSensor->timerPeriodSeconds = timerPeriodNs * (1e-9);
+	newSensor->conversionRatio = conversionRatio;
+	newSensor->resultStoreLocation = resultStoreLocation;
+	newSensor->useVariableSpeedSampling = useVariableSpeedSampling;
+	newSensor->lowResultingValue = lowResultingValue;
+	newSensor->highResultingValue = highResultingValue;
+	newSensor->minSamples = minSamples;
 
 	// Evaluate the size of the given timer by checking if the Auto reload value is the max size of a 16bit value 0xFFFF
 	// TODO: Verify the 32 bit detection works (16 bit validated, so it should work)
 	if (htim->Instance->ARR == 0xFFFF) {
-		pulseSensor[timerCount].timerSize = 16;
+		newSensor->timerSize = 16;
 	} else {
-		pulseSensor[timerCount].timerSize = 32;
+		newSensor->timerSize = 32;
 	}
 
 	// Clear the sensor's buffer
 	for(int i = 0; i < IC_BUF_SIZE; i++) {
-		pulseSensor[timerCount].buffer[i] = 0;
+		newSensor->buffer[i] = 0;
 	}
 
 	// Default other values to 0
-	pulseSensor[timerCount].averageDeltaTimerTicks = 0;
-	pulseSensor[timerCount].lastDMAReadValueTimeMs = 0;
-	pulseSensor[timerCount].DMA_lastReadValue = 0;
-	pulseSensor[timerCount].stopped = true;
+	newSensor->averageDeltaTimerTicks = 0;
+	newSensor->lastDMAReadValueTimeMs = 0;
+	newSensor->DMA_lastReadValue = 0;
+	newSensor->stopped = true;
 
 	HAL_TIM_IC_Start_DMA(htim, channel, (U32*)pulseSensor[numSensors].buffer, IC_BUF_SIZE);
 
@@ -119,9 +121,7 @@ void check_timer_dma(int sensorNumber) {
 
 	// Copy values of buffer copy into original buffer so its oldest values start at position 0,
 	// which is where the DMA position will be placed after restarting.
-	for (U16 i = 0; i < IC_BUF_SIZE; i++) {
-		pulseSensor[sensorNumber].buffer[i] = bufferCopy[i];
-	}
+	memcpy(pulseSensor[sensorNumber].buffer, bufferCopy, sizeof(pulseSensor[sensorNumber].buffer));
 
 	// Restart DMA before doing calculations so we lose as little values as possible.
 	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE); // Note: Resets DMA position
@@ -133,15 +133,23 @@ void check_timer_dma(int sensorNumber) {
 		if (valueInQuestion != 0) {	// If we were previously stopped but may be moving again.
 			// Check if this is just really a slow and occasional value
 			if (valueInQuestion == pulseSensor[sensorNumber].DMA_lastReadValue) {
+				// We're still seeing the same value, is it old now? We can't get here if it was last a 0.
+				if (HAL_GetTick() - pulseSensor[sensorNumber].lastDMAReadValueTimeMs >= DMA_STOPPED_TIMEOUT_MS) {
 				// Clear the random values that aren't fast enough so they don't sit and become stale
 				clear_buffer_and_reset_dma(sensorNumber);
+				pulseSensor[sensorNumber].DMA_lastReadValue = 0; // Set to 0 so there aren't accidents.
+				}
 				return;
-			} else if (HAL_GetTick() - pulseSensor[sensorNumber].lastDMAReadValueTimeMs <= DMA_STOPPED_TIMEOUT_MS) {
-				pulseSensor[sensorNumber].stopped = false; // Declare we are no longer stopped and move on.
 			} else {
-				pulseSensor[sensorNumber].DMA_lastReadValue = valueInQuestion;
-				pulseSensor[sensorNumber].lastDMAReadValueTimeMs = HAL_GetTick();
-				return;
+				if (pulseSensor[sensorNumber].DMA_lastReadValue != 0) {
+					// The value is new, it didn't get wiped, and the last wasn't 0 so we're good again
+					pulseSensor[sensorNumber].stopped = false; // Declare we are no longer stopped and move on.
+				} else {
+					// A new unwiped value but it's just the first after 0. Log it and go again.
+					pulseSensor[sensorNumber].DMA_lastReadValue = valueInQuestion;
+					pulseSensor[sensorNumber].lastDMAReadValueTimeMs = HAL_GetTick();
+					return;
+				}
 			}
 		} else {
 			*(pulseSensor[sensorNumber].resultStoreLocation) = 0; // Otherwise make sure the store location value is 0 and leave.
@@ -159,7 +167,6 @@ void check_timer_dma(int sensorNumber) {
 			*(pulseSensor[sensorNumber].resultStoreLocation) = 0;
 			return;
 		}
-		*(pulseSensor[sensorNumber].resultStoreLocation) = pulseSensor[sensorNumber].averageDeltaTimerTicks;
 		return;
 	}
 
@@ -181,33 +188,30 @@ void check_timer_dma(int sensorNumber) {
 
 	if(pulseSensor[sensorNumber].useVariableSpeedSampling) {
 		// Get an RPM calc from the most recent delta so the user can input RPM values as high and low values rather than deltas
-		U16 tempRPMCalc = convert_delta_time_to_rpm(mostRecentDelta, pulseSensor[sensorNumber].conversionRatio);
+		U16 tempRPMCalc = convert_delta_time_to_output(mostRecentDelta, pulseSensor[sensorNumber].conversionRatio, pulseSensor[sensorNumber].timerPeriodSeconds);
 
-		if (tempRPMCalc < pulseSensor[sensorNumber].lowResultingRPMValue) {
+		if (tempRPMCalc < pulseSensor[sensorNumber].lowResultingValue) {
 			amountOfSamples = pulseSensor[sensorNumber].minSamples;
-		} else if (tempRPMCalc > pulseSensor[sensorNumber].highResultingRPMValue) {
+		} else if (tempRPMCalc > pulseSensor[sensorNumber].highResultingValue) {
 			amountOfSamples = IC_BUF_SIZE;
 		} else {
 			// Equation for getting how many samples we should average, which is linear from low to high samples
 			float slope = (IC_BUF_SIZE - pulseSensor[sensorNumber].minSamples) /
-					(float)(pulseSensor[sensorNumber].highResultingRPMValue - pulseSensor[sensorNumber].lowResultingRPMValue);
-			amountOfSamples = slope * (tempRPMCalc - pulseSensor[sensorNumber].lowResultingRPMValue) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
+					(float)(pulseSensor[sensorNumber].highResultingValue - pulseSensor[sensorNumber].lowResultingValue);
+			amountOfSamples = slope * (tempRPMCalc - pulseSensor[sensorNumber].lowResultingValue) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
 		}
 	} else {
-		amountOfSamples = pulseSensor[sensorNumber].highResultingRPMValue;
-		if (amountOfSamples == 0) {
-			amountOfSamples = IC_BUF_SIZE;
-		}
+		amountOfSamples = IC_BUF_SIZE;
 	}
 
 	// Calculate the deltas between each of the time values and store them in deltaList
-	U16 deltaList[IC_BUF_SIZE] = {0};
+	U32 deltaList[IC_BUF_SIZE] = {0};
 	U16 numDeltas = 0;
 	for (U16 c = 0; c < amountOfSamples - 1; c++)
 	{
 		S16 i = (IC_BUF_SIZE - 1 - c);
-		U16 value1 = bufferCopy[i];
-		U16 value2 = bufferCopy[i - 1];
+		U32 value1 = bufferCopy[i];
+		U32 value2 = bufferCopy[i - 1];
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
 			if (value1 < value2) {
 				deltaList[numDeltas] = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Roll-over (resets to 0) protection
@@ -219,39 +223,42 @@ void check_timer_dma(int sensorNumber) {
 	}
 
 	// Get average of deltas
-	U32 deltaTotal = 0;
+	U64 deltaTotal = 0;
 	for (U16 c = 0; c < numDeltas; c++) {
 		deltaTotal += deltaList[c];
 	}
 
 	// Calculate average
 	float resultingAverageDelta = deltaTotal / numDeltas;
-
-	TrackedResult = resultingAverageDelta;
 	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
 
-	// Calculate RPM from average delta
-	U16 RPM = convert_delta_time_to_rpm(resultingAverageDelta, pulseSensor[sensorNumber].conversionRatio);
+	// Calculate result from average delta
+	U16 result = convert_delta_time_to_output(resultingAverageDelta, pulseSensor[sensorNumber].conversionRatio, pulseSensor[sensorNumber].timerPeriodSeconds);
 
 	// Send result to store location
-	*pulseSensor[sensorNumber].resultStoreLocation = RPM;
+	*pulseSensor[sensorNumber].resultStoreLocation = result;
 }
 
 // Function exactly as name implies
-static void clear_buffer_and_reset_dma(int sensorNumber) {
+static void clear_buffer_and_reset_dma(U8 sensorNumber) {
 	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
-	for (U16 c = 0; c < IC_BUF_SIZE - 1; c++)
-	{
-		pulseSensor[sensorNumber].buffer[c] = 0;
-	}
-	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE);
+
+	memcpy(pulseSensor[sensorNumber].buffer, zeroArray, sizeof(pulseSensor[sensorNumber].buffer));
+
+	// Old method, not sure if above is better yet
+//	for (U16 c = 0; c < IC_BUF_SIZE - 1; c++)
+//	{
+//		pulseSensor[sensorNumber].buffer[c] = 0;
+//	}
+//	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE);
 }
 
 // Also as name implies
-static U16 convert_delta_time_to_rpm(U16 deltaTime, float conversionRatio) {
+static U16 convert_delta_time_to_output(U32 deltaTime, float conversionRatio, float timerPeriodSeconds) {
 	// TODO: Implement timer period in here once I figure out how that factors in
-	double lengthOfDeltaSeconds = (float)deltaTime / ONE_MHZ;
-	double secondsFor1Revolution = lengthOfDeltaSeconds * conversionRatio;
-	float rpm = (60 / secondsFor1Revolution); // 60 is to get from seconds to minutes
-	return rpm;
+
+	float lengthOfDeltaSeconds = deltaTime * timerPeriodSeconds; // Since timer period is division already done (1MHz is 1000ns period)
+	U16 frequencyHz = 1 / lengthOfDeltaSeconds;
+	float result = frequencyHz * conversionRatio; // Passed in ratio to get to desired result.
+	return result;
 }
