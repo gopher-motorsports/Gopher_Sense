@@ -15,7 +15,7 @@ GENERAL_PARAMETER param_list[NUM_CAN_PARAMS] =
   {
     .can_param = (&({{param.param_name}}.info)),
     .status = SEND_NEEDED,
-	.ms_between_requests = {{param.ms_between_req}}
+    .ms_between_requests = {{param.ms_between_req}}
   },
   {% endfor %}
 };
