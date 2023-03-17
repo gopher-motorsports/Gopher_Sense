@@ -34,6 +34,7 @@ static U32 lastTick = 0;
 static bool error = false;
 static bool lastStopped = false;
 static U16 numLoops = 0;
+U32 clockFrequency;
 // Debug Variables End
 
 static void clear_buffer_and_reset_dma(U8 sensorNumber);
@@ -65,18 +66,21 @@ void setup_timer_and_start_dma_vss(
 	newSensor->highPulsesPerSecond = highPulsesPerSecond;
 	newSensor->minSamples = minSamples;
 
+	clockFrequency = HAL_RCC_GetSysClockFreq();
+
 	// Evaluate the size of the given timer by checking if the Auto reload value is the max size of a 16bit value 0xFFFF
 	// TODO: Verify the 32 bit detection works (16 bit validated, so it should work)
 	if (htim->Instance->ARR == 0xFFFF) {
 		newSensor->timerSize = 16;
+		clockFrequency *= 0.5;
 	} else {
 		newSensor->timerSize = 32;
 	}
 
+	newSensor->timerPeriodSeconds = 1 / ((float)clockFrequency / (htim->Instance->PSC + 1));
+
 	// Clear the sensor's buffer
-	for(int i = 0; i < IC_BUF_SIZE; i++) {
-		newSensor->buffer[i] = 0;
-	}
+	memset(newSensor->buffer, 0, sizeof(U32)*IC_BUF_SIZE);
 
 	// Default other values to 0
 	newSensor->averageDeltaTimerTicks = 0;
@@ -126,12 +130,15 @@ void check_all_dmas() {
 // Function that goes through the buffer of the given pulse sensor, handling edge cases, and setting the return value to the found speed value.
 void check_timer_dma(int sensorNumber) {
 	numLoops++;
-	U32 currentTick = HAL_GetTick();
 
 	U32 bufferCopy[IC_BUF_SIZE] = {0};
 
+	// Get the current tick and use it throughout the whole function so it can't change between operations.
+	U32 currentTick = HAL_GetTick();
+
 	// Stop DMA so we know that values won't change when copying them to bufferCopy
 	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
+
 	// Find the current position of DMA for the current sensor  - Note: Important this happens after DMA stops or weird values will randomly occur
 	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[1])->Instance->NDTR);
 
