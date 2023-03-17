@@ -169,6 +169,7 @@ void check_timer_dma(int sensorNumber) {
 			*(pulseSensor[sensorNumber].resultStoreLocation) = 0;
 			return;
 		}
+		// Value is the same as the last but it hasn't been enough time to declare stale, hop out of here for now because there's nothing new to process
 		return;
 	}
 
