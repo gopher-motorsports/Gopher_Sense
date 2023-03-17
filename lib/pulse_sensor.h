@@ -9,7 +9,7 @@
 #define TIMER_COUNT 4
 #define IC_BUF_SIZE 64
 #define MS_IN_A_MINUTE 60000
-#define DMA_STOPPED_TIMEOUT_MS 100
+#define DMA_STOPPED_TIMEOUT_MS 200
 #define ONE_MHZ 1000000
 
 typedef struct
@@ -25,7 +25,7 @@ typedef struct
 	U16 minSamples;					// Minimum amount of samples to take if using variable speed sampling
 
 	U16 timerSize;
-	U16 buffer[IC_BUF_SIZE];
+	U32 buffer[IC_BUF_SIZE];
 
 	U16 averageDeltaTimerTicks;
 	U32 lastDMAReadValueTimeMs;
