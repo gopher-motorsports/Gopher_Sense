@@ -18,7 +18,7 @@ typedef struct
 	float timerPeriodSeconds;		// Period of timer ticks (they can be different between different timers)
 	float conversionRatio;			// Number to multiple the frequency by to get the desired result
 	float* resultStoreLocation;		// Float pointer to a location you want the resulting RPM to update
-	U16 dmaStoppedTimeoutMS;		// Max number of miliseconds between pulses before rotating object should be declared to have stopped.
+	U16 dmaStoppedTimeoutMS;		// Max number of miliseconds between pulses before rotating object should be declared to have stopped. 16hz min for
 	bool useVariableSpeedSampling;	// Bool for weather or not to vary the amount of samples taken from the buffer to determine the resulting RPM average
 	U16 lowPulsesPerSecond;			// Value at which the min samples will be used from the buffer behind the DMA position. Set to desired number of samples if not using variable speed sampling, or 0 for max samples
 	U16 highPulsesPerSecond;			// Value at which all 64 values in the buffer are sampled to get the resulting speed value. Set to 0 if not using variable speed sampling
@@ -27,7 +27,7 @@ typedef struct
 	U16 timerSize;
 	U32 buffer[IC_BUF_SIZE];
 
-	U16 averageDeltaTimerTicks;
+	float averageDeltaTimerTicks;
 	U32 lastDMAReadValueTimeMs;
 	U16 DMALastReadValue;
 	float vssSlope;

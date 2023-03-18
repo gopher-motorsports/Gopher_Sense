@@ -17,7 +17,7 @@ PulseSensor pulseSensor[TIMER_COUNT] = {0};
 U8 numSensors = 0;
 
 static void clear_buffer_and_reset_dma(U8 sensorNumber);
-static U16 convert_delta_time_to_frequency(U32 deltaTime, float timerPeriodSeconds);
+static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds);
 
 // Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
 void setup_timer_and_start_dma_vss(
@@ -64,12 +64,13 @@ void setup_timer_and_start_dma_vss(
 	// Default other values to 0
 	newSensor->averageDeltaTimerTicks = 0;
 	newSensor->lastDMAReadValueTimeMs = 0;
-	newSensor->DMA_lastReadValue = 0;
+	newSensor->DMALastReadValue = 0;
 	newSensor->stopped = true;
 	newSensor->vssSlope = (IC_BUF_SIZE - minSamples) / (float)(highPulsesPerSecond - lowPulsesPerSecond); // Calculate the constant slope value for vss once at the beginning here.
 
-
 	HAL_TIM_IC_Start_DMA(htim, channel, (U32*)pulseSensor[numSensors].buffer, IC_BUF_SIZE);
+
+	numSensors++;
 }
 
 // Function for setting up timer without variable speed sampling (vss)
@@ -135,21 +136,21 @@ void check_timer_dma(int sensorNumber) {
 	if (pulseSensor[sensorNumber].stopped) {	// If we already know we're stopped, check if we should end early
 		if (valueInQuestion != 0) {	// If we were previously stopped but may be moving again.
 			// Check if this is just really a slow and occasional value
-			if (valueInQuestion == pulseSensor[sensorNumber].DMA_lastReadValue) {
+			if (valueInQuestion == pulseSensor[sensorNumber].DMALastReadValue) {
 				// We're still seeing the same value, is it old now? We can't get here if it was last a 0.
 				if (currentTick - pulseSensor[sensorNumber].lastDMAReadValueTimeMs >= pulseSensor[sensorNumber].dmaStoppedTimeoutMS) {
 					// Clear the random values that aren't fast enough so they don't sit and become stale
 					clear_buffer_and_reset_dma(sensorNumber);
-					pulseSensor[sensorNumber].DMA_lastReadValue = 0; // Set to 0 so there aren't accidents.
+					pulseSensor[sensorNumber].DMALastReadValue = 0; // Set to 0 so there aren't accidents.
 				}
 				return;
 			} else {
-				if (pulseSensor[sensorNumber].DMA_lastReadValue != 0) {
+				if (pulseSensor[sensorNumber].DMALastReadValue != 0) {
 					// The value is new, it didn't get wiped, and the last wasn't 0 so we're good again
 					pulseSensor[sensorNumber].stopped = false; // Declare we are no longer stopped and move on.
 				} else {
 					// A new unwiped value but it's just the first after 0. Log it and go again.
-					pulseSensor[sensorNumber].DMA_lastReadValue = valueInQuestion;
+					pulseSensor[sensorNumber].DMALastReadValue = valueInQuestion;
 					pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 					return;
 				}
@@ -160,14 +161,14 @@ void check_timer_dma(int sensorNumber) {
 		}
 	}
 
-	if (pulseSensor[sensorNumber].DMA_lastReadValue == valueInQuestion) {	// Check if the last read value is the same as the current
+	if (pulseSensor[sensorNumber].DMALastReadValue == valueInQuestion) {	// Check if the last read value is the same as the current
 		if (currentTick - pulseSensor[sensorNumber].lastDMAReadValueTimeMs >= pulseSensor[sensorNumber].dmaStoppedTimeoutMS){	// Check if we haven't changed values in a while which might mean we're stopped
 			pulseSensor[sensorNumber].stopped = true;
 
 			// Clear buffer so any non-zero values will be quickly identified that the car is moving again. This will also reset the DMA position.
 			clear_buffer_and_reset_dma(sensorNumber);
 
-			pulseSensor[sensorNumber].DMA_lastReadValue = 0;
+			pulseSensor[sensorNumber].DMALastReadValue = 0;
 			pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 			*(pulseSensor[sensorNumber].resultStoreLocation) = 0;
 			return;
@@ -177,7 +178,7 @@ void check_timer_dma(int sensorNumber) {
 	}
 
 	// ===== Passed All Breakpoint Checks =====
-	pulseSensor[sensorNumber].DMA_lastReadValue = valueInQuestion;
+	pulseSensor[sensorNumber].DMALastReadValue = valueInQuestion;
 	pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 
 	U16 amountOfSamples = 0;
@@ -211,7 +212,7 @@ void check_timer_dma(int sensorNumber) {
 	// Calculate the deltas between each of the time values and store them in deltaList
 	U64 deltaTotal = 0;
 	U16 numDeltas = 0;
-	for (U16 i = IC_BUF_SIZE - 1; c >= IC_BUF_SIZE - amountOfSamples; i--)
+	for (S16 i = IC_BUF_SIZE - 1; i >= IC_BUF_SIZE - amountOfSamples; i--)
 	{
 		U32 value1 = bufferCopy[i];
 		U32 value2 = bufferCopy[i - 1];
@@ -226,11 +227,11 @@ void check_timer_dma(int sensorNumber) {
 	}
 
 	// Calculate average
-	float resultingAverageDelta = deltaTotal / numDeltas;
+	float resultingAverageDelta = deltaTotal / (float)numDeltas;
 	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
 
 	// Calculate result from average delta
-	U16 result = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds) * pulseSensor[sensorNumber].conversionRatio;
+	float result = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds) * pulseSensor[sensorNumber].conversionRatio;
 
 	// Send result to store location
 	*pulseSensor[sensorNumber].resultStoreLocation = result;
@@ -244,8 +245,8 @@ static void clear_buffer_and_reset_dma(U8 sensorNumber) {
 }
 
 // Also as name implies
-static U16 convert_delta_time_to_frequency(U32 deltaTime, float timerPeriodSeconds) {
+static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds) {
 	float lengthOfDeltaSeconds = deltaTime * timerPeriodSeconds; // Since timer period is division already done (1MHz is 1000ns period)
-	U16 frequencyHz = 1 / lengthOfDeltaSeconds;
+	float frequencyHz = 1 / lengthOfDeltaSeconds;
 	return frequencyHz;
 }
