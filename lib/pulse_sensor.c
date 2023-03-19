@@ -32,8 +32,14 @@ static float TrackedResult = 0;
 static U32 lastTick = 0;
 static bool error = false;
 static U16 numLoops = 0;
-static U32 TrackedFrequency = 0;
+static float TrackedFrequency = 0;
 U32 clockFrequency;
+static U32 TrackedValue = 0;
+static float TrackedLength = 0;
+static U32 lastDeltaTotal = 0;
+static U16 lastNumDeltas = 0;
+
+// Debug Variables End
 
 // Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
 void setup_timer_and_start_dma_vss(
@@ -139,29 +145,29 @@ void check_timer_dma(int sensorNumber) {
 		bufferCopy[c] = pulseSensor[sensorNumber].buffer[i];
 	}
 
-	if(DMACurrentPosition == 2) {
-				U64 deltaTotal = 0;
-				U32 deltaList[IC_BUF_SIZE] = {0};
-				U16 numDeltas = 0;
-				for (U16 i = IC_BUF_SIZE - 1; i > IC_BUF_SIZE - 64; i--)
-				{
-					U32 value1 = bufferCopy[i];
-					U32 value2 = bufferCopy[i - 1];
-					if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
-						if (value1 < value2) {
-							deltaList[numDeltas] = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
-							deltaTotal += deltaList[numDeltas];
-						} else {
-							deltaList[numDeltas] = value1 - value2; // Buffer roll-over (timer resets to 0) protection
-							deltaTotal += deltaList[numDeltas];
-						}
-						numDeltas++;
-					}
-				}
-				TrackedDMACurrentPosition = DMACurrentPosition;
-				memcpy(TrackedDeltaList, deltaList, sizeof(U32)*IC_BUF_SIZE);
-				memcpy(TrackedBufferCopy, bufferCopy, sizeof(U32)*IC_BUF_SIZE);
-			}
+//	if(DMACurrentPosition == 2) {
+//		U64 deltaTotal = 0;
+//		U32 deltaList[IC_BUF_SIZE] = {0};
+//		U16 numDeltas = 0;
+//		for (U16 i = IC_BUF_SIZE - 1; i > IC_BUF_SIZE - 64; i--)
+//		{
+//			U32 value1 = bufferCopy[i];
+//			U32 value2 = bufferCopy[i - 1];
+//			if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
+//				if (value1 < value2) {
+//					deltaList[numDeltas] = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
+//					deltaTotal += deltaList[numDeltas];
+//				} else {
+//					deltaList[numDeltas] = value1 - value2; // Buffer roll-over (timer resets to 0) protection
+//					deltaTotal += deltaList[numDeltas];
+//				}
+//				numDeltas++;
+//			}
+//		}
+//		TrackedDMACurrentPosition = DMACurrentPosition;
+//		memcpy(TrackedDeltaList, deltaList, sizeof(U32)*IC_BUF_SIZE);
+//		memcpy(TrackedBufferCopy, bufferCopy, sizeof(U32)*IC_BUF_SIZE);
+//	}
 
 	// Copy values of buffer copy into original buffer so its oldest values start at position 0,
 	// which is where the DMA position will be placed after restarting.
@@ -234,6 +240,7 @@ void check_timer_dma(int sensorNumber) {
 			mostRecentDelta = valueInQuestion - value2;
 		}
 
+		// TODO: Protect from the bad value
 		// Get an frequency calc from the most recent delta so the user can input RPM values as high and low values rather than deltas
 		U16 tempFrequencyCalc = convert_delta_time_to_frequency(mostRecentDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
 
@@ -250,23 +257,53 @@ void check_timer_dma(int sensorNumber) {
 	}
 
 	// Calculate the deltas between each of the time values and store them in deltaList
-	U64 deltaTotal = 0;
+	U32 deltaTotal = 0;
 	U32 deltaList[IC_BUF_SIZE] = {0};
+	U32 lastDelta = 0;
+	U32 last2ndDelta = 0;
 	U16 numDeltas = 0;
+	U32 delta = 0;
+	bool hit = false;
 	for (U16 i = IC_BUF_SIZE - 1; i > IC_BUF_SIZE - amountOfSamples; i--)
 	{
 		U32 value1 = bufferCopy[i];
 		U32 value2 = bufferCopy[i - 1];
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
 			if (value1 < value2) {
-				deltaList[numDeltas] = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
-				deltaTotal += deltaList[numDeltas];
+				delta = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
+				deltaList[numDeltas] = delta;
 			} else {
-				deltaList[numDeltas] = value1 - value2; // Buffer roll-over (timer resets to 0) protection
-				deltaTotal += deltaList[numDeltas];
+				delta = value1 - value2; // Buffer roll-over (timer resets to 0) protection
+				deltaList[numDeltas] = delta;
 			}
+			deltaList[numDeltas] = delta;
+			// Smoothing for issue where DMA loses values
+			if(last2ndDelta == 0) {
+				if(lastDelta != 0) {
+					if(lastDelta > delta * 1.8) {
+						deltaTotal -= lastDelta;
+						deltaTotal += delta;
+					}
+				}
+			} else {
+				if ((lastDelta > delta * 1.8) && (lastDelta > last2ndDelta * 1.8)) {
+					deltaTotal -= lastDelta;
+					lastDelta = (delta + last2ndDelta) * 0.5;
+					deltaTotal += lastDelta;
+				}
+			}
+			deltaTotal += delta;
+			last2ndDelta = lastDelta;
+			lastDelta = delta;
+
 			numDeltas++;
 		}
+	}
+
+	if (delta > last2ndDelta * 1.8)
+	{
+		deltaTotal -= delta;
+		deltaTotal += last2ndDelta;
 	}
 
 	// Calculate average
@@ -294,13 +331,18 @@ void check_timer_dma(int sensorNumber) {
 	if (error) {
 		error = false;
 	} else {
-		for(int i; i < IC_BUF_SIZE; i++) {
-			if(deltaList[i] > 4000){//resultingAverageDelta >= TrackedResult * 1.05 || resultingAverageDelta <= TrackedResult * 0.95) {
+		//for(int i = 1; i < numDeltas - 1; i++) {
+		//	if(deltaList[i] > deltaList[i-1]*1.45 && deltaList[i] > deltaList[i+1]*1.45){
+		if(resultingAverageDelta >= TrackedResult * 1.01 || resultingAverageDelta <= TrackedResult * 0.99) {
 				printf("--- Anomaly Detected! ---\n");
 				printf("Current Value: %f\n", resultingAverageDelta);
 				printf("Previous Value: %f\n", TrackedResult);
 				printf("DMA Position: %u\n", TrackedDMACurrentPosition);
 				printf("Num Loops: %u\n", numLoops);
+				printf("Num Deltas: %u\n", numDeltas);
+				printf("Last Num Deltas: %u\n", lastNumDeltas);
+				printf("Delta total: %lu\n", deltaTotal);
+				printf("Last Delta total: %lu\n", lastDeltaTotal);
 				printf("Amount of Samples: %u\n", TrackedAmountOfSamples);
 				printf("Current Tick: %lu\n", HAL_GetTick());
 				printf("Distance from Last Occurence: %lu\n", HAL_GetTick() - lastTick);
@@ -320,10 +362,11 @@ void check_timer_dma(int sensorNumber) {
 				}
 				error = true;
 				numLoops = 0;
-			}
+			//}
 		}
 	}
-
+	lastNumDeltas = numDeltas;
+	lastDeltaTotal = deltaTotal;
 	TrackedResult = resultingAverageDelta;
 	// Debug end
 }
@@ -335,9 +378,17 @@ static void clear_buffer_and_reset_dma(U8 sensorNumber) {
 	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE);
 }
 
+
+
 // Also as name implies
 static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds) {
 	float lengthOfDeltaSeconds = deltaTime * timerPeriodSeconds; // Since timer period is division already done (1MHz is 1000ns period)
 	float frequencyHz = 1 / lengthOfDeltaSeconds;
+
+	// Debug
+	TrackedValue = deltaTime;
+	TrackedLength = lengthOfDeltaSeconds;
+	//Debug End
+
 	return frequencyHz;
 }
