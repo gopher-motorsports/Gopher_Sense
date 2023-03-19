@@ -4,8 +4,6 @@
  * Alex Tong
  */
 
-// TODO: Decrease jittering
-
 #include "stm32f4xx_hal.h"
 #include "pulse_sensor.h"
 #include "base_types.h"
@@ -111,6 +109,7 @@ void check_timer_dma(int sensorNumber) {
 
 	// Stop DMA so we know that values won't change when copying them to bufferCopy
 	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
+	// TODO Scope the stop point by triggering a pin here and compare to actual signal and see if overlap
 
 	// Find the current position of DMA for the current sensor  - Note: Important this happens after DMA stops or weird values will randomly occur
 	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[1])->Instance->NDTR);
@@ -194,6 +193,7 @@ void check_timer_dma(int sensorNumber) {
 			mostRecentDelta = valueInQuestion - value2;
 		}
 
+		// TODO: Protect from the bad value
 		// Get an frequency calc from the most recent delta so the user can input RPM values as high and low values rather than deltas
 		U16 tempFrequencyCalc = convert_delta_time_to_frequency(mostRecentDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
 
@@ -210,20 +210,48 @@ void check_timer_dma(int sensorNumber) {
 	}
 
 	// Calculate the deltas between each of the time values and store them in deltaList
-	U64 deltaTotal = 0;
+	U32 deltaTotal = 0;
+	U32 delta = 0;
+	U32 lastDelta = 0;
+	U32 last2ndDelta = 0;
 	U16 numDeltas = 0;
-	for (S16 i = IC_BUF_SIZE - 1; i >= IC_BUF_SIZE - amountOfSamples; i--)
+	for (U16 i = IC_BUF_SIZE - 1; i > IC_BUF_SIZE - amountOfSamples; i--)
 	{
 		U32 value1 = bufferCopy[i];
 		U32 value2 = bufferCopy[i - 1];
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
 			if (value1 < value2) {
-				deltaTotal += ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
+				delta = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
 			} else {
-				deltaTotal += value1 - value2;
+				delta = value1 - value2; // Buffer roll-over (timer resets to 0) protection
 			}
+			// Value that's 1.8x both nearby value detection for issue where DMA loses a value
+			if(last2ndDelta == 0) {
+				if(lastDelta != 0) {
+					if(lastDelta > delta * 1.8) {
+						deltaTotal -= lastDelta - delta;
+					}
+				}
+			} else {
+				if ((lastDelta > delta * 1.8) && (lastDelta > last2ndDelta * 1.8)) {
+					deltaTotal -= lastDelta;
+					lastDelta = (delta + last2ndDelta) * 0.5;
+					deltaTotal += lastDelta;
+				}
+			}
+			deltaTotal += delta;
+			last2ndDelta = lastDelta;
+			lastDelta = delta;
+
 			numDeltas++;
 		}
+	}
+
+	// Make sure the last value isn't an outlier either
+	if (delta > last2ndDelta * 1.8)
+	{
+		deltaTotal -= delta;
+		deltaTotal += last2ndDelta;
 	}
 
 	// Calculate average
