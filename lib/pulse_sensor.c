@@ -13,6 +13,32 @@
 
 PulseSensor pulseSensor[TIMER_COUNT] = {0};
 U8 numSensors = 0;
+static U16 numDroppedValues = 0;
+static U16 num5percentOutliers = 0;
+static U16 num1percentOutliers = 0;
+#define DEBUG1
+#ifdef DEBUG1
+// Debug Variables Start
+static S16 TrackedDMACurrentPosition = 0;
+static U16 TrackedAmountOfSamples = 0;
+static U32 TrackedValueInQuestion = 0;
+static U32 TrackedFirstValue = 0;
+static U32 TrackedLastValue = 0;
+static U32 TrackedDeltaList[IC_BUF_SIZE] = {0};
+static U32 TrackedBufferCopy[IC_BUF_SIZE] = {0};
+static U32 TrackedDeltaTotal = 0;
+static float TrackedResult = 0;
+static U32 lastTick = 0;
+static bool error = false;
+static U16 numLoops = 0;
+static float TrackedFrequency = 0;
+U32 clockFrequency;
+static U32 TrackedValue = 0;
+static float TrackedLength = 0;
+static U32 lastDeltaTotal = 0;
+static U16 lastNumDeltas = 0;
+// Debug Variables End
+#endif
 
 static void clear_buffer_and_reset_dma(U8 sensorNumber);
 static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds);
@@ -27,7 +53,8 @@ void setup_timer_and_start_dma_vss(
 		bool useVariableSpeedSampling,
 		U16 lowPulsesPerSecond,
 		U16 highPulsesPerSecond,
-		U16 minSamples
+		U16 minSamples,
+		ReturnValues* returnValuesPointer
 		)
 {
 	PulseSensor* newSensor = &pulseSensor[numSensors];
@@ -42,6 +69,7 @@ void setup_timer_and_start_dma_vss(
 	newSensor->lowPulsesPerSecond = lowPulsesPerSecond;
 	newSensor->highPulsesPerSecond = highPulsesPerSecond;
 	newSensor->minSamples = minSamples;
+	newSensor->returnValuesPointer = returnValuesPointer;
 
 	U32 clockFrequency = HAL_RCC_GetSysClockFreq();
 
@@ -77,7 +105,8 @@ void setup_timer_and_start_dma(
 		U32 channel,
 		float conversionRatio,
 		float* resultStoreLocation,
-		U16 dmaStoppedTimeoutMS
+		U16 dmaStoppedTimeoutMS,
+		ReturnValues* returnValuesPointer
 		)
 {
 	setup_timer_and_start_dma_vss(
@@ -89,7 +118,8 @@ void setup_timer_and_start_dma(
 		false,
 		0,	// Low RPM Value
 		0,	// High RPM Value
-		0 	// Min samples
+		0, 	// Min samples
+		returnValuesPointer
 		);
 }
 
@@ -102,6 +132,8 @@ void check_all_dmas() {
 
 // Function that goes through the buffer of the given pulse sensor, handling edge cases, and setting the return value to the found speed value.
 void check_timer_dma(int sensorNumber) {
+
+	pulseSensor[sensorNumber].returnValuesPointer->stopped = pulseSensor[sensorNumber].stopped;
 	U32 bufferCopy[IC_BUF_SIZE] = {0};
 
 	// Get the current tick and use it throughout the whole function so it can't change between operations.
@@ -181,6 +213,7 @@ void check_timer_dma(int sensorNumber) {
 	pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 
 	U16 amountOfSamples = 0;
+	U16 tempFrequencyCalc = 0;
 	if(pulseSensor[sensorNumber].useVariableSpeedSampling) {
 		// Calculate the amount of samples to take to get the speed based on the delta between the last 2 values
 		U32 value2 = bufferCopy[IC_BUF_SIZE - 2];
@@ -195,7 +228,7 @@ void check_timer_dma(int sensorNumber) {
 
 		// TODO: Protect from the bad value
 		// Get an frequency calc from the most recent delta so the user can input RPM values as high and low values rather than deltas
-		U16 tempFrequencyCalc = convert_delta_time_to_frequency(mostRecentDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
+		tempFrequencyCalc = convert_delta_time_to_frequency(mostRecentDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
 
 		if (tempFrequencyCalc < pulseSensor[sensorNumber].lowPulsesPerSecond) {
 			amountOfSamples = pulseSensor[sensorNumber].minSamples;
@@ -210,6 +243,9 @@ void check_timer_dma(int sensorNumber) {
 	}
 
 	// Calculate the deltas between each of the time values and store them in deltaList
+#ifdef DEBUG1
+	U32 deltaList[IC_BUF_SIZE] = {0};
+#endif
 	U32 deltaTotal = 0;
 	U32 delta = 0;
 	U32 lastDelta = 0;
@@ -225,11 +261,15 @@ void check_timer_dma(int sensorNumber) {
 			} else {
 				delta = value1 - value2; // Buffer roll-over (timer resets to 0) protection
 			}
+#ifdef DEBUG1
+	deltaList[numDeltas] = delta;
+#endif
 			// Value that's 1.8x both nearby value detection for issue where DMA loses a value
 			if(last2ndDelta == 0) {
 				if(lastDelta != 0) {
 					if(lastDelta > delta * 1.8) {
 						deltaTotal -= lastDelta - delta;
+						numDroppedValues++;
 					}
 				}
 			} else {
@@ -237,6 +277,7 @@ void check_timer_dma(int sensorNumber) {
 					deltaTotal -= lastDelta;
 					lastDelta = (delta + last2ndDelta) * 0.5;
 					deltaTotal += lastDelta;
+					numDroppedValues++;
 				}
 			}
 			deltaTotal += delta;
@@ -252,6 +293,7 @@ void check_timer_dma(int sensorNumber) {
 	{
 		deltaTotal -= delta;
 		deltaTotal += last2ndDelta;
+		numDroppedValues++;
 	}
 
 	// Calculate average
@@ -259,10 +301,80 @@ void check_timer_dma(int sensorNumber) {
 	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
 
 	// Calculate result from average delta
-	float result = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds) * pulseSensor[sensorNumber].conversionRatio;
+	float frequency = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
 
+	float result = frequency * pulseSensor[sensorNumber].conversionRatio;
 	// Send result to store location
 	*pulseSensor[sensorNumber].resultStoreLocation = result;
+
+#ifdef DEBUG1
+	// Debug Start
+		TrackedDMACurrentPosition = DMACurrentPosition;
+		TrackedAmountOfSamples = amountOfSamples;
+		TrackedValueInQuestion = valueInQuestion;
+		TrackedFirstValue = bufferCopy[IC_BUF_SIZE - 1];
+		TrackedLastValue = bufferCopy[0];
+		memcpy(TrackedDeltaList, deltaList, sizeof(U32)*IC_BUF_SIZE);
+		memcpy(TrackedBufferCopy, bufferCopy, sizeof(U32)*IC_BUF_SIZE);
+		TrackedDeltaTotal = deltaTotal;
+		TrackedFrequency = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
+		numLoops++;
+
+		if (error) {
+			error = false;
+		} else {
+			//for(int i = 1; i < numDeltas - 1; i++) {
+			//	if(deltaList[i] > deltaList[i-1]*1.45 && deltaList[i] > deltaList[i+1]*1.45){
+			if(resultingAverageDelta >= TrackedResult * 1.01 || resultingAverageDelta <= TrackedResult * 0.99) {
+					printf("--- Anomaly Detected! ---\n");
+					printf("Current Value: %f\n", resultingAverageDelta);
+					printf("Previous Value: %f\n", TrackedResult);
+					printf("DMA Position: %u\n", TrackedDMACurrentPosition);
+					printf("Num Loops: %u\n", numLoops);
+					printf("Num Deltas: %u\n", numDeltas);
+					printf("Last Num Deltas: %u\n", lastNumDeltas);
+					printf("Delta total: %lu\n", deltaTotal);
+					printf("Last Delta total: %lu\n", lastDeltaTotal);
+					printf("Amount of Samples: %u\n", TrackedAmountOfSamples);
+					printf("Current Tick: %lu\n", HAL_GetTick());
+					printf("Distance from Last Occurence: %lu\n", HAL_GetTick() - lastTick);
+					lastTick = HAL_GetTick();
+					for (int i = 0; i < IC_BUF_SIZE; i++) {
+						printf("Value %i: ", i);
+						if (i == DMACurrentPosition) {
+							printf("- ");
+						}
+						printf("%lu\n", bufferCopy[i]);
+					}
+					printf("DELTAS ===\n");
+					for (int i = 0; i < IC_BUF_SIZE; i++) {
+						printf("Value %i: ", i);
+						printf("%lu\n", deltaList[i]);
+						//(U16)((DMACurrentPosition - i + IC_BUF_SIZE) % IC_BUF_SIZE)
+					}
+					error = true;
+					numLoops = 0;
+				//}
+			}
+		}
+		lastNumDeltas = numDeltas;
+		lastDeltaTotal = deltaTotal;
+		TrackedResult = resultingAverageDelta;
+		// Debug end
+#else
+		if(resultingAverageDelta >= result * 1.01 || resultingAverageDelta <= result * 0.99) {
+			num1percentOutliers++;
+		}
+		if(resultingAverageDelta >= result * 1.05 || resultingAverageDelta <= result * 0.95) {
+			num5percentOutliers++;
+		}
+#endif
+
+	pulseSensor[sensorNumber].returnValuesPointer->numSamples = amountOfSamples;
+	pulseSensor[sensorNumber].returnValuesPointer->frequency = tempFrequencyCalc;
+	pulseSensor[sensorNumber].returnValuesPointer->numDroppedValues = numDroppedValues;
+	pulseSensor[sensorNumber].returnValuesPointer->num1percentOutliers = num1percentOutliers;
+	pulseSensor[sensorNumber].returnValuesPointer->num5percentOutliers = num5percentOutliers;
 }
 
 // Function exactly as name implies

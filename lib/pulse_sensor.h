@@ -13,6 +13,16 @@
 
 typedef struct
 {
+	U16 numSamples;
+	float frequency;
+	U8 stopped;
+	U16 numDroppedValues;
+	U16 num5percentOutliers;
+	U16 num1percentOutliers;
+} ReturnValues;
+
+typedef struct
+{
 	TIM_HandleTypeDef* htim; 		// Timer that was used to set up input capture and DMA on
 	U32 channel;					// Channel of the given timer
 	float timerPeriodSeconds;		// Period of timer ticks (they can be different between different timers)
@@ -31,13 +41,14 @@ typedef struct
 	U32 lastDMAReadValueTimeMs;
 	U16 DMALastReadValue;
 	float vssSlope;
+	ReturnValues* returnValuesPointer;
 
 	bool stopped;
 
 } PulseSensor;
 
-void setup_timer_and_start_dma_vss(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS, bool useVariableSpeedSampling, U16 lowPulsesPerSecond, U16 highPulsesPerSecond, U16 minSamples);
-void setup_timer_and_start_dma(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS);
+void setup_timer_and_start_dma_vss(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS, bool useVariableSpeedSampling, U16 lowPulsesPerSecond, U16 highPulsesPerSecond, U16 minSamples, ReturnValues* returnValuesPointer);
+void setup_timer_and_start_dma(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS, ReturnValues* returnValuesPointer);
 void check_all_dmas();
 void check_timer_dma(int sensorNumber);
 
