@@ -10,13 +10,14 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 PulseSensor pulseSensor[TIMER_COUNT] = {0};
 U8 numSensors = 0;
 static U16 numDroppedValues = 0;
 static U16 num5percentOutliers = 0;
 static U16 num1percentOutliers = 0;
-#define DEBUG1
+//#define DEBUG1
 #ifdef DEBUG1
 // Debug Variables Start
 static S16 TrackedDMACurrentPosition = 0;
@@ -179,6 +180,8 @@ void check_timer_dma(int sensorNumber) {
 				if (pulseSensor[sensorNumber].DMALastReadValue != 0) {
 					// The value is new, it didn't get wiped, and the last wasn't 0 so we're good again
 					pulseSensor[sensorNumber].stopped = false; // Declare we are no longer stopped and move on.
+					printf("*** NO LONGER STOPPED ***\n");
+
 				} else {
 					// A new unwiped value but it's just the first after 0. Log it and go again.
 					pulseSensor[sensorNumber].DMALastReadValue = valueInQuestion;
@@ -195,6 +198,8 @@ void check_timer_dma(int sensorNumber) {
 	if (pulseSensor[sensorNumber].DMALastReadValue == valueInQuestion) {	// Check if the last read value is the same as the current
 		if (currentTick - pulseSensor[sensorNumber].lastDMAReadValueTimeMs >= pulseSensor[sensorNumber].dmaStoppedTimeoutMS){	// Check if we haven't changed values in a while which might mean we're stopped
 			pulseSensor[sensorNumber].stopped = true;
+
+			printf("=== STOPPED ===\n");
 
 			// Clear buffer so any non-zero values will be quickly identified that the car is moving again. This will also reset the DMA position.
 			clear_buffer_and_reset_dma(sensorNumber);
@@ -299,12 +304,18 @@ void check_timer_dma(int sensorNumber) {
 	// Calculate average
 	float resultingAverageDelta = deltaTotal / (float)numDeltas;
 	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
+	pulseSensor[sensorNumber].returnValuesPointer->averageDeltaTimerTicks = resultingAverageDelta;
 
 	// Calculate result from average delta
 	float frequency = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
 
 	float result = frequency * pulseSensor[sensorNumber].conversionRatio;
 	// Send result to store location
+
+	if(isinf(result) || isnan(result)) {
+		result = 0;
+	}
+
 	*pulseSensor[sensorNumber].resultStoreLocation = result;
 
 #ifdef DEBUG1
@@ -390,3 +401,5 @@ static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodS
 	float frequencyHz = 1 / lengthOfDeltaSeconds;
 	return frequencyHz;
 }
+
+

@@ -15,6 +15,7 @@ typedef struct
 {
 	U16 numSamples;
 	float frequency;
+	float averageDeltaTimerTicks;
 	U8 stopped;
 	U16 numDroppedValues;
 	U16 num5percentOutliers;
