@@ -10,6 +10,7 @@
 #define IC_BUF_SIZE 64
 #define MS_IN_A_MINUTE 60000
 #define ONE_MHZ 1000000
+#define DUPLICATE_VALUE_TICK_DIFFERENCE 5
 
 typedef struct
 {
@@ -21,7 +22,7 @@ typedef struct
 	U16 dmaStoppedTimeoutMS;		// Max number of miliseconds between pulses before rotating object should be declared to have stopped. 16hz min for
 	bool useVariableSpeedSampling;	// Bool for weather or not to vary the amount of samples taken from the buffer to determine the resulting RPM average
 	U16 lowPulsesPerSecond;			// Value at which the min samples will be used from the buffer behind the DMA position. Set to desired number of samples if not using variable speed sampling, or 0 for max samples
-	U16 highPulsesPerSecond;			// Value at which all 64 values in the buffer are sampled to get the resulting speed value. Set to 0 if not using variable speed sampling
+	U16 highPulsesPerSecond;		// Value at which all 64 values in the buffer are sampled to get the resulting speed value. Set to 0 if not using variable speed sampling
 	U16 minSamples;					// Minimum amount of samples to take if using variable speed sampling
 
 	U16 timerSize;

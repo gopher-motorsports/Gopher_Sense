@@ -12,6 +12,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
+#define DEBUG_PS
 
 PulseSensor pulseSensor[TIMER_COUNT] = {0};
 U8 numSensors = 0;
@@ -39,6 +42,13 @@ static U32 TrackedValue = 0;
 static float TrackedLength = 0;
 static U32 lastDeltaTotal = 0;
 static U16 lastNumDeltas = 0;
+static U16 TrackedNumDuplicateValues = 0;
+
+// VSS Debug Vars
+static U32 TrackedTempDeltaTotal = 0;
+static float TrackedMinAverageDelta = 0;
+static float TrackedTempFrequencyCalc = 0;
+
 // Debug Variables End
 #endif
 
@@ -62,7 +72,7 @@ void setup_timer_and_start_dma_vss(
 	newSensor->channel = channel;
 	newSensor->conversionRatio = conversionRatio;
 	newSensor->resultStoreLocation = resultStoreLocation;
-	newSensor->useVariableSpeedSampling = useVariableSpeedSampling;
+	newSensor->useVariableSpeedSampling = false;//useVariableSpeedSampling;
 	newSensor->dmaStoppedTimeoutMS = dmaStoppedTimeoutMS;
 	newSensor->lowPulsesPerSecond = lowPulsesPerSecond;
 	newSensor->highPulsesPerSecond = highPulsesPerSecond;
@@ -194,9 +204,14 @@ void check_timer_dma(int sensorNumber) {
 				}
 				return;
 			} else {
-				if (pulseSensor[sensorNumber].DMALastReadValue != 0) {
+				// TODO see if this should be changed from min samples
+				if (bufferCopy[IC_BUF_SIZE - pulseSensor[sensorNumber].minSamples] != 0) {
 					// The value is new, it didn't get wiped, and the last wasn't 0 so we're good again
 					pulseSensor[sensorNumber].stopped = false; // Declare we are no longer stopped and move on.
+
+#ifdef DEBUG_PS
+			printf("*** UN-STOPPED ***\n");
+#endif
 				} else {
 					// A new unwiped value but it's just the first after 0. Log it and go again.
 					pulseSensor[sensorNumber].DMALastReadValue = valueInQuestion;
@@ -220,6 +235,11 @@ void check_timer_dma(int sensorNumber) {
 			pulseSensor[sensorNumber].DMALastReadValue = 0;
 			pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 			*(pulseSensor[sensorNumber].resultStoreLocation) = 0;
+
+#ifdef DEBUG_PS
+			printf("=== STOPPED ===\n");
+#endif
+
 			return;
 		}
 		// Value is the same as the last but it hasn't been enough time to declare stale, hop out of here for now because there's nothing new to process
@@ -230,40 +250,14 @@ void check_timer_dma(int sensorNumber) {
 	pulseSensor[sensorNumber].DMALastReadValue = valueInQuestion;
 	pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 
-	U16 amountOfSamples = 0;
-	if(pulseSensor[sensorNumber].useVariableSpeedSampling) {
-		// Calculate the amount of samples to take to get the speed based on the delta between the last 2 values
-		U32 value2 = bufferCopy[IC_BUF_SIZE - 2];
-		U32 mostRecentDelta = 0;
-
-		// Find the the most rececnt difference between 2 values, with roll-over protection
-		if (valueInQuestion < value2) {
-			mostRecentDelta = ((1 << pulseSensor[sensorNumber].timerSize) | valueInQuestion) - value2; // Buffer roll-over (timer resets to 0) protection
-		} else {
-			mostRecentDelta = valueInQuestion - value2;
-		}
-
-		// TODO: Protect from the bad value
-		// Get an frequency calc from the most recent delta so the user can input RPM values as high and low values rather than deltas
-		U16 tempFrequencyCalc = convert_delta_time_to_frequency(mostRecentDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
-
-		if (tempFrequencyCalc < pulseSensor[sensorNumber].lowPulsesPerSecond) {
-			amountOfSamples = pulseSensor[sensorNumber].minSamples;
-		} else if (tempFrequencyCalc > pulseSensor[sensorNumber].highPulsesPerSecond) {
-			amountOfSamples = IC_BUF_SIZE;
-		} else {
-			// Equation for getting how many samples we should average, which is linear from low to high samples - y = m(x-x0) + y0
-			amountOfSamples = pulseSensor[sensorNumber].vssSlope * (tempFrequencyCalc - pulseSensor[sensorNumber].lowPulsesPerSecond) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
-		}
-	} else {
-		amountOfSamples = IC_BUF_SIZE;
-	}
+	// Declare amount of samples and evaluate initial size based on if we're using variable sampling. If we are we'll determine it again after some deltas are evaluated
+	U16 amountOfSamples = pulseSensor[sensorNumber].useVariableSpeedSampling ? pulseSensor[sensorNumber].minSamples + 1 : IC_BUF_SIZE;
 
 	// Calculate the deltas between each of the time values and store them in deltaList
 #ifdef DEBUG_PS
 	U32 deltaList[IC_BUF_SIZE] = {0};
 #endif
-	U32 deltaTotal = 0;
+	U32 deltaTotal = 0; // Gets big adding up all U32 deltas but not big enough to need U64 before stopped if like <1 full second
 	U32 lastDelta = 0;
 	U32 last2ndDelta = 0;
 	U16 numDeltas = 0;
@@ -274,34 +268,75 @@ void check_timer_dma(int sensorNumber) {
 		U32 value1 = bufferCopy[i];
 		U32 value2 = bufferCopy[i - 1];
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
-			if (value1 < value2) {
-				delta = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
-			} else {
-				delta = value1 - value2; // Buffer roll-over (timer resets to 0) protection
-			}
-#ifdef DEBUG_PS
-			deltaList[numDeltas] = delta;
-#endif
-			// Smoothing for issue where DMA loses values
-			if(last2ndDelta == 0) {
-				if(lastDelta != 0) {
-					if(lastDelta > delta * 1.8) {
+			if (abs(value2 - value1) > DUPLICATE_VALUE_TICK_DIFFERENCE) {
+
+
+				if (value1 < value2) {
+					delta = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
+				} else {
+					delta = value1 - value2; // Buffer roll-over (timer resets to 0) protection
+				}
+	#ifdef DEBUG_PS
+				deltaList[numDeltas] = delta;
+	#endif
+				// Smoothing for issue where DMA loses values
+				if(last2ndDelta == 0) {
+					if(lastDelta != 0) {
+						if(lastDelta > delta * 1.8) {
+							deltaTotal -= lastDelta;
+							deltaTotal += delta;
+						}
+					}
+				} else {
+					if ((lastDelta > delta * 1.8) && (lastDelta > last2ndDelta * 1.8)) {
 						deltaTotal -= lastDelta;
-						deltaTotal += delta;
+						lastDelta = (delta + last2ndDelta) * 0.5;
+						deltaTotal += lastDelta;
 					}
 				}
-			} else {
-				if ((lastDelta > delta * 1.8) && (lastDelta > last2ndDelta * 1.8)) {
-					deltaTotal -= lastDelta;
-					lastDelta = (delta + last2ndDelta) * 0.5;
-					deltaTotal += lastDelta;
-				}
-			}
-			deltaTotal += delta;
-			last2ndDelta = lastDelta;
-			lastDelta = delta;
+				deltaTotal += delta;
+				last2ndDelta = lastDelta;
+				lastDelta = delta;
 
-			numDeltas++;
+				numDeltas++;
+			}
+#ifdef DEBUG_PS
+			else {
+				TrackedNumDuplicateValues++;
+			}
+#endif
+		}
+
+		// When we're at the minimum samples, take a break to re-evaluate our amount of samples from it's initial value of the minimum + 1.
+		if ((i == (IC_BUF_SIZE - pulseSensor[sensorNumber].minSamples)) && pulseSensor[sensorNumber].useVariableSpeedSampling) {
+			// Need a temp total so it doesn't mess up the regular loops bad value rejection
+			U32 tempDeltaTotal = deltaTotal;
+			// All deltas are protected from dropped values.
+			if (delta > last2ndDelta * 1.8)
+			{
+				tempDeltaTotal -= delta;
+				tempDeltaTotal += last2ndDelta;
+			}
+
+			float minSamplesAverageDelta = tempDeltaTotal / numDeltas;
+
+			float tempFrequencyCalc = convert_delta_time_to_frequency(minSamplesAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
+
+#ifdef DEBUG_PS
+			//Debug
+			TrackedTempDeltaTotal = tempDeltaTotal;
+			TrackedMinAverageDelta = minSamplesAverageDelta;
+			TrackedTempFrequencyCalc = tempFrequencyCalc;
+#endif
+
+			if (tempFrequencyCalc < pulseSensor[sensorNumber].lowPulsesPerSecond) {
+				amountOfSamples = pulseSensor[sensorNumber].minSamples;
+			} else if (tempFrequencyCalc > pulseSensor[sensorNumber].highPulsesPerSecond) {
+				amountOfSamples = IC_BUF_SIZE;
+			} else {
+				// Equation for getting how many samples we should average, which is linear from low to high samples - y = m(x-x0) + y0
+				amountOfSamples = pulseSensor[sensorNumber].vssSlope * (tempFrequencyCalc - pulseSensor[sensorNumber].lowPulsesPerSecond) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
+			}
 		}
 	}
 
