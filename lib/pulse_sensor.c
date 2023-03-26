@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define DEBUG_PS
 
@@ -43,6 +44,7 @@ static float TrackedLength = 0;
 static U32 lastDeltaTotal = 0;
 static U16 lastNumDeltas = 0;
 static U16 TrackedNumDuplicateValues = 0;
+static U16 numTimesNaNorInf = 0;
 
 // VSS Debug Vars
 static U32 TrackedTempDeltaTotal = 0;
@@ -72,7 +74,7 @@ void setup_timer_and_start_dma_vss(
 	newSensor->channel = channel;
 	newSensor->conversionRatio = conversionRatio;
 	newSensor->resultStoreLocation = resultStoreLocation;
-	newSensor->useVariableSpeedSampling = false;//useVariableSpeedSampling;
+	newSensor->useVariableSpeedSampling = useVariableSpeedSampling;
 	newSensor->dmaStoppedTimeoutMS = dmaStoppedTimeoutMS;
 	newSensor->lowPulsesPerSecond = lowPulsesPerSecond;
 	newSensor->highPulsesPerSecond = highPulsesPerSecond;
@@ -318,24 +320,30 @@ void check_timer_dma(int sensorNumber) {
 				tempDeltaTotal += last2ndDelta;
 			}
 
-			float minSamplesAverageDelta = tempDeltaTotal / numDeltas;
+			// If we're somehow left with no deltas don't divide by 0
+			if (numDeltas != 0) {
 
-			float tempFrequencyCalc = convert_delta_time_to_frequency(minSamplesAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
+				float minSamplesAverageDelta = tempDeltaTotal / (float)numDeltas; // Don't lose accuracy with int devision
+
+				float tempFrequencyCalc = convert_delta_time_to_frequency(minSamplesAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
 
 #ifdef DEBUG_PS
-			//Debug
-			TrackedTempDeltaTotal = tempDeltaTotal;
-			TrackedMinAverageDelta = minSamplesAverageDelta;
-			TrackedTempFrequencyCalc = tempFrequencyCalc;
+				//Debug
+				TrackedTempDeltaTotal = tempDeltaTotal;
+				TrackedMinAverageDelta = minSamplesAverageDelta;
+				TrackedTempFrequencyCalc = tempFrequencyCalc;
 #endif
 
-			if (tempFrequencyCalc < pulseSensor[sensorNumber].lowPulsesPerSecond) {
-				amountOfSamples = pulseSensor[sensorNumber].minSamples;
-			} else if (tempFrequencyCalc > pulseSensor[sensorNumber].highPulsesPerSecond) {
-				amountOfSamples = IC_BUF_SIZE;
+				if (tempFrequencyCalc < pulseSensor[sensorNumber].lowPulsesPerSecond) {
+					amountOfSamples = pulseSensor[sensorNumber].minSamples;
+				} else if (tempFrequencyCalc > pulseSensor[sensorNumber].highPulsesPerSecond) {
+					amountOfSamples = IC_BUF_SIZE;
+				} else {
+					// Equation for getting how many samples we should average, which is linear from low to high samples - y = m(x-x0) + y0
+					amountOfSamples = pulseSensor[sensorNumber].vssSlope * (tempFrequencyCalc - pulseSensor[sensorNumber].lowPulsesPerSecond) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
+				}
 			} else {
-				// Equation for getting how many samples we should average, which is linear from low to high samples - y = m(x-x0) + y0
-				amountOfSamples = pulseSensor[sensorNumber].vssSlope * (tempFrequencyCalc - pulseSensor[sensorNumber].lowPulsesPerSecond) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
+				amountOfSamples = pulseSensor[sensorNumber].minSamples;
 			}
 		}
 	}
@@ -346,12 +354,31 @@ void check_timer_dma(int sensorNumber) {
 		deltaTotal += last2ndDelta;
 	}
 
+	float result = 0;
+
 	// Calculate average
 	float resultingAverageDelta = deltaTotal / (float)numDeltas;
+
 	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
 
-	// Calculate result from average delta
-	float result = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds) * pulseSensor[sensorNumber].conversionRatio;
+	if(!(isinf(resultingAverageDelta) || isnan(resultingAverageDelta))) {
+
+		// Calculate result from average delta
+		result = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds) * pulseSensor[sensorNumber].conversionRatio;
+
+		// Check if calculation came out inf or nan
+		if(isinf(result) || isnan(result)) {
+			result = 0;
+#ifdef DEBUG_PS
+			numTimesNaNorInf++;
+#endif
+		}
+	}
+#ifdef DEBUG_PS
+	else {
+		numTimesNaNorInf++;
+	}
+#endif
 
 	// Send result to store location
 	*pulseSensor[sensorNumber].resultStoreLocation = result;
