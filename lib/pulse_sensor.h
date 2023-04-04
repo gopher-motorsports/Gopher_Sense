@@ -10,7 +10,7 @@
 #define IC_BUF_SIZE 64
 #define MS_IN_A_MINUTE 60000
 #define ONE_MHZ 1000000
-#define DUPLICATE_VALUE_TICK_DIFFERENCE 5
+#define DUPLICATE_VALUE_TICK_DIFFERENCE 25	// TODO: See if there's a universal value or if needs to be set individually
 
 typedef struct
 {

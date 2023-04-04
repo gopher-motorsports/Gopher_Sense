@@ -80,13 +80,13 @@ void setup_timer_and_start_dma_vss(
 	newSensor->highPulsesPerSecond = highPulsesPerSecond;
 	newSensor->minSamples = minSamples;
 
-	U32 clockFrequency = HAL_RCC_GetSysClockFreq();
+	U32 clockFrequency = HAL_RCC_GetSysClockFreq() * 0.5; // Multiply by 0.5 as timers are 1/2 the clock frequency
 
 	// Evaluate the size of the given timer by checking if the Auto reload value is the max size of a 16bit value 0xFFFF
 	// TODO: Verify the 32 bit detection works (16 bit validated, so it should work)
+	// TODO: Change clock frequency if certain timers
 	if (htim->Instance->ARR == 0xFFFF) {
 		newSensor->timerSize = 16;
-		clockFrequency *= 0.5;
 	} else {
 		newSensor->timerSize = 32;
 	}
