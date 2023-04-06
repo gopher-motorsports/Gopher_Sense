@@ -10,7 +10,7 @@
 #define IC_BUF_SIZE 64
 #define MS_IN_A_MINUTE 60000
 #define ONE_MHZ 1000000
-#define DUPLICATE_VALUE_TICK_DIFFERENCE 25	// TODO: See if there's a universal value or if needs to be set individually
+#define DUPLICATE_VALUE_TICK_DIFFERENCE 5	// TODO: See if there's a universal value or if needs to be set individually
 
 typedef struct
 {
@@ -26,7 +26,10 @@ typedef struct
 	U16 minSamples;					// Minimum amount of samples to take if using variable speed sampling
 
 	U16 timerSize;
-	U32 buffer[IC_BUF_SIZE];
+	U32 readBuffer[IC_BUF_SIZE];
+	U32 buffer1[IC_BUF_SIZE];
+	U32 buffer2[IC_BUF_SIZE];
+	U32* currentBuffer;
 
 	float averageDeltaTimerTicks;
 	U32 lastDMAReadValueTimeMs;
@@ -37,9 +40,25 @@ typedef struct
 
 } PulseSensor;
 
-void setup_timer_and_start_dma_vss(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS, bool useVariableSpeedSampling, U16 lowPulsesPerSecond, U16 highPulsesPerSecond, U16 minSamples);
-void setup_timer_and_start_dma(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS);
-void check_all_dmas();
-void check_timer_dma(int sensorNumber);
+void setup_pulse_sensor_vss(
+		TIM_HandleTypeDef* htim,
+		U32 channel,
+		float conversionRatio,
+		float* resultStoreLocation,
+		U16 dmaStoppedTimeoutMS,
+		bool useVariableSpeedSampling,
+		U16 lowPulsesPerSecond,
+		U16 highPulsesPerSecond,
+		U16 minSamples
+		);
+void setup_pulse_sensor(
+		TIM_HandleTypeDef* htim,
+		U32 channel,
+		float conversionRatio,
+		float* resultStoreLocation,
+		U16 dmaStoppedTimeoutMS
+		);
+void check_pulse_sensors();
+void evaluate_pulse_sensor(int sensorNumber);
 
 #endif

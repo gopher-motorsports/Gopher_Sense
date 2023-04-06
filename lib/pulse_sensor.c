@@ -1,10 +1,8 @@
 /**
  * Library for operating pulse one or multiple sensors and returning an result through a float pointer.
  *
- * Alex Tong
+ * Made by Alex Tong 4/23
  */
-
-// TODO: Decrease jittering
 
 #include "stm32f4xx_hal.h"
 #include "pulse_sensor.h"
@@ -31,7 +29,6 @@ static U32 TrackedValueInQuestion = 0;
 static U32 TrackedFirstValue = 0;
 static U32 TrackedLastValue = 0;
 static U32 TrackedDeltaList[IC_BUF_SIZE] = {0};
-static U32 TrackedBufferCopy[IC_BUF_SIZE] = {0};
 static U32 TrackedDeltaTotal = 0;
 static float TrackedResult = 0;
 static U32 lastTick = 0;
@@ -55,7 +52,7 @@ static float TrackedTempFrequencyCalc = 0;
 #endif
 
 // Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
-void setup_timer_and_start_dma_vss(
+void setup_pulse_sensor_vss(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
 		float conversionRatio,
@@ -83,8 +80,7 @@ void setup_timer_and_start_dma_vss(
 	U32 clockFrequency = HAL_RCC_GetSysClockFreq() * 0.5; // Multiply by 0.5 as timers are 1/2 the clock frequency
 
 	// Evaluate the size of the given timer by checking if the Auto reload value is the max size of a 16bit value 0xFFFF
-	// TODO: Verify the 32 bit detection works (16 bit validated, so it should work)
-	// TODO: Change clock frequency if certain timers
+	// TODO: Change clock frequency if certain timers that operate differently are in use
 	if (htim->Instance->ARR == 0xFFFF) {
 		newSensor->timerSize = 16;
 	} else {
@@ -94,7 +90,10 @@ void setup_timer_and_start_dma_vss(
 	newSensor->timerPeriodSeconds = 1 / ((float)clockFrequency / (htim->Instance->PSC + 1));
 
 	// Clear the sensor's buffer
-	memset(newSensor->buffer, 0, sizeof(U32)*IC_BUF_SIZE);
+	memset(newSensor->buffer1, 0, sizeof(U32)*IC_BUF_SIZE);
+	memset(newSensor->buffer2, 0, sizeof(U32)*IC_BUF_SIZE);
+
+	newSensor->currentBuffer = newSensor->buffer1;
 
 	// Default other values to 0
 	newSensor->averageDeltaTimerTicks = 0;
@@ -103,13 +102,13 @@ void setup_timer_and_start_dma_vss(
 	newSensor->stopped = true;
 	newSensor->vssSlope = (IC_BUF_SIZE - minSamples) / (float)(highPulsesPerSecond - lowPulsesPerSecond); // Calculate the constant slope value for vss once at the beginning here.
 
-	HAL_TIM_IC_Start_DMA(htim, channel, (U32*)pulseSensor[numSensors].buffer, IC_BUF_SIZE);
+	HAL_TIM_IC_Start_DMA(htim, channel, newSensor->currentBuffer, IC_BUF_SIZE);
 
 	numSensors++;
 }
 
 // Function for setting up timer without variable speed sampling (vss)
-void setup_timer_and_start_dma(
+void setup_pulse_sensor(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
 		float conversionRatio,
@@ -117,7 +116,7 @@ void setup_timer_and_start_dma(
 		U16 dmaStoppedTimeoutMS
 		)
 {
-	setup_timer_and_start_dma_vss(
+	setup_pulse_sensor_vss(
 		htim,
 		channel,
 		conversionRatio,
@@ -131,31 +130,42 @@ void setup_timer_and_start_dma(
 }
 
 // Function for going through all of the currently set up pulse sensors
-void check_all_dmas() {
+void check_pulse_sensors() {
 	for (int sensorNumber = 0; sensorNumber < numSensors; sensorNumber++) {
-		check_timer_dma(sensorNumber);
+		evaluate_pulse_sensor(sensorNumber);
 	}
 }
 
 // Function that goes through the buffer of the given pulse sensor, handling edge cases, and setting the return value to the found speed value.
-void check_timer_dma(int sensorNumber) {
-	U32 bufferCopy[IC_BUF_SIZE] = {0};
+void evaluate_pulse_sensor(int sensorNumber) {
+	U32* lastBuffer;
 
 	// Get the current tick and use it throughout the whole function so it can't change between operations.
 	U32 currentTick = HAL_GetTick();
 
-	// Stop DMA so we know that values won't change when copying them to bufferCopy
+	// Stop DMA so we know that values won't change when copying them to pulseSensor[sensorNumber].readBuffer
 	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
-
 	// Find the current position of DMA for the current sensor  - Note: Important this happens after DMA stops or weird values will randomly occur
 	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[1])->Instance->NDTR);
 
-	// Copy all the values to bufferCopy so they can't change while doing calculations,
-	// starting at the DMA position because we know restarting DMA resets its position in the buffer.
-	for (U16 c = 0; c < IC_BUF_SIZE; c++)
-	{
-		S16 i = (DMACurrentPosition + c) % IC_BUF_SIZE;
-		bufferCopy[c] = pulseSensor[sensorNumber].buffer[i];
+	if (pulseSensor[sensorNumber].currentBuffer == pulseSensor[sensorNumber].buffer1) {
+		pulseSensor[sensorNumber].currentBuffer = pulseSensor[sensorNumber].buffer2;
+		lastBuffer = pulseSensor[sensorNumber].buffer1;
+	} else {
+		pulseSensor[sensorNumber].currentBuffer = pulseSensor[sensorNumber].buffer1;
+		lastBuffer = pulseSensor[sensorNumber].buffer2;
+	}
+	memset(pulseSensor[sensorNumber].currentBuffer, 0, sizeof(U32)*IC_BUF_SIZE);
+
+	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel,  pulseSensor[sensorNumber].currentBuffer, IC_BUF_SIZE); // Note: Resets DMA position
+
+	for (U16 i = 0; i < IC_BUF_SIZE; i++) {
+		if (i < DMACurrentPosition) {
+			pulseSensor[sensorNumber].readBuffer[i] = pulseSensor[sensorNumber].readBuffer[i + DMACurrentPosition];
+		} else {
+			U16 c = DMACurrentPosition - i;
+			pulseSensor[sensorNumber].readBuffer[i] = lastBuffer[c];
+		}
 	}
 
 #ifdef DEBUG_PS
@@ -165,8 +175,8 @@ void check_timer_dma(int sensorNumber) {
 //		U16 numDeltas = 0;
 //		for (U16 i = IC_BUF_SIZE - 1; i > IC_BUF_SIZE - 64; i--)
 //		{
-//			U32 value1 = bufferCopy[i];
-//			U32 value2 = bufferCopy[i - 1];
+//			U32 value1 = pulseSensor[sensorNumber].readBuffer[i];
+//			U32 value2 = pulseSensor[sensorNumber].readBuffer[i - 1];
 //			if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
 //				if (value1 < value2) {
 //					deltaList[numDeltas] = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
@@ -180,19 +190,12 @@ void check_timer_dma(int sensorNumber) {
 //		}
 //		TrackedDMACurrentPosition = DMACurrentPosition;
 //		memcpy(TrackedDeltaList, deltaList, sizeof(U32)*IC_BUF_SIZE);
-//		memcpy(TrackedBufferCopy, bufferCopy, sizeof(U32)*IC_BUF_SIZE);
+//		memcpy(TrackedpulseSensor[sensorNumber].readBuffer, pulseSensor[sensorNumber].readBuffer, sizeof(U32)*IC_BUF_SIZE);
 //	}
 #endif
 
-	// Copy values of buffer copy into original buffer so its oldest values start at position 0,
-	// which is where the DMA position will be placed after restarting.
-	memcpy(pulseSensor[sensorNumber].buffer, bufferCopy, sizeof(U32)*IC_BUF_SIZE);
-
-	// Restart DMA before doing calculations so we lose as little values as possible.
-	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE); // Note: Resets DMA position
-
 	// Find the value in question, which is 1 position backwards from the DMA's current position, which is the end of the buffer copy.
-	U32 valueInQuestion = bufferCopy[IC_BUF_SIZE - 1];
+	U32 valueInQuestion = pulseSensor[sensorNumber].readBuffer[IC_BUF_SIZE - 1];
 
 	if (pulseSensor[sensorNumber].stopped) {	// If we already know we're stopped, check if we should end early
 		if (valueInQuestion != 0) {	// If we were previously stopped but may be moving again.
@@ -207,7 +210,7 @@ void check_timer_dma(int sensorNumber) {
 				return;
 			} else {
 				// TODO see if this should be changed from min samples
-				if (bufferCopy[IC_BUF_SIZE - pulseSensor[sensorNumber].minSamples] != 0) {
+				if (pulseSensor[sensorNumber].readBuffer[IC_BUF_SIZE - pulseSensor[sensorNumber].minSamples] != 0) {
 					// The value is new, it didn't get wiped, and the last wasn't 0 so we're good again
 					pulseSensor[sensorNumber].stopped = false; // Declare we are no longer stopped and move on.
 
@@ -267,8 +270,8 @@ void check_timer_dma(int sensorNumber) {
 
 	for (U16 i = IC_BUF_SIZE - 1; i > IC_BUF_SIZE - amountOfSamples; i--)
 	{
-		U32 value1 = bufferCopy[i];
-		U32 value2 = bufferCopy[i - 1];
+		U32 value1 = pulseSensor[sensorNumber].readBuffer[i];
+		U32 value2 = pulseSensor[sensorNumber].readBuffer[i - 1];
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
 			if (abs(value2 - value1) > DUPLICATE_VALUE_TICK_DIFFERENCE) {
 
@@ -388,10 +391,9 @@ void check_timer_dma(int sensorNumber) {
 	TrackedDMACurrentPosition = DMACurrentPosition;
 	TrackedAmountOfSamples = amountOfSamples;
 	TrackedValueInQuestion = valueInQuestion;
-	TrackedFirstValue = bufferCopy[IC_BUF_SIZE - 1];
-	TrackedLastValue = bufferCopy[0];
+	TrackedFirstValue = pulseSensor[sensorNumber].readBuffer[IC_BUF_SIZE - 1];
+	TrackedLastValue = pulseSensor[sensorNumber].readBuffer[0];
 	memcpy(TrackedDeltaList, deltaList, sizeof(U32)*IC_BUF_SIZE);
-	memcpy(TrackedBufferCopy, bufferCopy, sizeof(U32)*IC_BUF_SIZE);
 	TrackedDeltaTotal = deltaTotal;
 	TrackedFrequency = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
 	numLoops++;
@@ -420,7 +422,7 @@ void check_timer_dma(int sensorNumber) {
 					if (i == DMACurrentPosition) {
 						printf("- ");
 					}
-					printf("%lu\n", bufferCopy[i]);
+					printf("%lu\n", pulseSensor[sensorNumber].readBuffer[i]);
 				}
 				printf("DELTAS ===\n");
 				for (int i = 0; i < IC_BUF_SIZE; i++) {
@@ -442,9 +444,9 @@ void check_timer_dma(int sensorNumber) {
 
 // Function exactly as name implies
 static void clear_buffer_and_reset_dma(U8 sensorNumber) {
-	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
-	memset(pulseSensor[sensorNumber].buffer, 0, sizeof(U32)*IC_BUF_SIZE);	// Use memset function to set all memory in buffer to 0 with the byte size of 64 U32 values.
-	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE);
+	//HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
+	memset(pulseSensor[sensorNumber].readBuffer, 0, sizeof(U32)*IC_BUF_SIZE);	// Use memset function to set all memory in buffer to 0 with the byte size of 64 U32 values.
+	//HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].currentBuffer), IC_BUF_SIZE);
 }
 
 
