@@ -44,6 +44,7 @@ static float TrackedLength = 0;
 static U32 lastDeltaTotal = 0;
 static U16 lastNumDeltas = 0;
 static U16 TrackedNumDuplicateValues = 0;
+static U16 TrackedNumDroppedValues = 0;
 static U16 numTimesNaNorInf = 0;
 
 // VSS Debug Vars
@@ -55,7 +56,7 @@ static float TrackedTempFrequencyCalc = 0;
 #endif
 
 // Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
-void setup_timer_and_start_dma_vss(
+void setup_pulse_sensor_vss(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
 		float conversionRatio,
@@ -109,7 +110,7 @@ void setup_timer_and_start_dma_vss(
 }
 
 // Function for setting up timer without variable speed sampling (vss)
-void setup_timer_and_start_dma(
+void setup_pulse_sensor(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
 		float conversionRatio,
@@ -117,7 +118,7 @@ void setup_timer_and_start_dma(
 		U16 dmaStoppedTimeoutMS
 		)
 {
-	setup_timer_and_start_dma_vss(
+	setup_pulse_sensor_vss(
 		htim,
 		channel,
 		conversionRatio,
@@ -131,14 +132,14 @@ void setup_timer_and_start_dma(
 }
 
 // Function for going through all of the currently set up pulse sensors
-void check_all_dmas() {
+void check_pulse_sensors() {
 	for (int sensorNumber = 0; sensorNumber < numSensors; sensorNumber++) {
-		check_timer_dma(sensorNumber);
+		evaluate_pulse_sensor(sensorNumber);
 	}
 }
 
 // Function that goes through the buffer of the given pulse sensor, handling edge cases, and setting the return value to the found speed value.
-void check_timer_dma(int sensorNumber) {
+void evaluate_pulse_sensor(int sensorNumber) {
 	U32 bufferCopy[IC_BUF_SIZE] = {0};
 
 	// Get the current tick and use it throughout the whole function so it can't change between operations.
@@ -287,6 +288,7 @@ void check_timer_dma(int sensorNumber) {
 						if(lastDelta > delta * 1.8) {
 							deltaTotal -= lastDelta;
 							deltaTotal += delta;
+							TrackedNumDroppedValues++;
 						}
 					}
 				} else {
@@ -294,6 +296,7 @@ void check_timer_dma(int sensorNumber) {
 						deltaTotal -= lastDelta;
 						lastDelta = (delta + last2ndDelta) * 0.5;
 						deltaTotal += lastDelta;
+						TrackedNumDroppedValues++;
 					}
 				}
 				deltaTotal += delta;
@@ -318,6 +321,7 @@ void check_timer_dma(int sensorNumber) {
 			{
 				tempDeltaTotal -= delta;
 				tempDeltaTotal += last2ndDelta;
+				TrackedNumDroppedValues++;
 			}
 
 			// If we're somehow left with no deltas don't divide by 0
@@ -352,6 +356,7 @@ void check_timer_dma(int sensorNumber) {
 	{
 		deltaTotal -= delta;
 		deltaTotal += last2ndDelta;
+		TrackedNumDroppedValues++;
 	}
 
 	float result = 0;
