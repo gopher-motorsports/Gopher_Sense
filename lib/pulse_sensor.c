@@ -41,6 +41,7 @@ static float TrackedLength = 0;
 static U32 lastDeltaTotal = 0;
 static U16 lastNumDeltas = 0;
 static U16 TrackedNumDuplicateValues = 0;
+static U16 TrackedNumDroppedValues = 0;
 static U16 numTimesNaNorInf = 0;
 
 // VSS Debug Vars
@@ -160,10 +161,12 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel,  pulseSensor[sensorNumber].currentBuffer, IC_BUF_SIZE); // Note: Resets DMA position
 
 	for (U16 i = 0; i < IC_BUF_SIZE; i++) {
-		if (i < DMACurrentPosition) {
+		if (i < IC_BUF_SIZE - DMACurrentPosition) {
 			pulseSensor[sensorNumber].readBuffer[i] = pulseSensor[sensorNumber].readBuffer[i + DMACurrentPosition];
 		} else {
-			U16 c = DMACurrentPosition - i;
+//			S16 c = DMACurrentPosition - (i - IC_BUF_SIZE + DMACurrentPosition) - 1;
+			U16 c = i - IC_BUF_SIZE + DMACurrentPosition;
+
 			pulseSensor[sensorNumber].readBuffer[i] = lastBuffer[c];
 		}
 	}
@@ -275,7 +278,6 @@ void evaluate_pulse_sensor(int sensorNumber) {
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
 			if (abs(value2 - value1) > DUPLICATE_VALUE_TICK_DIFFERENCE) {
 
-
 				if (value1 < value2) {
 					delta = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
 				} else {
@@ -290,6 +292,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 						if(lastDelta > delta * 1.8) {
 							deltaTotal -= lastDelta;
 							deltaTotal += delta;
+							TrackedNumDroppedValues++;
 						}
 					}
 				} else {
@@ -297,12 +300,12 @@ void evaluate_pulse_sensor(int sensorNumber) {
 						deltaTotal -= lastDelta;
 						lastDelta = (delta + last2ndDelta) * 0.5;
 						deltaTotal += lastDelta;
+						TrackedNumDroppedValues++;
 					}
 				}
 				deltaTotal += delta;
 				last2ndDelta = lastDelta;
 				lastDelta = delta;
-
 				numDeltas++;
 			}
 #ifdef DEBUG_PS
@@ -321,6 +324,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 			{
 				tempDeltaTotal -= delta;
 				tempDeltaTotal += last2ndDelta;
+				TrackedNumDroppedValues++;
 			}
 
 			// If we're somehow left with no deltas don't divide by 0
@@ -355,6 +359,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	{
 		deltaTotal -= delta;
 		deltaTotal += last2ndDelta;
+		TrackedNumDroppedValues++;
 	}
 
 	float result = 0;
