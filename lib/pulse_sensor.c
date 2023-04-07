@@ -101,7 +101,7 @@ void setup_pulse_sensor_vss(
 	newSensor->lastDMAReadValueTimeMs = 0;
 	newSensor->DMALastReadValue = 0;
 	newSensor->stopped = true;
-	newSensor->vssSlope = (IC_BUF_SIZE - minSamples) / (float)(highPulsesPerSecond - lowPulsesPerSecond); // Calculate the constant slope value for vss once at the beginning here.
+	newSensor->vssSlope = (MAX_DELTAS - minSamples) / (float)(highPulsesPerSecond - lowPulsesPerSecond); // Calculate the constant slope value for vss once at the beginning here.
 
 	HAL_TIM_IC_Start_DMA(htim, channel, (U32*)pulseSensor[numSensors].buffer, IC_BUF_SIZE);
 
@@ -144,13 +144,15 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	U32 currentTick = HAL_GetTick();
 
 	// Find the current position of DMA for the current sensor
-	S16 DMACurrentPosition = 0;//IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[1])->Instance->NDTR);
+	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[1])->Instance->NDTR);
 
 	// Find the value in question, which is 1 position backwards from the DMA's current position, which is the end of the buffer copy.
-	U16 lastBufferPosition = (DMACurrentPosition - 1 + IC_BUF_SIZE) % IC_BUF_SIZE;
+	S16 lastBufferPosition = (DMACurrentPosition - 1 + IC_BUF_SIZE) % IC_BUF_SIZE;
 
-	printf("Current Position: %s\n", DMACurrentPosition);
-	printf("Last buffer position: %i\n", lastBufferPosition);
+#ifdef DEBUG_PS
+//	printf("Current Position: %u\n", DMACurrentPosition);
+//	printf("Last buffer position: %u\n", lastBufferPosition);
+#endif
 
 	U32 valueInQuestion = pulseSensor[sensorNumber].buffer[lastBufferPosition];
 
@@ -224,8 +226,8 @@ void evaluate_pulse_sensor(int sensorNumber) {
 
 	for (U16 i = 0; i < amountOfSamples; i++)
 	{
-		U32 value1 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - i + IC_BUF_SIZE) % IC_BUF_SIZE];
-		U32 value2 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - i - 1 + IC_BUF_SIZE) % IC_BUF_SIZE];
+		U32 value1 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 1 - i + IC_BUF_SIZE) % IC_BUF_SIZE];
+		U32 value2 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 2 - i + IC_BUF_SIZE) % IC_BUF_SIZE];
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
 			if (abs(value2 - value1) > DUPLICATE_VALUE_TICK_DIFFERENCE) {
 
@@ -244,7 +246,9 @@ void evaluate_pulse_sensor(int sensorNumber) {
 						if(lastDelta > delta * 1.8) {
 							deltaTotal -= lastDelta;
 							deltaTotal += delta;
+#ifdef DEBUG_PS
 							TrackedNumDroppedValues++;
+#endif
 						}
 					}
 				} else {
@@ -252,7 +256,9 @@ void evaluate_pulse_sensor(int sensorNumber) {
 						deltaTotal -= lastDelta;
 						lastDelta = (delta + last2ndDelta) * 0.5;
 						deltaTotal += lastDelta;
+#ifdef DEBUG_PS
 						TrackedNumDroppedValues++;
+#endif
 					}
 				}
 				deltaTotal += delta;
@@ -277,7 +283,9 @@ void evaluate_pulse_sensor(int sensorNumber) {
 			{
 				tempDeltaTotal -= delta;
 				tempDeltaTotal += last2ndDelta;
+#ifdef DEBUG_PS
 				TrackedNumDroppedValues++;
+#endif
 			}
 
 			// If we're somehow left with no deltas don't divide by 0
@@ -297,7 +305,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 				if (tempFrequencyCalc < pulseSensor[sensorNumber].lowPulsesPerSecond) {
 					amountOfSamples = pulseSensor[sensorNumber].minSamples;
 				} else if (tempFrequencyCalc > pulseSensor[sensorNumber].highPulsesPerSecond) {
-					amountOfSamples = IC_BUF_SIZE;
+					amountOfSamples = MAX_DELTAS;
 				} else {
 					// Equation for getting how many samples we should average, which is linear from low to high samples - y = m(x-x0) + y0
 					amountOfSamples = pulseSensor[sensorNumber].vssSlope * (tempFrequencyCalc - pulseSensor[sensorNumber].lowPulsesPerSecond) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
@@ -312,7 +320,9 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	{
 		deltaTotal -= delta;
 		deltaTotal += last2ndDelta;
+#ifdef DEBUG_PS
 		TrackedNumDroppedValues++;
+#endif
 	}
 
 	float result = 0;
