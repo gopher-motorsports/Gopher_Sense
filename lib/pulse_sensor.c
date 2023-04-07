@@ -28,8 +28,6 @@ static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodS
 static S16 TrackedDMACurrentPosition = 0;
 static U16 TrackedAmountOfSamples = 0;
 static U32 TrackedValueInQuestion = 0;
-static U32 TrackedFirstValue = 0;
-static U32 TrackedLastValue = 0;
 static U32 TrackedDeltaList[IC_BUF_SIZE] = {0};
 static U32 TrackedBufferCopy[IC_BUF_SIZE] = {0};
 static U32 TrackedDeltaTotal = 0;
@@ -46,6 +44,7 @@ static U16 lastNumDeltas = 0;
 static U16 TrackedNumDuplicateValues = 0;
 static U16 TrackedNumDroppedValues = 0;
 static U16 numTimesNaNorInf = 0;
+static U32 deltaList[MAX_DELTAS] = {0};
 
 // VSS Debug Vars
 static U32 TrackedTempDeltaTotal = 0;
@@ -140,60 +139,16 @@ void check_pulse_sensors() {
 
 // Function that goes through the buffer of the given pulse sensor, handling edge cases, and setting the return value to the found speed value.
 void evaluate_pulse_sensor(int sensorNumber) {
-	U32 bufferCopy[IC_BUF_SIZE] = {0};
 
 	// Get the current tick and use it throughout the whole function so it can't change between operations.
 	U32 currentTick = HAL_GetTick();
 
-	// Stop DMA so we know that values won't change when copying them to bufferCopy
-	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
-
-	// Find the current position of DMA for the current sensor  - Note: Important this happens after DMA stops or weird values will randomly occur
-	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[1])->Instance->NDTR);
-
-	// Copy all the values to bufferCopy so they can't change while doing calculations,
-	// starting at the DMA position because we know restarting DMA resets its position in the buffer.
-	for (U16 c = 0; c < IC_BUF_SIZE; c++)
-	{
-		S16 i = (DMACurrentPosition + c) % IC_BUF_SIZE;
-		bufferCopy[c] = pulseSensor[sensorNumber].buffer[i];
-	}
-
-#ifdef DEBUG_PS
-//	if(DMACurrentPosition == 2) {
-//		U64 deltaTotal = 0;
-//		U32 deltaList[IC_BUF_SIZE] = {0};
-//		U16 numDeltas = 0;
-//		for (U16 i = IC_BUF_SIZE - 1; i > IC_BUF_SIZE - 64; i--)
-//		{
-//			U32 value1 = bufferCopy[i];
-//			U32 value2 = bufferCopy[i - 1];
-//			if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
-//				if (value1 < value2) {
-//					deltaList[numDeltas] = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
-//					deltaTotal += deltaList[numDeltas];
-//				} else {
-//					deltaList[numDeltas] = value1 - value2; // Buffer roll-over (timer resets to 0) protection
-//					deltaTotal += deltaList[numDeltas];
-//				}
-//				numDeltas++;
-//			}
-//		}
-//		TrackedDMACurrentPosition = DMACurrentPosition;
-//		memcpy(TrackedDeltaList, deltaList, sizeof(U32)*IC_BUF_SIZE);
-//		memcpy(TrackedBufferCopy, bufferCopy, sizeof(U32)*IC_BUF_SIZE);
-//	}
-#endif
-
-	// Copy values of buffer copy into original buffer so its oldest values start at position 0,
-	// which is where the DMA position will be placed after restarting.
-	memcpy(pulseSensor[sensorNumber].buffer, bufferCopy, sizeof(U32)*IC_BUF_SIZE);
-
-	// Restart DMA before doing calculations so we lose as little values as possible.
-	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE); // Note: Resets DMA position
+	// Find the current position of DMA for the current sensor
+	S16 DMACurrentPosition = 0;//IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[1])->Instance->NDTR);
 
 	// Find the value in question, which is 1 position backwards from the DMA's current position, which is the end of the buffer copy.
-	U32 valueInQuestion = bufferCopy[IC_BUF_SIZE - 1];
+	U16 lastBufferPosition = (DMACurrentPosition - 1 + IC_BUF_SIZE) % IC_BUF_SIZE;
+	U32 valueInQuestion = pulseSensor[sensorNumber].buffer[lastBufferPosition];
 
 	if (pulseSensor[sensorNumber].stopped) {	// If we already know we're stopped, check if we should end early
 		if (valueInQuestion != 0) {	// If we were previously stopped but may be moving again.
@@ -208,7 +163,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 				return;
 			} else {
 				// TODO see if this should be changed from min samples
-				if (bufferCopy[IC_BUF_SIZE - pulseSensor[sensorNumber].minSamples] != 0) {
+				if (pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 1 - pulseSensor[sensorNumber].minSamples + IC_BUF_SIZE) % IC_BUF_SIZE] != 0) {
 					// The value is new, it didn't get wiped, and the last wasn't 0 so we're good again
 					pulseSensor[sensorNumber].stopped = false; // Declare we are no longer stopped and move on.
 
@@ -254,22 +209,19 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 
 	// Declare amount of samples and evaluate initial size based on if we're using variable sampling. If we are we'll determine it again after some deltas are evaluated
-	U16 amountOfSamples = pulseSensor[sensorNumber].useVariableSpeedSampling ? pulseSensor[sensorNumber].minSamples + 1 : IC_BUF_SIZE;
+	U16 amountOfSamples = pulseSensor[sensorNumber].useVariableSpeedSampling ? pulseSensor[sensorNumber].minSamples + 1 : MAX_DELTAS;
 
-	// Calculate the deltas between each of the time values and store them in deltaList
-#ifdef DEBUG_PS
-	U32 deltaList[IC_BUF_SIZE] = {0};
-#endif
+	// Calculate the deltas between each of the time values and store them in deltaTotal
 	U32 deltaTotal = 0; // Gets big adding up all U32 deltas but not big enough to need U64 before stopped if like <1 full second
 	U32 lastDelta = 0;
 	U32 last2ndDelta = 0;
 	U16 numDeltas = 0;
 	U32 delta = 0;
 
-	for (U16 i = IC_BUF_SIZE - 1; i > IC_BUF_SIZE - amountOfSamples; i--)
+	for (U16 i = 0; i < amountOfSamples; i++)
 	{
-		U32 value1 = bufferCopy[i];
-		U32 value2 = bufferCopy[i - 1];
+		U32 value1 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - i + IC_BUF_SIZE) % IC_BUF_SIZE];
+		U32 value2 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - i - 1 + IC_BUF_SIZE) % IC_BUF_SIZE];
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
 			if (abs(value2 - value1) > DUPLICATE_VALUE_TICK_DIFFERENCE) {
 
@@ -313,7 +265,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 		}
 
 		// When we're at the minimum samples, take a break to re-evaluate our amount of samples from it's initial value of the minimum + 1.
-		if ((i == (IC_BUF_SIZE - pulseSensor[sensorNumber].minSamples)) && pulseSensor[sensorNumber].useVariableSpeedSampling) {
+		if ((i == ((DMACurrentPosition - 1 - pulseSensor[sensorNumber].minSamples + IC_BUF_SIZE) % IC_BUF_SIZE)) && pulseSensor[sensorNumber].useVariableSpeedSampling) {
 			// Need a temp total so it doesn't mess up the regular loops bad value rejection
 			U32 tempDeltaTotal = deltaTotal;
 			// All deltas are protected from dropped values.
@@ -393,10 +345,8 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	TrackedDMACurrentPosition = DMACurrentPosition;
 	TrackedAmountOfSamples = amountOfSamples;
 	TrackedValueInQuestion = valueInQuestion;
-	TrackedFirstValue = bufferCopy[IC_BUF_SIZE - 1];
-	TrackedLastValue = bufferCopy[0];
-	memcpy(TrackedDeltaList, deltaList, sizeof(U32)*IC_BUF_SIZE);
-	memcpy(TrackedBufferCopy, bufferCopy, sizeof(U32)*IC_BUF_SIZE);
+//	TrackedFirstValue = bufferCopy[IC_BUF_SIZE - 1];
+//	TrackedLastValue = bufferCopy[0];
 	TrackedDeltaTotal = deltaTotal;
 	TrackedFrequency = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
 	numLoops++;
@@ -425,7 +375,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 					if (i == DMACurrentPosition) {
 						printf("- ");
 					}
-					printf("%lu\n", bufferCopy[i]);
+					printf("%lu\n", pulseSensor[sensorNumber].buffer[i]);
 				}
 				printf("DELTAS ===\n");
 				for (int i = 0; i < IC_BUF_SIZE; i++) {
