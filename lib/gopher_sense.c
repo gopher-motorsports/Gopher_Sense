@@ -7,9 +7,20 @@
 #include "gsense_structs.h"
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "cmsis_os.h"
 #include "main.h"
 #include "module_hw_config.h"
+
+
+// The max spacing between two floats before they are considered not equal
+#define EPSILON 1e-4f
+
+/*!
+  @brief   Determine if two floating point values are equal
+  @returns True if equal, false if not equal
+*/
+#define fequals(a, b) (fabsf(a - b) < EPSILON) ? 1 : 0
 
 #if NEED_ADC
 ADC_HandleTypeDef* adc1_ptr;
@@ -219,7 +230,7 @@ S8 update_and_queue_param_float(FLOAT_CAN_STRUCT* can_param, float f)
 {
 	GENERAL_PARAMETER* param;
 
-	if (can_param->data == f)
+	if (fequals(can_param->data, f))
 	{
 		// we dont need to do anything as the data was not changed
 		return GSENSE_SUCCESS;
@@ -643,7 +654,7 @@ static S8 fill_gcan_param_data(CAN_INFO_STRUCT* can_param, float data)
 		return FALSE;
 
 	case FLOATING:
-		if (((FLOAT_CAN_STRUCT*)(can_param))->data != data)
+		if (!fequals(((FLOAT_CAN_STRUCT*)(can_param))->data, data))
 		{
 			((FLOAT_CAN_STRUCT*)(can_param))->data = data;
 			return TRUE;
