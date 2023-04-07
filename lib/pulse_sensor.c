@@ -148,6 +148,10 @@ void evaluate_pulse_sensor(int sensorNumber) {
 
 	// Find the value in question, which is 1 position backwards from the DMA's current position, which is the end of the buffer copy.
 	U16 lastBufferPosition = (DMACurrentPosition - 1 + IC_BUF_SIZE) % IC_BUF_SIZE;
+
+	printf("Current Position: %s\n", DMACurrentPosition);
+	printf("Last buffer position: %i\n", lastBufferPosition);
+
 	U32 valueInQuestion = pulseSensor[sensorNumber].buffer[lastBufferPosition];
 
 	if (pulseSensor[sensorNumber].stopped) {	// If we already know we're stopped, check if we should end early
