@@ -4,6 +4,7 @@
 #ifndef ADC_LIB_H
 #define ADC_LIB_H
 
+#include "module_hw_config.h"
 #include "gsense_structs.h"
 #include "gopher_sense.h"
 #include "GopherCAN.h"
