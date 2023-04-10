@@ -19,21 +19,10 @@ static U8 numSensors = 0;
 static void clear_buffer_and_reset_dma(U8 sensorNumber);
 static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds);
 
-// Debug Variables
+// Most useful debug variables
 #ifdef DEBUG_PS
 static U32 deltaList[MAX_DELTAS] = {0};
-
-static float lastResult = 0;
 static float TrackedFrequency = 0;
-static float TrackedConversionPeriodSeconds = 0;
-static U32 TrackedValueInQuestion = 0;
-static U32 TrackedDeltaTotal = 0;
-static U32 lastTick = 0;
-static U32 lastDeltaTotal = 0;
-static U16 lastNumDeltas = 0;
-static U16 numTimesNaNorInf = 0;
-static U16 numLoops = 0;
-static bool error = false;
 #endif
 
 // Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
@@ -81,7 +70,6 @@ int setup_pulse_sensor_vss(
 	memset(newSensor->buffer, 0, sizeof(U32)*IC_BUF_SIZE);
 
 	// Default other values to 0
-	newSensor->averageDeltaTimerTicks = 0;
 	newSensor->lastDMAReadValueTimeMs = 0;
 	newSensor->DMALastReadValue = 0;
 	newSensor->stopped = true;
@@ -311,9 +299,6 @@ int evaluate_pulse_sensor(int sensorNumber) {
 
 		// Check if the calculation is inf or nan for any reason
 		if(isinf(result) || isnan(result)) {
-#ifdef DEBUG_PS
-			numTimesNaNorInf++;
-#endif
 			*pulseSensor[sensorNumber].resultStoreLocation = 0;
 			return INF_OR_NAN_RESULT;
 		}
@@ -325,52 +310,6 @@ int evaluate_pulse_sensor(int sensorNumber) {
 	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
 	pulseSensor[sensorNumber].numSamples = numSamples;
 	pulseSensor[sensorNumber].DMACurrentPosition = DMACurrentPosition;
-
-	// Debug Start
-	TrackedValueInQuestion = valueInQuestion;
-	TrackedDeltaTotal = deltaTotal;
-	TrackedFrequency = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
-	lastNumDeltas = numDeltas;
-	numLoops++;
-
-	// 1 loop cool-down so it doesn't trigger on changing back to correct
-	if (error) {
-		error = false;
-	} else {
-		// If the result is within 1% of the last result
-		if(resultingAverageDelta >= lastResult * 1.01 || resultingAverageDelta <= lastResult * 0.99) {
-			// Print out a bunch of information about everything so everything at that moment is know and patterns can quickly be identified.
-			printf("--- Anomaly Detected! ---\n");
-			printf("Current Value: %f\n", resultingAverageDelta);
-			printf("Previous Value: %f\n", lastResult);
-			printf("DMA Position: %u\n", DMACurrentPosition);
-			printf("Num Loops: %u\n", numLoops);
-			printf("Num Deltas: %u\n", numDeltas);
-			printf("Last Num Deltas: %u\n", lastNumDeltas);
-			printf("Delta total: %lu\n", deltaTotal);
-			printf("Last Delta total: %lu\n", lastDeltaTotal);
-			printf("Amount of Samples: %u\n", numSamples);
-			printf("Current Tick: %lu\n", HAL_GetTick());
-			printf("Distance from Last Anomaly: %lu\n", HAL_GetTick() - lastTick);
-			lastTick = HAL_GetTick();
-			for (int i = 0; i < IC_BUF_SIZE; i++) {
-				printf("Value %i: ", i);
-				if (i == DMACurrentPosition) {
-					printf("- ");
-				}
-				printf("%lu\n", pulseSensor[sensorNumber].buffer[i]);
-			}
-			printf("DELTAS ===\n");
-			for (int i = 0; i < MAX_DELTAS; i++) {
-				printf("Value %i: ", i);
-				printf("%lu\n", deltaList[i]);
-			}
-			error = true;
-			numLoops = 0;
-		}
-	}
-	lastResult = resultingAverageDelta;
-	// Debug end
 #endif
 
 	return READ_SUCCESS;
@@ -386,13 +325,8 @@ static void clear_buffer_and_reset_dma(U8 sensorNumber) {
 // Also as name implies
 static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds) {
 	float lengthOfDeltaSeconds = deltaTime * timerPeriodSeconds; // Since timer period is division already done (1MHz is 1000ns period)
-	float frequencyHz = 1 / lengthOfDeltaSeconds;
 
-#ifdef DEBUG_PS
-	TrackedConversionPeriodSeconds = lengthOfDeltaSeconds;
-#endif
-
-	return frequencyHz;
+	return 1 / lengthOfDeltaSeconds;
 }
 
 

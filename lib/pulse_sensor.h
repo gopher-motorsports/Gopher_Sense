@@ -6,7 +6,7 @@
 #ifndef PULSE_SENSOR_H
 #define PULSE_SENSOR_H
 
-#define DEBUG_PS
+// #define DEBUG_PS
 
 #define TIMER_COUNT 4
 #define IC_BUF_SIZE 128
@@ -15,7 +15,7 @@
 #define ONE_MHZ 1000000
 #define DUPLICATE_VALUE_TICK_DIFFERENCE 25	// TODO: See if there's a universal value or if needs to be set individually
 
-// Error codes
+// Error codes - may not be necessary
 #define CANNOT_DETECT_TIMER_SIZE -1
 #define READ_SUCCESS 0
 #define NO_NEW_VALUE 1
@@ -47,8 +47,8 @@ typedef struct
 	U16 DMALastReadValue;
 	bool stopped;
 
+	//Debug/tracking variables
 #ifdef DEBUG_PS
-	//Debug/tracking
 	float averageDeltaTimerTicks;
 	U16 numSamples;
 	U16 numDroppedValues;
