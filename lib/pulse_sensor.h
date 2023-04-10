@@ -6,6 +6,8 @@
 #ifndef PULSE_SENSOR_H
 #define PULSE_SENSOR_H
 
+#define DEBUG_PS
+
 #define TIMER_COUNT 4
 #define IC_BUF_SIZE 128
 #define MAX_DELTAS 64
@@ -15,6 +17,7 @@
 
 typedef struct
 {
+	// Passed in values
 	TIM_HandleTypeDef* htim; 		// Timer that was used to set up input capture and DMA on
 	U32 channel;					// Channel of the given timer
 	float timerPeriodSeconds;		// Period of timer ticks (they can be different between different timers)
@@ -26,15 +29,22 @@ typedef struct
 	U16 highPulsesPerSecond;		// Value at which all 64 values in the buffer are sampled to get the resulting speed value. Set to 0 if not using variable speed sampling
 	U16 minSamples;					// Minimum amount of samples to take if using variable speed sampling
 
-	U16 timerSize;
 	U32 buffer[IC_BUF_SIZE];
 
-	float averageDeltaTimerTicks;
-	U32 lastDMAReadValueTimeMs;
-	U16 DMALastReadValue;
+	// Stored values
 	float vssSlope;
-
+	U32 lastDMAReadValueTimeMs;
+	U16 timerSize;
+	U16 DMALastReadValue;
 	bool stopped;
+
+#ifdef DEBUG_PS
+	//Debug/tracking
+	float averageDeltaTimerTicks;
+	U16 numSamples;
+	U16 numDroppedValues;
+	U16 DMACurrentPosition;
+#endif
 
 } PulseSensor;
 

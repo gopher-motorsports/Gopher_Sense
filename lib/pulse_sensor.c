@@ -4,8 +4,6 @@
  * Alex Tong
  */
 
-// TODO: Decrease jittering
-
 #include "stm32f4xx_hal.h"
 #include "pulse_sensor.h"
 #include "base_types.h"
@@ -15,43 +13,28 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define DEBUG_PS
-
-PulseSensor pulseSensor[TIMER_COUNT] = {0};
-U8 numSensors = 0;
+static PulseSensor pulseSensor[TIMER_COUNT] = {0};
+static U8 numSensors = 0;
 
 static void clear_buffer_and_reset_dma(U8 sensorNumber);
 static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds);
 
+// Debug Variables
 #ifdef DEBUG_PS
-// Debug Variables Start
-static S16 TrackedDMACurrentPosition = 0;
-static U16 TrackedAmountOfSamples = 0;
-static U32 TrackedValueInQuestion = 0;
-static U32 TrackedDeltaList[IC_BUF_SIZE] = {0};
-static U32 TrackedBufferCopy[IC_BUF_SIZE] = {0};
-static U32 TrackedDeltaTotal = 0;
-static float TrackedResult = 0;
-static U32 lastTick = 0;
-static bool error = false;
-static U16 numLoops = 0;
-static float TrackedFrequency = 0;
-U32 clockFrequency;
-static U32 TrackedValue = 0;
-static float TrackedLength = 0;
-static U32 lastDeltaTotal = 0;
-static U16 lastNumDeltas = 0;
-static U16 TrackedNumDuplicateValues = 0;
-static U16 TrackedNumDroppedValues = 0;
-static U16 numTimesNaNorInf = 0;
 static U32 deltaList[MAX_DELTAS] = {0};
 
-// VSS Debug Vars
-static U32 TrackedTempDeltaTotal = 0;
-static float TrackedMinAverageDelta = 0;
-static float TrackedTempFrequencyCalc = 0;
-
-// Debug Variables End
+static float TrackedResult = 0;
+static float TrackedFrequency = 0;
+static float TrackedConversionPeriodSeconds = 0;
+static S16 TrackedDMACurrentPosition = 0;
+static U32 TrackedValueInQuestion = 0;
+static U32 TrackedDeltaTotal = 0;
+static U32 lastTick = 0;
+static U32 lastDeltaTotal = 0;
+static U16 lastNumDeltas = 0;
+static U16 numTimesNaNorInf = 0;
+static U16 numLoops = 0;
+static bool error = false;
 #endif
 
 // Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
@@ -83,7 +66,6 @@ void setup_pulse_sensor_vss(
 	U32 clockFrequency = HAL_RCC_GetSysClockFreq() * 0.5; // Multiply by 0.5 as timers are 1/2 the clock frequency
 
 	// Evaluate the size of the given timer by checking if the Auto reload value is the max size of a 16bit value 0xFFFF
-	// TODO: Verify the 32 bit detection works (16 bit validated, so it should work)
 	// TODO: Change clock frequency if certain timers
 	if (htim->Instance->ARR == 0xFFFF) {
 		newSensor->timerSize = 16;
@@ -149,11 +131,6 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	// Find the value in question, which is 1 position backwards from the DMA's current position, which is the end of the buffer copy.
 	S16 lastBufferPosition = (DMACurrentPosition - 1 + IC_BUF_SIZE) % IC_BUF_SIZE;
 
-#ifdef DEBUG_PS
-//	printf("Current Position: %u\n", DMACurrentPosition);
-//	printf("Last buffer position: %u\n", lastBufferPosition);
-#endif
-
 	U32 valueInQuestion = pulseSensor[sensorNumber].buffer[lastBufferPosition];
 
 	if (pulseSensor[sensorNumber].stopped) {	// If we already know we're stopped, check if we should end early
@@ -215,7 +192,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 
 	// Declare amount of samples and evaluate initial size based on if we're using variable sampling. If we are we'll determine it again after some deltas are evaluated
-	U16 amountOfSamples = pulseSensor[sensorNumber].useVariableSpeedSampling ? pulseSensor[sensorNumber].minSamples + 1 : MAX_DELTAS;
+	U16 numSamples = pulseSensor[sensorNumber].useVariableSpeedSampling ? pulseSensor[sensorNumber].minSamples + 1 : MAX_DELTAS;
 
 	// Calculate the deltas between each of the time values and store them in deltaTotal
 	U32 deltaTotal = 0; // Gets big adding up all U32 deltas but not big enough to need U64 before stopped if like <1 full second
@@ -224,7 +201,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	U16 numDeltas = 0;
 	U32 delta = 0;
 
-	for (U16 i = 0; i < amountOfSamples; i++)
+	for (U16 i = 0; i < numSamples; i++)
 	{
 		U32 value1 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 1 - i + IC_BUF_SIZE) % IC_BUF_SIZE];
 		U32 value2 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 2 - i + IC_BUF_SIZE) % IC_BUF_SIZE];
@@ -237,9 +214,9 @@ void evaluate_pulse_sensor(int sensorNumber) {
 				} else {
 					delta = value1 - value2; // Buffer roll-over (timer resets to 0) protection
 				}
-	#ifdef DEBUG_PS
+#ifdef DEBUG_PS
 				deltaList[numDeltas] = delta;
-	#endif
+#endif
 				// Smoothing for issue where DMA loses values
 				if(last2ndDelta == 0) {
 					if(lastDelta != 0) {
@@ -247,7 +224,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 							deltaTotal -= lastDelta;
 							deltaTotal += delta;
 #ifdef DEBUG_PS
-							TrackedNumDroppedValues++;
+							pulseSensor[sensorNumber].numDroppedValues++;
 #endif
 						}
 					}
@@ -257,7 +234,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 						lastDelta = (delta + last2ndDelta) * 0.5;
 						deltaTotal += lastDelta;
 #ifdef DEBUG_PS
-						TrackedNumDroppedValues++;
+						pulseSensor[sensorNumber].numDroppedValues++;
 #endif
 					}
 				}
@@ -269,7 +246,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 			}
 #ifdef DEBUG_PS
 			else {
-				TrackedNumDuplicateValues++;
+				pulseSensor[sensorNumber].numDroppedValues++;
 			}
 #endif
 		}
@@ -284,34 +261,25 @@ void evaluate_pulse_sensor(int sensorNumber) {
 				tempDeltaTotal -= delta;
 				tempDeltaTotal += last2ndDelta;
 #ifdef DEBUG_PS
-				TrackedNumDroppedValues++;
+				pulseSensor[sensorNumber].numDroppedValues++;
 #endif
 			}
 
 			// If we're somehow left with no deltas don't divide by 0
 			if (numDeltas != 0) {
-
 				float minSamplesAverageDelta = tempDeltaTotal / (float)numDeltas; // Don't lose accuracy with int devision
-
 				float tempFrequencyCalc = convert_delta_time_to_frequency(minSamplesAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
 
-#ifdef DEBUG_PS
-				//Debug
-				TrackedTempDeltaTotal = tempDeltaTotal;
-				TrackedMinAverageDelta = minSamplesAverageDelta;
-				TrackedTempFrequencyCalc = tempFrequencyCalc;
-#endif
-
 				if (tempFrequencyCalc < pulseSensor[sensorNumber].lowPulsesPerSecond) {
-					amountOfSamples = pulseSensor[sensorNumber].minSamples;
+					numSamples = pulseSensor[sensorNumber].minSamples;
 				} else if (tempFrequencyCalc > pulseSensor[sensorNumber].highPulsesPerSecond) {
-					amountOfSamples = MAX_DELTAS;
+					numSamples = MAX_DELTAS;
 				} else {
 					// Equation for getting how many samples we should average, which is linear from low to high samples - y = m(x-x0) + y0
-					amountOfSamples = pulseSensor[sensorNumber].vssSlope * (tempFrequencyCalc - pulseSensor[sensorNumber].lowPulsesPerSecond) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
+					numSamples = pulseSensor[sensorNumber].vssSlope * (tempFrequencyCalc - pulseSensor[sensorNumber].lowPulsesPerSecond) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
 				}
 			} else {
-				amountOfSamples = pulseSensor[sensorNumber].minSamples;
+				numSamples = pulseSensor[sensorNumber].minSamples;
 			}
 		}
 	}
@@ -321,7 +289,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 		deltaTotal -= delta;
 		deltaTotal += last2ndDelta;
 #ifdef DEBUG_PS
-		TrackedNumDroppedValues++;
+		pulseSensor[sensorNumber].numDroppedValues++;
 #endif
 	}
 
@@ -329,8 +297,6 @@ void evaluate_pulse_sensor(int sensorNumber) {
 
 	// Calculate average
 	float resultingAverageDelta = deltaTotal / (float)numDeltas;
-
-	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
 
 	if(!(isinf(resultingAverageDelta) || isnan(resultingAverageDelta))) {
 
@@ -355,56 +321,53 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	*pulseSensor[sensorNumber].resultStoreLocation = result;
 
 #ifdef DEBUG_PS
+	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
+	pulseSensor[sensorNumber].numSamples = numSamples;
+	pulseSensor[sensorNumber].DMACurrentPosition = DMACurrentPosition;
+
 	// Debug Start
-	TrackedDMACurrentPosition = DMACurrentPosition;
-	TrackedAmountOfSamples = amountOfSamples;
 	TrackedValueInQuestion = valueInQuestion;
-//	TrackedFirstValue = bufferCopy[IC_BUF_SIZE - 1];
-//	TrackedLastValue = bufferCopy[0];
 	TrackedDeltaTotal = deltaTotal;
 	TrackedFrequency = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
+	lastNumDeltas = numDeltas;
 	numLoops++;
 
+	// 1 loop cool-down so it doesn't trigger on changing back to correct
 	if (error) {
 		error = false;
 	} else {
-		//for(int i = 1; i < numDeltas - 1; i++) {
-		//	if(deltaList[i] > deltaList[i-1]*1.45 && deltaList[i] > deltaList[i+1]*1.45){
+		// If the result is within 1% of the last result
 		if(resultingAverageDelta >= TrackedResult * 1.01 || resultingAverageDelta <= TrackedResult * 0.99) {
-				printf("--- Anomaly Detected! ---\n");
-				printf("Current Value: %f\n", resultingAverageDelta);
-				printf("Previous Value: %f\n", TrackedResult);
-				printf("DMA Position: %u\n", TrackedDMACurrentPosition);
-				printf("Num Loops: %u\n", numLoops);
-				printf("Num Deltas: %u\n", numDeltas);
-				printf("Last Num Deltas: %u\n", lastNumDeltas);
-				printf("Delta total: %lu\n", deltaTotal);
-				printf("Last Delta total: %lu\n", lastDeltaTotal);
-				printf("Amount of Samples: %u\n", TrackedAmountOfSamples);
-				printf("Current Tick: %lu\n", HAL_GetTick());
-				printf("Distance from Last Occurence: %lu\n", HAL_GetTick() - lastTick);
-				lastTick = HAL_GetTick();
-				for (int i = 0; i < IC_BUF_SIZE; i++) {
-					printf("Value %i: ", i);
-					if (i == DMACurrentPosition) {
-						printf("- ");
-					}
-					printf("%lu\n", pulseSensor[sensorNumber].buffer[i]);
+			// Print out a bunch of information about everything so everything at that moment is know and patterns can quickly be identified.
+			printf("--- Anomaly Detected! ---\n");
+			printf("Current Value: %f\n", resultingAverageDelta);
+			printf("Previous Value: %f\n", TrackedResult);
+			printf("DMA Position: %u\n", TrackedDMACurrentPosition);
+			printf("Num Loops: %u\n", numLoops);
+			printf("Num Deltas: %u\n", numDeltas);
+			printf("Last Num Deltas: %u\n", lastNumDeltas);
+			printf("Delta total: %lu\n", deltaTotal);
+			printf("Last Delta total: %lu\n", lastDeltaTotal);
+			printf("Amount of Samples: %u\n", numSamples);
+			printf("Current Tick: %lu\n", HAL_GetTick());
+			printf("Distance from Last Anomaly: %lu\n", HAL_GetTick() - lastTick);
+			lastTick = HAL_GetTick();
+			for (int i = 0; i < IC_BUF_SIZE; i++) {
+				printf("Value %i: ", i);
+				if (i == DMACurrentPosition) {
+					printf("- ");
 				}
-				printf("DELTAS ===\n");
-				for (int i = 0; i < IC_BUF_SIZE; i++) {
-					printf("Value %i: ", i);
-					printf("%lu\n", deltaList[i]);
-					//(U16)((DMACurrentPosition - i + IC_BUF_SIZE) % IC_BUF_SIZE)
-				}
-				error = true;
-				numLoops = 0;
-			//}
+				printf("%lu\n", pulseSensor[sensorNumber].buffer[i]);
+			}
+			printf("DELTAS ===\n");
+			for (int i = 0; i < IC_BUF_SIZE; i++) {
+				printf("Value %i: ", i);
+				printf("%lu\n", deltaList[i]);
+			}
+			error = true;
+			numLoops = 0;
 		}
 	}
-	lastNumDeltas = numDeltas;
-	lastDeltaTotal = deltaTotal;
-	TrackedResult = resultingAverageDelta;
 	// Debug end
 #endif
 }
@@ -416,18 +379,16 @@ static void clear_buffer_and_reset_dma(U8 sensorNumber) {
 	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE);
 }
 
-
-
 // Also as name implies
 static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds) {
 	float lengthOfDeltaSeconds = deltaTime * timerPeriodSeconds; // Since timer period is division already done (1MHz is 1000ns period)
 	float frequencyHz = 1 / lengthOfDeltaSeconds;
 
 #ifdef DEBUG_PS
-	// Debug
-	TrackedValue = deltaTime;
-	TrackedLength = lengthOfDeltaSeconds;
+	TrackedConversionPeriodSeconds = lengthOfDeltaSeconds;
 #endif
 
 	return frequencyHz;
 }
+
+
