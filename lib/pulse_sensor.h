@@ -15,6 +15,15 @@
 #define ONE_MHZ 1000000
 #define DUPLICATE_VALUE_TICK_DIFFERENCE 25	// TODO: See if there's a universal value or if needs to be set individually
 
+// Error codes
+#define CANNOT_DETECT_TIMER_SIZE -1
+#define READ_SUCCESS 0
+#define NO_NEW_VALUE 1
+#define STALE_BUFFER_WIPE 2
+#define STOPPED 3
+#define UN_STOPPED 4
+#define INF_OR_NAN_RESULT 5
+
 typedef struct
 {
 	// Passed in values
@@ -43,14 +52,15 @@ typedef struct
 	float averageDeltaTimerTicks;
 	U16 numSamples;
 	U16 numDroppedValues;
+	U16 numDuplicateValues;
 	U16 DMACurrentPosition;
 #endif
 
 } PulseSensor;
 
-void setup_pulse_sensor_vss(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS, bool useVariableSpeedSampling, U16 lowPulsesPerSecond, U16 highPulsesPerSecond, U16 minSamples);
-void setup_pulse_sensor(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS);
-void check_pulse_sensors();
-void evaluate_pulse_sensor(int sensorNumber);
+int setup_pulse_sensor_vss(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS, bool useVariableSpeedSampling, U16 lowPulsesPerSecond, U16 highPulsesPerSecond, U16 minSamples);
+int setup_pulse_sensor(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS);
+int check_pulse_sensors();
+int evaluate_pulse_sensor(int sensorNumber);
 
 #endif

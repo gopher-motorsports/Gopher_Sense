@@ -23,10 +23,9 @@ static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodS
 #ifdef DEBUG_PS
 static U32 deltaList[MAX_DELTAS] = {0};
 
-static float TrackedResult = 0;
+static float lastResult = 0;
 static float TrackedFrequency = 0;
 static float TrackedConversionPeriodSeconds = 0;
-static S16 TrackedDMACurrentPosition = 0;
 static U32 TrackedValueInQuestion = 0;
 static U32 TrackedDeltaTotal = 0;
 static U32 lastTick = 0;
@@ -38,7 +37,7 @@ static bool error = false;
 #endif
 
 // Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
-void setup_pulse_sensor_vss(
+int setup_pulse_sensor_vss(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
 		float conversionRatio,
@@ -69,8 +68,11 @@ void setup_pulse_sensor_vss(
 	// TODO: Change clock frequency if certain timers
 	if (htim->Instance->ARR == 0xFFFF) {
 		newSensor->timerSize = 16;
+	} else if (htim->Instance->ARR == 0xFFFFFFFF) {
+		newSensor->timerSize = 32;
 	} else {
 		newSensor->timerSize = 32;
+		return -1;
 	}
 
 	newSensor->timerPeriodSeconds = 1 / ((float)clockFrequency / (htim->Instance->PSC + 1));
@@ -88,10 +90,12 @@ void setup_pulse_sensor_vss(
 	HAL_TIM_IC_Start_DMA(htim, channel, (U32*)pulseSensor[numSensors].buffer, IC_BUF_SIZE);
 
 	numSensors++;
+
+	return 0;
 }
 
 // Function for setting up timer without variable speed sampling (vss)
-void setup_pulse_sensor(
+int setup_pulse_sensor(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
 		float conversionRatio,
@@ -99,7 +103,7 @@ void setup_pulse_sensor(
 		U16 dmaStoppedTimeoutMS
 		)
 {
-	setup_pulse_sensor_vss(
+	return setup_pulse_sensor_vss(
 		htim,
 		channel,
 		conversionRatio,
@@ -113,14 +117,16 @@ void setup_pulse_sensor(
 }
 
 // Function for going through all of the currently set up pulse sensors
-void check_pulse_sensors() {
+int check_pulse_sensors() {
 	for (int sensorNumber = 0; sensorNumber < numSensors; sensorNumber++) {
 		evaluate_pulse_sensor(sensorNumber);
 	}
+
+	return 0;
 }
 
 // Function that goes through the buffer of the given pulse sensor, handling edge cases, and setting the return value to the found speed value.
-void evaluate_pulse_sensor(int sensorNumber) {
+int evaluate_pulse_sensor(int sensorNumber) {
 
 	// Get the current tick and use it throughout the whole function so it can't change between operations.
 	U32 currentTick = HAL_GetTick();
@@ -143,7 +149,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 					clear_buffer_and_reset_dma(sensorNumber);
 					pulseSensor[sensorNumber].DMALastReadValue = 0; // Set to 0 so there aren't accidents.
 				}
-				return;
+				return STALE_BUFFER_WIPE;
 			} else {
 				// TODO see if this should be changed from min samples
 				if (pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 1 - pulseSensor[sensorNumber].minSamples + IC_BUF_SIZE) % IC_BUF_SIZE] != 0) {
@@ -157,12 +163,12 @@ void evaluate_pulse_sensor(int sensorNumber) {
 					// A new unwiped value but it's just the first after 0. Log it and go again.
 					pulseSensor[sensorNumber].DMALastReadValue = valueInQuestion;
 					pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
-					return;
+					return UN_STOPPED;
 				}
 			}
 		} else {
 			*(pulseSensor[sensorNumber].resultStoreLocation) = 0; // Otherwise make sure the store location value is 0 and leave.
-			return;
+			return NO_NEW_VALUE;
 		}
 	}
 
@@ -181,11 +187,12 @@ void evaluate_pulse_sensor(int sensorNumber) {
 			printf("=== STOPPED ===\n");
 #endif
 
-			return;
+			return STOPPED;
 		}
 		// Value is the same as the last but it hasn't been enough time to declare stale, hop out of here for now because there's nothing new to process
-		return;
+		return NO_NEW_VALUE;
 	}
+
 
 	// ===== Passed All Breakpoint Checks =====
 	pulseSensor[sensorNumber].DMALastReadValue = valueInQuestion;
@@ -201,34 +208,33 @@ void evaluate_pulse_sensor(int sensorNumber) {
 	U16 numDeltas = 0;
 	U32 delta = 0;
 
+	// Begin by going through the first minimum amount samples to determine how many we should read, and then find the average delta while rejecting any dropped DMA values
 	for (U16 i = 0; i < numSamples; i++)
 	{
 		U32 value1 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 1 - i + IC_BUF_SIZE) % IC_BUF_SIZE];
 		U32 value2 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 2 - i + IC_BUF_SIZE) % IC_BUF_SIZE];
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
+			// Check if the difference is so small it can be considered a duplicate of the last
 			if (abs(value2 - value1) > DUPLICATE_VALUE_TICK_DIFFERENCE) {
-
-
 				if (value1 < value2) {
 					delta = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
 				} else {
 					delta = value1 - value2; // Buffer roll-over (timer resets to 0) protection
 				}
 #ifdef DEBUG_PS
+				// Store deltas in an array for  if we're debugging
 				deltaList[numDeltas] = delta;
 #endif
-				// Smoothing for issue where DMA loses values
-				if(last2ndDelta == 0) {
-					if(lastDelta != 0) {
-						if(lastDelta > delta * 1.8) {
-							deltaTotal -= lastDelta;
-							deltaTotal += delta;
+				// Begin smoothing for issue where DMA loses values
+				if(numDeltas == 2) { // On the 3rd delta check if the first value (unprotected by main checker) was bad
+					if((last2ndDelta > lastDelta * 1.8) && (last2ndDelta > delta * 1.8)) {
+						deltaTotal -= lastDelta;
+						deltaTotal += delta;
 #ifdef DEBUG_PS
-							pulseSensor[sensorNumber].numDroppedValues++;
+						pulseSensor[sensorNumber].numDroppedValues++;
 #endif
-						}
 					}
-				} else {
+				} else if (numDeltas > 2) { // Make sure not to check first 2
 					if ((lastDelta > delta * 1.8) && (lastDelta > last2ndDelta * 1.8)) {
 						deltaTotal -= lastDelta;
 						lastDelta = (delta + last2ndDelta) * 0.5;
@@ -246,16 +252,16 @@ void evaluate_pulse_sensor(int sensorNumber) {
 			}
 #ifdef DEBUG_PS
 			else {
-				pulseSensor[sensorNumber].numDroppedValues++;
+				pulseSensor[sensorNumber].numDuplicateValues++;
 			}
 #endif
 		}
 
 		// When we're at the minimum samples, take a break to re-evaluate our amount of samples from it's initial value of the minimum + 1.
-		if ((i == ((DMACurrentPosition - 1 - pulseSensor[sensorNumber].minSamples + IC_BUF_SIZE) % IC_BUF_SIZE)) && pulseSensor[sensorNumber].useVariableSpeedSampling) {
+		if (i == pulseSensor[sensorNumber].minSamples && pulseSensor[sensorNumber].useVariableSpeedSampling) {
 			// Need a temp total so it doesn't mess up the regular loops bad value rejection
 			U32 tempDeltaTotal = deltaTotal;
-			// All deltas are protected from dropped values.
+			// Check current end value so all deltas are protected from dropped values
 			if (delta > last2ndDelta * 1.8)
 			{
 				tempDeltaTotal -= delta;
@@ -284,7 +290,8 @@ void evaluate_pulse_sensor(int sensorNumber) {
 		}
 	}
 
-	if (delta > last2ndDelta * 1.8)
+	// After the delta checking and adding loop is over, make sure the last one isn't bad either
+	if (delta > lastDelta * 1.8 && delta > last2ndDelta * 1.8)
 	{
 		deltaTotal -= delta;
 		deltaTotal += last2ndDelta;
@@ -293,29 +300,23 @@ void evaluate_pulse_sensor(int sensorNumber) {
 #endif
 	}
 
+	// Time to calculate results
 	float result = 0;
 
 	// Calculate average
 	float resultingAverageDelta = deltaTotal / (float)numDeltas;
 
-	if(!(isinf(resultingAverageDelta) || isnan(resultingAverageDelta))) {
-
 		// Calculate result from average delta
 		result = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds) * pulseSensor[sensorNumber].conversionRatio;
 
-		// Check if calculation came out inf or nan
+		// Check if the calculation is inf or nan for any reason
 		if(isinf(result) || isnan(result)) {
-			result = 0;
 #ifdef DEBUG_PS
 			numTimesNaNorInf++;
 #endif
+			*pulseSensor[sensorNumber].resultStoreLocation = 0;
+			return INF_OR_NAN_RESULT;
 		}
-	}
-#ifdef DEBUG_PS
-	else {
-		numTimesNaNorInf++;
-	}
-#endif
 
 	// Send result to store location
 	*pulseSensor[sensorNumber].resultStoreLocation = result;
@@ -337,12 +338,12 @@ void evaluate_pulse_sensor(int sensorNumber) {
 		error = false;
 	} else {
 		// If the result is within 1% of the last result
-		if(resultingAverageDelta >= TrackedResult * 1.01 || resultingAverageDelta <= TrackedResult * 0.99) {
+		if(resultingAverageDelta >= lastResult * 1.01 || resultingAverageDelta <= lastResult * 0.99) {
 			// Print out a bunch of information about everything so everything at that moment is know and patterns can quickly be identified.
 			printf("--- Anomaly Detected! ---\n");
 			printf("Current Value: %f\n", resultingAverageDelta);
-			printf("Previous Value: %f\n", TrackedResult);
-			printf("DMA Position: %u\n", TrackedDMACurrentPosition);
+			printf("Previous Value: %f\n", lastResult);
+			printf("DMA Position: %u\n", DMACurrentPosition);
 			printf("Num Loops: %u\n", numLoops);
 			printf("Num Deltas: %u\n", numDeltas);
 			printf("Last Num Deltas: %u\n", lastNumDeltas);
@@ -360,7 +361,7 @@ void evaluate_pulse_sensor(int sensorNumber) {
 				printf("%lu\n", pulseSensor[sensorNumber].buffer[i]);
 			}
 			printf("DELTAS ===\n");
-			for (int i = 0; i < IC_BUF_SIZE; i++) {
+			for (int i = 0; i < MAX_DELTAS; i++) {
 				printf("Value %i: ", i);
 				printf("%lu\n", deltaList[i]);
 			}
@@ -368,8 +369,11 @@ void evaluate_pulse_sensor(int sensorNumber) {
 			numLoops = 0;
 		}
 	}
+	lastResult = resultingAverageDelta;
 	// Debug end
 #endif
+
+	return READ_SUCCESS;
 }
 
 // Function exactly as name implies
