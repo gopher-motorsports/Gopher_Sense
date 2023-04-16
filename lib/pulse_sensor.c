@@ -25,7 +25,21 @@ static U32 deltaList[MAX_DELTAS] = {0};
 static float TrackedFrequency = 0;
 #endif
 
-// Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
+/**
+ * Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
+ *
+ * him - Timer that was used to set up input capture and DMA on (Ex. &htim2)
+ * channel - Channel of the given timer (Ex. TIM_CHANNEL_1)
+ * conversionRatio - Number to multiple the frequency by to get the desired result
+ * 		(Ex. for TCM: (X pulses / 1 sec) * (60 sec / 1 min) * (1 rev / 30 pulses) = RPM, so conversion ration would be 60/30 = 2)
+ * resultStoreLocation - Float pointer to a location you want to be updated after using check_pulse_sensor() (Ex. &(tcm_data.trans_speed)
+ * dmaStoppedTimeoutMS - Max number of miliseconds between pulses before rotating object should be declared to have stopped.
+ * 		Different timers/configurations may have different limits to this value before the buffer may roll over or the deltas get too big. (Ex. 60 for 60 miliseconds)
+ * useVariableSpeedSampling - Boolean for weather or not to vary the amount of samples taken from the buffer to calculate a result. Expected to be true when using setup_pulse_sensor_vss(), otherwise use setup_pulse_sensor()
+ * lowPulsesPerSecond - Value at which the min samples will be used from the buffer behind the DMA position
+ * highPulsesPerSecond - Value at which the max number of deltas from the buffer will sampled to get the resulting speed value
+ * minSamples - Minimum amount of samples to take if using variable speed sampling
+ */
 int setup_pulse_sensor_vss(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
@@ -39,6 +53,12 @@ int setup_pulse_sensor_vss(
 		)
 {
 	PulseSensor* newSensor = &pulseSensor[numSensors];
+
+	if (useVariableSpeedSampling) {
+		if (lowPulsesPerSecond == 0 || lowPulsesPerSecond > MAX_DELTAS) return -1;	// Low pulses per second is too low or too high
+		if (highPulsesPerSecond == 0 || highPulsesPerSecond > MAX_DELTAS) return -2;	// High pulses per second is too low or too high
+		if (minSamples == 0  || minSamples > MAX_DELTAS) return -3;	// Min samples is too low or too high
+	}
 
 	// Set the local values of the pulse sensor data struct to the given parameters
 	newSensor->htim = htim;
@@ -214,7 +234,7 @@ int evaluate_pulse_sensor(int sensorNumber) {
 				deltaList[numDeltas] = delta;
 #endif
 				// Begin smoothing for issue where DMA loses values
-				if(numDeltas == 2) { // On the 3rd delta check if the first value (unprotected by main checker) was bad
+				if(numDeltas == 2) { // On the 3rd delta check if the first value (unprotected by main checker) was an extra large (due to dropped value) that needs to be overwritten
 					if((last2ndDelta > lastDelta * 1.8) && (last2ndDelta > delta * 1.8)) {
 						deltaTotal -= lastDelta;
 						deltaTotal += delta;

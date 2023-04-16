@@ -29,19 +29,19 @@ typedef struct
 	// Passed in values
 	TIM_HandleTypeDef* htim; 		// Timer that was used to set up input capture and DMA on
 	U32 channel;					// Channel of the given timer
-	float timerPeriodSeconds;		// Period of timer ticks (they can be different between different timers)
 	float conversionRatio;			// Number to multiple the frequency by to get the desired result
-	float* resultStoreLocation;		// Float pointer to a location you want the resulting RPM to update
-	U16 dmaStoppedTimeoutMS;		// Max number of miliseconds between pulses before rotating object should be declared to have stopped. 16hz min for
-	bool useVariableSpeedSampling;	// Bool for weather or not to vary the amount of samples taken from the buffer to determine the resulting RPM average
-	U16 lowPulsesPerSecond;			// Value at which the min samples will be used from the buffer behind the DMA position. Set to desired number of samples if not using variable speed sampling, or 0 for max samples
-	U16 highPulsesPerSecond;		// Value at which all 64 values in the buffer are sampled to get the resulting speed value. Set to 0 if not using variable speed sampling
+	float* resultStoreLocation;		// Float pointer to a location you want to be updated after using check_pulse_sensor()
+	U16 dmaStoppedTimeoutMS;		// Max number of miliseconds between pulses before rotating object should be declared to have stopped
+	bool useVariableSpeedSampling;	// Boolean for weather or not to vary the amount of samples taken from the buffer to calculate a result
+	U16 lowPulsesPerSecond;			// Value at which the min samples will be used from the buffer behind the DMA position
+	U16 highPulsesPerSecond;		// Value at which the max number of deltas from the buffer will sampled to get the resulting speed value
 	U16 minSamples;					// Minimum amount of samples to take if using variable speed sampling
 
 	U32 buffer[IC_BUF_SIZE];
 
 	// Stored values
 	float vssSlope;
+	float timerPeriodSeconds;		// Period of timer ticks (can be different between different timers) - current found automatically in sensor init
 	U32 lastDMAReadValueTimeMs;
 	U16 timerSize;
 	U16 DMALastReadValue;
