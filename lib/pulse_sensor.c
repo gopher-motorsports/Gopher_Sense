@@ -22,6 +22,8 @@ static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodS
 #ifdef DEBUG_PS
 static U32 deltaList[MAX_DELTAS] = {0};
 static float TrackedFrequency = 0;
+static U32 timeBetween = 100;
+static U32 lastTime = 0;
 #endif
 
 /**
@@ -53,9 +55,10 @@ int setup_pulse_sensor_vss(
 {
 	PulseSensor* newSensor = &pulseSensor[numSensors];
 
+	// TODO: Should we refuse to setup if there's issues here?
 	if (useVariableSpeedSampling) {
-		if (lowPulsesPerSecond == 0 || lowPulsesPerSecond > MAX_DELTAS) return -1;	// Low pulses per second is too low or too high
-		if (highPulsesPerSecond == 0 || highPulsesPerSecond > MAX_DELTAS) return -2;	// High pulses per second is too low or too high
+//		if (lowPulsesPerSecond == 0 || lowPulsesPerSecond > MAX_DELTAS) return -1;	// Low pulses per second is too low or too high
+//		if (highPulsesPerSecond == 0 || highPulsesPerSecond > MAX_DELTAS) return -2;	// High pulses per second is too low or too high
 		if (minSamples == 0  || minSamples > MAX_DELTAS) return -3;	// Min samples is too low or too high
 	}
 
@@ -94,7 +97,7 @@ int setup_pulse_sensor_vss(
 	newSensor->stopped = true;
 	newSensor->vssSlope = (MAX_DELTAS - minSamples) / (float)(highPulsesPerSecond - lowPulsesPerSecond); // Calculate the constant slope value for vss once at the beginning here.
 
-	HAL_TIM_IC_Start_DMA(htim, channel, (U32*)pulseSensor[numSensors].buffer, IC_BUF_SIZE);
+	HAL_TIM_IC_Start_DMA(htim, channel, (U32*)(pulseSensor[numSensors].buffer), IC_BUF_SIZE);
 
 	numSensors++;
 
@@ -139,7 +142,8 @@ int evaluate_pulse_sensor(int sensorNumber) {
 	U32 currentTick = HAL_GetTick();
 
 	// Find the current position of DMA for the current sensor
-	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[1])->Instance->NDTR);
+	// TODO: This NEEDS to be updated for deadling with other times and channels than the TCM - hdma[1] doesn't always work
+	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[4])->Instance->NDTR);
 
 	// Find the value in question, which is 1 position backwards from the DMA's current position, which is the end of the buffer copy.
 	S16 lastBufferPosition = (DMACurrentPosition - 1 + IC_BUF_SIZE) % IC_BUF_SIZE;
@@ -329,6 +333,29 @@ int evaluate_pulse_sensor(int sensorNumber) {
 	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
 	pulseSensor[sensorNumber].numSamples = numSamples;
 	pulseSensor[sensorNumber].DMACurrentPosition = DMACurrentPosition;
+
+
+	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
+
+	if (currentTick - lastTime > timeBetween) {
+		for (int i = 0; i < IC_BUF_SIZE; i++) {
+			printf("Value %i: ", i);
+			if (i == DMACurrentPosition) {
+				printf("- ");
+			}
+			printf("%lu\n", pulseSensor[sensorNumber].buffer[i]);
+		}
+		printf("DELTAS ===\n");
+		for (int i = 0; i < MAX_DELTAS; i++) {
+			printf("Value %i: ", i);
+			printf("%lu\n", deltaList[i]);
+
+		}
+		lastTime = currentTick;
+	}
+
+	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE);
+
 #endif
 
 	return READ_SUCCESS;

@@ -6,7 +6,7 @@
 #ifndef PULSE_SENSOR_H
 #define PULSE_SENSOR_H
 
-// #define DEBUG_PS
+#define DEBUG_PS
 
 #define TIMER_COUNT 4
 #define IC_BUF_SIZE 128
@@ -29,6 +29,7 @@ typedef struct
 	// Passed in values
 	TIM_HandleTypeDef* htim; 		// Timer that was used to set up input capture and DMA on
 	U32 channel;					// Channel of the given timer
+	U8 hdmaChannel;
 	float conversionRatio;			// Number to multiple the frequency by to get the desired result
 	float* resultStoreLocation;		// Float pointer to a location you want to be updated after using check_pulse_sensor()
 	U16 dmaStoppedTimeoutMS;		// Max number of miliseconds between pulses before rotating object should be declared to have stopped
