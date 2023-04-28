@@ -1,12 +1,13 @@
 #include "main.h"
 #include "base_types.h"
 #include <stdbool.h>
+#include <math.h>
 
 // Header guard
 #ifndef PULSE_SENSOR_H
 #define PULSE_SENSOR_H
 
-#define DEBUG_PS
+//#define DEBUG_PS
 
 #define TIMER_COUNT 4
 #define IC_BUF_SIZE 128
@@ -24,12 +25,14 @@
 #define UN_STOPPED 4
 #define INF_OR_NAN_RESULT 5
 
+#define CALCULATE_MPH_CONVERSION_RATIO(ticksPerRev, radiusInches) (radiusInches*2*M_PI/ticksPerRev*60*60/5280) // Circumpherence/ticksPerRev*minutes*hours/inchesPerMile
+
 typedef struct
 {
 	// Passed in values
 	TIM_HandleTypeDef* htim; 		// Timer that was used to set up input capture and DMA on
 	U32 channel;					// Channel of the given timer
-	U8 hdmaChannel;
+	U8 hdmaChannel;					// [Hopefully temporary] Value of the array position of the timers hdma the selected timer and channel will use - needed for getting the dma position
 	float conversionRatio;			// Number to multiple the frequency by to get the desired result
 	float* resultStoreLocation;		// Float pointer to a location you want to be updated after using check_pulse_sensor()
 	U16 dmaStoppedTimeoutMS;		// Max number of miliseconds between pulses before rotating object should be declared to have stopped
@@ -59,8 +62,8 @@ typedef struct
 
 } PulseSensor;
 
-int setup_pulse_sensor_vss(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS, bool useVariableSpeedSampling, U16 lowPulsesPerSecond, U16 highPulsesPerSecond, U16 minSamples);
-int setup_pulse_sensor(TIM_HandleTypeDef* htim, U32 channel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS);
+int setup_pulse_sensor_vss(TIM_HandleTypeDef* htim, U32 channel, U8 hdmaChannel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS, bool useVariableSpeedSampling, U16 lowPulsesPerSecond, U16 highPulsesPerSecond, U16 minSamples);
+int setup_pulse_sensor(TIM_HandleTypeDef* htim, U32 channel, U8 hdmaChannel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS);
 int check_pulse_sensors();
 int evaluate_pulse_sensor(int sensorNumber);
 

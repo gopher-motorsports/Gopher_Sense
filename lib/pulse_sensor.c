@@ -30,7 +30,8 @@ static U32 lastTime = 0;
  * Function for setting up timer with all details, use this function directly to include variable speed sampling (vss) data.
  *
  * him - Timer that was used to set up input capture and DMA on (Ex. &htim2)
- * channel - Channel of the given timer (Ex. TIM_CHANNEL_1)
+ * channel - Channel of the given timer (Ex. TIM_CHANNEL_1) - NOTE: You need to be very aware if different timer channels cannot be run at the same time. For example on timer 2, Channel 4 and channel 2 cannot be used at the same time as they share the same hdma positions (below) and fail to start if the other is configured first. You can tell be looking at the channels that you're setting up when configuring for DMA - if the channel you're trying to set up says somthing like TIM2_CH2/CH4, this means they're interchangeable. You may have to look if there is a different timer availible on the same pins (In this case tim5 was availible which has no channel conflicts.
+ * hdmaChannel - // [Hopefully temporary] Value of the array position of the timers hdma the selected timer and channel will use - needed for getting the dma position
  * conversionRatio - Number to multiple the frequency by to get the desired result
  * 		(Ex. for TCM: (X pulses / 1 sec) * (60 sec / 1 min) * (1 rev / 30 pulses) = RPM, so conversion ration would be 60/30 = 2)
  * resultStoreLocation - Float pointer to a location you want to be updated after using check_pulse_sensor() (Ex. &(tcm_data.trans_speed)
@@ -44,6 +45,7 @@ static U32 lastTime = 0;
 int setup_pulse_sensor_vss(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
+		U8 hdmaChannel,
 		float conversionRatio,
 		float* resultStoreLocation,
 		U16 dmaStoppedTimeoutMS,
@@ -65,6 +67,7 @@ int setup_pulse_sensor_vss(
 	// Set the local values of the pulse sensor data struct to the given parameters
 	newSensor->htim = htim;
 	newSensor->channel = channel;
+	newSensor->hdmaChannel = hdmaChannel;
 	newSensor->conversionRatio = conversionRatio;
 	newSensor->resultStoreLocation = resultStoreLocation;
 	newSensor->useVariableSpeedSampling = useVariableSpeedSampling;
@@ -108,6 +111,7 @@ int setup_pulse_sensor_vss(
 int setup_pulse_sensor(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
+		U8 hdmaChannel,
 		float conversionRatio,
 		float* resultStoreLocation,
 		U16 dmaStoppedTimeoutMS
@@ -116,6 +120,7 @@ int setup_pulse_sensor(
 	return setup_pulse_sensor_vss(
 		htim,
 		channel,
+		hdmaChannel,
 		conversionRatio,
 		resultStoreLocation,
 		dmaStoppedTimeoutMS,
@@ -143,7 +148,7 @@ int evaluate_pulse_sensor(int sensorNumber) {
 
 	// Find the current position of DMA for the current sensor
 	// TODO: This NEEDS to be updated for deadling with other times and channels than the TCM - hdma[1] doesn't always work
-	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[4])->Instance->NDTR);
+	S16 DMACurrentPosition = IC_BUF_SIZE - (U16)((pulseSensor[sensorNumber].htim->hdma[pulseSensor[sensorNumber].hdmaChannel])->Instance->NDTR);
 
 	// Find the value in question, which is 1 position backwards from the DMA's current position, which is the end of the buffer copy.
 	S16 lastBufferPosition = (DMACurrentPosition - 1 + IC_BUF_SIZE) % IC_BUF_SIZE;
