@@ -153,8 +153,10 @@ sensors:
         name_english: "Steering Angle Sensor"
         analog_subtype: Voltage
         points:
-            - (0.33, 0) # 0.5 * 3.3/5
-            - (2.97, 360) # 4.5 * 3.3/5
+            - (0.77213, -105)
+            - (2.71541, 105)
+            # -105, 60.29 -> 0.1674722 -> 0.77213V
+            # 105, 325.283203 -> 2.715410V
         
     exhaust_temp_sensor:
         # Sensata HTS_0630_330
