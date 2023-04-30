@@ -1,11 +1,13 @@
 /**
  * Library for operating pulse one or multiple sensors and returning an result through a float pointer.
+ * Currently needs to be a f4 stm32 for auto-detecting the hdma array value
  *
  * Alex Tong
  */
 
 #include "pulse_sensor.h"
 #include "base_types.h"
+#include "main.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -20,7 +22,7 @@ static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodS
 
 // Most useful debug variables
 #ifdef DEBUG_PS
-static U32 deltaList[MAX_DELTAS] = {0};
+static U32 deltaList[IC_BUF_SIZE] = {0};
 static float TrackedFrequency = 0;
 static U32 timeBetween = 100;
 static U32 lastTime = 0;
@@ -41,33 +43,34 @@ static U32 lastTime = 0;
  * lowPulsesPerSecond - Value at which the min samples will be used from the buffer behind the DMA position
  * highPulsesPerSecond - Value at which the max number of deltas from the buffer will sampled to get the resulting speed value
  * minSamples - Minimum amount of samples to take if using variable speed sampling
+ * maxSamples - Maxium amount of samples to take - 64 recommended high, max of 100 (will not hit if there is duplicate values)
  */
 int setup_pulse_sensor_vss(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
-		U8 hdmaChannel,
 		float conversionRatio,
 		float* resultStoreLocation,
 		U16 dmaStoppedTimeoutMS,
 		bool useVariableSpeedSampling,
 		U16 lowPulsesPerSecond,
 		U16 highPulsesPerSecond,
-		U16 minSamples
+		U16 minSamples,
+		U16 maxSamples
 		)
 {
 	PulseSensor* newSensor = &pulseSensor[numSensors];
 
-	// TODO: Should we refuse to setup if there's issues here?
+	if (maxSamples > MAX_READ_BUFFER_VALUES) return MAX_VALUES_TOO_HIGH; // Max samples is too low or too high
 	if (useVariableSpeedSampling) {
-//		if (lowPulsesPerSecond == 0 || lowPulsesPerSecond > MAX_DELTAS) return -1;	// Low pulses per second is too low or too high
-//		if (highPulsesPerSecond == 0 || highPulsesPerSecond > MAX_DELTAS) return -2;	// High pulses per second is too low or too high
-		if (minSamples == 0  || minSamples > MAX_DELTAS) return -3;	// Min samples is too low or too high
+		if (lowPulsesPerSecond == 0) return TOO_LOW_LOW_PPS;	// Low pulses per second is too low or too high
+		if (highPulsesPerSecond == 0) return TOO_LOW_HIGH_PPS;	// High pulses per second is too low or too high
+		if (minSamples == 0 || minSamples > MAX_READ_BUFFER_VALUES) return TOO_LOW_OR_HIGH_MIN_SAMPLES;	// Min samples is too low or too high
+		if (maxSamples <= minSamples) return MAX_SAMPLES_NOT_GREATER_THAN_MIN; // Max samples is not greater than min samples
 	}
 
 	// Set the local values of the pulse sensor data struct to the given parameters
 	newSensor->htim = htim;
 	newSensor->channel = channel;
-	newSensor->hdmaChannel = hdmaChannel;
 	newSensor->conversionRatio = conversionRatio;
 	newSensor->resultStoreLocation = resultStoreLocation;
 	newSensor->useVariableSpeedSampling = useVariableSpeedSampling;
@@ -75,6 +78,7 @@ int setup_pulse_sensor_vss(
 	newSensor->lowPulsesPerSecond = lowPulsesPerSecond;
 	newSensor->highPulsesPerSecond = highPulsesPerSecond;
 	newSensor->minSamples = minSamples;
+	newSensor->maxSamples = maxSamples;
 
 	U32 clockFrequency = HAL_RCC_GetSysClockFreq() * 0.5; // Multiply by 0.5 as timers are 1/2 the clock frequency
 
@@ -85,8 +89,25 @@ int setup_pulse_sensor_vss(
 	} else if (htim->Instance->ARR == 0xFFFFFFFF) {
 		newSensor->timerSize = 32;
 	} else {
-		newSensor->timerSize = 32;
-		return -1;
+		return CANNOT_DETECT_TIMER_SIZE;
+	}
+
+	switch(channel) {
+		case TIM_CHANNEL_1:
+			newSensor->hdmaChannel = 1;
+			break;
+		case TIM_CHANNEL_2:
+			newSensor->hdmaChannel = 2;
+			break;
+		case TIM_CHANNEL_3:
+			newSensor->hdmaChannel = 3;
+			break;
+		case TIM_CHANNEL_4:
+			newSensor->hdmaChannel = 4;
+			break;
+		default:
+			return CANNOT_DETECT_HDMA_CHANNEL;
+			break;
 	}
 
 	newSensor->timerPeriodSeconds = 1 / ((float)clockFrequency / (htim->Instance->PSC + 1));
@@ -98,9 +119,11 @@ int setup_pulse_sensor_vss(
 	newSensor->lastDMAReadValueTimeMs = 0;
 	newSensor->DMALastReadValue = 0;
 	newSensor->stopped = true;
-	newSensor->vssSlope = (MAX_DELTAS - minSamples) / (float)(highPulsesPerSecond - lowPulsesPerSecond); // Calculate the constant slope value for vss once at the beginning here.
+	newSensor->vssSlope = (maxSamples - minSamples) / (float)(highPulsesPerSecond - lowPulsesPerSecond); // Calculate the constant slope value for vss once at the beginning here.
 
-	HAL_TIM_IC_Start_DMA(htim, channel, (U32*)(pulseSensor[numSensors].buffer), IC_BUF_SIZE);
+	if(HAL_TIM_IC_Start_DMA(htim, channel, (U32*)(pulseSensor[numSensors].buffer), IC_BUF_SIZE)) {
+		return STARTING_DMA_FAILED;
+	}
 
 	numSensors++;
 
@@ -111,23 +134,23 @@ int setup_pulse_sensor_vss(
 int setup_pulse_sensor(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
-		U8 hdmaChannel,
 		float conversionRatio,
 		float* resultStoreLocation,
-		U16 dmaStoppedTimeoutMS
+		U16 dmaStoppedTimeoutMS,
+		U16 numSamples
 		)
 {
 	return setup_pulse_sensor_vss(
 		htim,
 		channel,
-		hdmaChannel,
 		conversionRatio,
 		resultStoreLocation,
 		dmaStoppedTimeoutMS,
 		false,
 		0,	// Low RPM Value
 		0,	// High RPM Value
-		0 	// Min samples
+		0, 	// Min samples
+		numSamples
 		);
 }
 
@@ -215,7 +238,7 @@ int evaluate_pulse_sensor(int sensorNumber) {
 	pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 
 	// Declare amount of samples and evaluate initial size based on if we're using variable sampling. If we are we'll determine it again after some deltas are evaluated
-	U16 numSamples = pulseSensor[sensorNumber].useVariableSpeedSampling ? pulseSensor[sensorNumber].minSamples + 1 : MAX_DELTAS;
+	U16 numSamples = pulseSensor[sensorNumber].useVariableSpeedSampling ? pulseSensor[sensorNumber].minSamples + 1 : pulseSensor[sensorNumber].maxSamples;
 
 	// Calculate the deltas between each of the time values and store them in deltaTotal
 	U32 deltaTotal = 0; // Gets big adding up all U32 deltas but not big enough to need U64 before stopped if like <1 full second
@@ -223,10 +246,11 @@ int evaluate_pulse_sensor(int sensorNumber) {
 	U32 last2ndDelta = 0;
 	U16 numDeltas = 0;
 	U32 delta = 0;
+	U16 i = 0;
 
 	// Begin by going through the first minimum amount samples to determine how many we should read, and then find the average delta while rejecting any dropped DMA values
-	for (U16 i = 0; i < numSamples; i++)
-	{
+	// While loop till we either have enough deltas or have passed max readings we can take
+	while ((numDeltas < numSamples) && (i < MAX_READ_BUFFER_VALUES)) {
 		U32 value1 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 1 - i + IC_BUF_SIZE) % IC_BUF_SIZE];
 		U32 value2 = pulseSensor[sensorNumber].buffer[(DMACurrentPosition - 2 - i + IC_BUF_SIZE) % IC_BUF_SIZE];
 		if (value1 != 0 && value2 != 0) { // Check if 0s because of previously empty buffer, because otherwise a value would simply be a time amount
@@ -295,7 +319,7 @@ int evaluate_pulse_sensor(int sensorNumber) {
 				if (tempFrequencyCalc < pulseSensor[sensorNumber].lowPulsesPerSecond) {
 					numSamples = pulseSensor[sensorNumber].minSamples;
 				} else if (tempFrequencyCalc > pulseSensor[sensorNumber].highPulsesPerSecond) {
-					numSamples = MAX_DELTAS;
+					numSamples = pulseSensor[sensorNumber].maxSamples;
 				} else {
 					// Equation for getting how many samples we should average, which is linear from low to high samples - y = m(x-x0) + y0
 					numSamples = pulseSensor[sensorNumber].vssSlope * (tempFrequencyCalc - pulseSensor[sensorNumber].lowPulsesPerSecond) + pulseSensor[sensorNumber].minSamples; // Point slope form lol
@@ -304,6 +328,8 @@ int evaluate_pulse_sensor(int sensorNumber) {
 				numSamples = pulseSensor[sensorNumber].minSamples;
 			}
 		}
+
+		i++;
 	}
 
 	// After the delta checking and adding loop is over, make sure the last one isn't bad either
@@ -338,29 +364,6 @@ int evaluate_pulse_sensor(int sensorNumber) {
 	pulseSensor[sensorNumber].averageDeltaTimerTicks = resultingAverageDelta;
 	pulseSensor[sensorNumber].numSamples = numSamples;
 	pulseSensor[sensorNumber].DMACurrentPosition = DMACurrentPosition;
-
-
-	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
-
-	if (currentTick - lastTime > timeBetween) {
-		for (int i = 0; i < IC_BUF_SIZE; i++) {
-			printf("Value %i: ", i);
-			if (i == DMACurrentPosition) {
-				printf("- ");
-			}
-			printf("%lu\n", pulseSensor[sensorNumber].buffer[i]);
-		}
-		printf("DELTAS ===\n");
-		for (int i = 0; i < MAX_DELTAS; i++) {
-			printf("Value %i: ", i);
-			printf("%lu\n", deltaList[i]);
-
-		}
-		lastTime = currentTick;
-	}
-
-	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE);
-
 #endif
 
 	return READ_SUCCESS;

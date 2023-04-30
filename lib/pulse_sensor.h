@@ -11,13 +11,21 @@
 
 #define TIMER_COUNT 4
 #define IC_BUF_SIZE 128
-#define MAX_DELTAS 64
+#define DEFAULT_MAX_DELTAS 64
+#define MAX_READ_BUFFER_VALUES 100
 #define MS_IN_A_MINUTE 60000
 #define ONE_MHZ 1000000
 #define DUPLICATE_VALUE_TICK_DIFFERENCE 25	// TODO: See if there's a universal value or if needs to be set individually
 
-// Error codes - may not be necessary
-#define CANNOT_DETECT_TIMER_SIZE -1
+// Error codes
+#define MAX_VALUES_TOO_HIGH -1
+#define TOO_LOW_LOW_PPS -2
+#define TOO_LOW_HIGH_PPS -3
+#define TOO_LOW_OR_HIGH_MIN_SAMPLES -4
+#define MAX_SAMPLES_NOT_GREATER_THAN_MIN -5
+#define CANNOT_DETECT_TIMER_SIZE -6
+#define CANNOT_DETECT_HDMA_CHANNEL -7
+#define STARTING_DMA_FAILED -8
 #define READ_SUCCESS 0
 #define NO_NEW_VALUE 1
 #define STALE_BUFFER_WIPE 2
@@ -40,6 +48,7 @@ typedef struct
 	U16 lowPulsesPerSecond;			// Value at which the min samples will be used from the buffer behind the DMA position
 	U16 highPulsesPerSecond;		// Value at which the max number of deltas from the buffer will sampled to get the resulting speed value
 	U16 minSamples;					// Minimum amount of samples to take if using variable speed sampling
+	U16 maxSamples;					// Maxium amount of samples to take - 64 recommended high, max of 100 (will not hit if there is duplicate values)
 
 	U32 buffer[IC_BUF_SIZE];
 
@@ -48,7 +57,7 @@ typedef struct
 	float timerPeriodSeconds;		// Period of timer ticks (can be different between different timers) - current found automatically in sensor init
 	U32 lastDMAReadValueTimeMs;
 	U16 timerSize;
-	U16 DMALastReadValue;
+	U32 DMALastReadValue;
 	bool stopped;
 
 	//Debug/tracking variables
@@ -62,8 +71,26 @@ typedef struct
 
 } PulseSensor;
 
-int setup_pulse_sensor_vss(TIM_HandleTypeDef* htim, U32 channel, U8 hdmaChannel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS, bool useVariableSpeedSampling, U16 lowPulsesPerSecond, U16 highPulsesPerSecond, U16 minSamples);
-int setup_pulse_sensor(TIM_HandleTypeDef* htim, U32 channel, U8 hdmaChannel, float conversionRatio, float* resultStoreLocation, U16 dmaStoppedTimeoutMS);
+int setup_pulse_sensor_vss(
+		TIM_HandleTypeDef* htim,
+		U32 channel,
+		float conversionRatio,
+		float* resultStoreLocation,
+		U16 dmaStoppedTimeoutMS,
+		bool useVariableSpeedSampling,
+		U16 lowPulsesPerSecond,
+		U16 highPulsesPerSecond,
+		U16 minSamples,
+		U16 maxSamples
+		);
+int setup_pulse_sensor(
+		TIM_HandleTypeDef* htim,
+		U32 channel,
+		float conversionRatio,
+		float* resultStoreLocation,
+		U16 dmaStoppedTimeoutMS,
+		U16 numSamples
+		);
 int check_pulse_sensors();
 int evaluate_pulse_sensor(int sensorNumber);
 
