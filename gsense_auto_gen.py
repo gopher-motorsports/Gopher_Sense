@@ -48,6 +48,11 @@ class AnalogSensor():
                 # convert both into floating point numbers
                 self.tableEntries[0].append(float(split_point[0]))
                 self.tableEntries[1].append(float(split_point[1]))
+                
+            # sort the points in acsending order of input value
+            my_list = list(zip(self.tableEntries[0], self.tableEntries[1]))
+            my_list.sort(key=lambda x: x[0])
+            self.tableEntries = tuple(zip(*my_list))
 
 # Objects for the module configuration file
 class Module():
