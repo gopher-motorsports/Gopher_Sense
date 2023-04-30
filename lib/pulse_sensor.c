@@ -127,7 +127,7 @@ int setup_pulse_sensor_vss(
 
 	numSensors++;
 
-	return 0;
+	return NO_PULSE_SENSOR_ISSUES;
 }
 
 // Function for setting up timer without variable speed sampling (vss)
@@ -156,11 +156,15 @@ int setup_pulse_sensor(
 
 // Function for going through all of the currently set up pulse sensors
 int check_pulse_sensors() {
+	bool success = true;
 	for (int sensorNumber = 0; sensorNumber < numSensors; sensorNumber++) {
-		evaluate_pulse_sensor(sensorNumber);
+		pulseSensor[sensorNumber].errorCode = evaluate_pulse_sensor(sensorNumber);
+		if(pulseSensor[sensorNumber].errorCode < 0) {
+			success = false;
+		}
 	}
 
-	return 0;
+	return success ? NO_PULSE_SENSOR_ISSUES : -1;
 }
 
 // Function that goes through the buffer of the given pulse sensor, handling edge cases, and setting the return value to the found speed value.
@@ -341,21 +345,24 @@ int evaluate_pulse_sensor(int sensorNumber) {
 		pulseSensor[sensorNumber].numDroppedValues++;
 #endif
 	}
-
 	// Time to calculate results
-	float result = 0;
+	if(numDeltas == 0) {
+		// No deltas, don't divide by 0
+		*pulseSensor[sensorNumber].resultStoreLocation = 0;
+		return NO_DETLAS;
+	}
 
 	// Calculate average
 	float resultingAverageDelta = deltaTotal / (float)numDeltas;
 
-		// Calculate result from average delta
-		result = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds) * pulseSensor[sensorNumber].conversionRatio;
+	// Calculate result from average delta
+	float result = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds) * pulseSensor[sensorNumber].conversionRatio;
 
-		// Check if the calculation is inf or nan for any reason
-		if(isinf(result) || isnan(result)) {
-			*pulseSensor[sensorNumber].resultStoreLocation = 0;
-			return INF_OR_NAN_RESULT;
-		}
+	// Check if the calculation is inf or nan for any reason
+	if(isinf(result) || isnan(result)) {
+		*pulseSensor[sensorNumber].resultStoreLocation = 0;
+		return INF_OR_NAN_RESULT;
+	}
 
 	// Send result to store location
 	*pulseSensor[sensorNumber].resultStoreLocation = result;

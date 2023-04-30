@@ -31,7 +31,10 @@
 #define STALE_BUFFER_WIPE 2
 #define STOPPED 3
 #define UN_STOPPED 4
-#define INF_OR_NAN_RESULT 5
+#define INF_OR_NAN_RESULT -1
+#define NO_DETLAS -2
+
+#define NO_PULSE_SENSOR_ISSUES 1
 
 #define CALCULATE_MPH_CONVERSION_RATIO(ticksPerRev, radiusInches) (radiusInches*2*M_PI/ticksPerRev*60*60/5280) // Circumpherence/ticksPerRev*minutes*hours/inchesPerMile
 
@@ -58,6 +61,7 @@ typedef struct
 	U32 lastDMAReadValueTimeMs;
 	U16 timerSize;
 	U32 DMALastReadValue;
+	S16 errorCode;
 	bool stopped;
 
 	//Debug/tracking variables
