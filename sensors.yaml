@@ -203,9 +203,8 @@ sensors:
         name_english: "Exhaust Gas Temp Sensor"
         analog_subtype: Resistive
         points:
-            - (785.7, -40) # datasheet says it draws 2.8mA from 5V and a 1KOhm pull up
             - (190.4, 950) # datasheet says it draws 4.2mA from 5V and a 1KOhm pull up
-
+            - (785.7, -40) # datasheet says it draws 2.8mA from 5V and a 1KOhm pull up
 
     current_sensor_1:
         # Channel 1 of the tractive current sensor
