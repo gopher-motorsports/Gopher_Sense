@@ -63,16 +63,16 @@ sensors:
         name_english: "Honeywell Pressure Sensor"
         analog_subtype: Voltage
         points:
-            - (0.33, 0) # 0.5 * 3.3/5
-            - (2.97, 100) # 4.5 * 3.3/5
+            - (0.33, 14.7) # 0.5 * 3.3/5
+            - (2.97, 114.7) # 4.5 * 3.3/5
             
     pressure_sensor_sealed_gauge:
         # PX3AN2BS100PSAAX. We have lots of these on the car
         name_english: "Honeywell Pressure Sensor"
         analog_subtype: Voltage
         points:
-            - (0.33, 14.7) # 0.5 * 3.3/5
-            - (2.97, 114.7) # 4.5 * 3.3/5
+            - (0.33, 0) # 0.5 * 3.3/5
+            - (2.97, 100) # 4.5 * 3.3/5
             
     combined_temp_sensor:
         # 0 261 K00 654-000
@@ -203,8 +203,25 @@ sensors:
         name_english: "Exhaust Gas Temp Sensor"
         analog_subtype: Resistive
         points:
-            - (190.4, 950) # datasheet says it draws 4.2mA from 5V and a 1KOhm pull up
-            - (785.7, -40) # datasheet says it draws 2.8mA from 5V and a 1KOhm pull up
+            - (169.18, -40)
+            - (200, 0)
+            - (275.4, 100)
+            - (348.46, 200)
+            - (384.11, 250)
+            - (419.18, 300)
+            - (453.66, 350)
+            - (487.56, 400)
+            - (520.87, 450)
+            - (553.6, 500)
+            - (585.74, 550)
+            - (617.3, 600)
+            - (648.27, 650)
+            - (678.66, 700)
+            - (708.46, 750)
+            - (737.68, 800)
+            - (766.31, 850)
+            - (794.36, 900)
+            - (821.82, 950)
 
     current_sensor_1:
         # Channel 1 of the tractive current sensor
