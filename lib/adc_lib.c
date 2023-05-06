@@ -167,6 +167,12 @@ void add_data_to_buffer(ANALOG_SENSOR_PARAM* param_array,
 			 buffer - sample_buffer < (ADC_SAMPLE_SIZE_PER_PARAM*num_params);
 			 buffer += num_params)
 		{
+
+#ifdef PLM_JANK
+			// max out during PWM control
+			if (*buffer >= 4050) *buffer = 0;
+#endif
+
 			total += *buffer;
 		}
 
