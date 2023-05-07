@@ -36,7 +36,7 @@
 
 #define NO_PULSE_SENSOR_ISSUES 1
 
-#define CALCULATE_MPH_CONVERSION_RATIO(ticksPerRev, radiusInches) (radiusInches*2*M_PI/ticksPerRev*60*60/5280) // Circumpherence/ticksPerRev*minutes*hours/inchesPerMile
+#define CALCULATE_MPH_CONVERSION_RATIO(ticksPerRev, radiusInches) (radiusInches*2*M_PI/ticksPerRev*60*60/(12*5280)) // Circumpherence/ticksPerRev*minutes*hours/inchesPerMile
 
 typedef struct
 {
