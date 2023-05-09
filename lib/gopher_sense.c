@@ -40,7 +40,7 @@ TIM_HandleTypeDef* tim10_ptr;
 #define TIMER_PSC 16
 #define ADC_READING_FREQUENCY_HZ 2000
 
-#define TASK_STACK_SIZE 512
+#define TASK_STACK_SIZE 1024
 #define PARAM_SEND_MAX_ATTEMPTS 5
 #define INITIAL_DATA 0.0f
 #define DATA_CONV_FAILURE_REPLACEMENT -1
@@ -371,7 +371,9 @@ void gsense_main_task(void* param)
 			 DAQ_UpdateADC();
 #endif // NEED_HW_TIMER == 0
     		ADC_sensor_service();
+#ifndef PLM_JANK
     		if (send_data) handle_param_sending();
+#endif
     	}
 
     	handle_gsense_led();
