@@ -10,6 +10,7 @@ import yaml
 import munch
 from jinja2 import Template
 
+# define name constants
 TEMPLATES_DIRECTORY = "Templates"
 OUTPUT_DIRECTORY = "Build"
 SENSOR_CONFIG_FILE = "sensors.yaml"
@@ -24,6 +25,7 @@ def NoneOnValueError(d, k):
     except(KeyError):
         return None
 
+# returns the name of the sensor at id from sensors
 def getSensorNameFromID(id, sensors):
     for sensor in sensors:
         if id == sensor.sensorID:
@@ -114,12 +116,13 @@ class Param():
         self.param_list_loc = 1337
 
 def main():
+    # get and error check the given command line argument
     argv = sys.argv
     if len(argv) < 2:
         print("Pass the path to the hardware config file: somepath\\some_module_hwconfig.yaml")
         sys.exit()
 
-    # Get the details from all the required .yamls
+    # get the details from all the required .yamls
     print("Gopher Motorsports Sensor Cannon")
     sensorFile = open(SENSOR_CONFIG_FILE)
     configFile = open(argv[1])

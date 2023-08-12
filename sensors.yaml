@@ -163,6 +163,14 @@ sensors:
         points:
             - (0.33, 0) # 0.5 * 3.3/5
             - (2.97, 5000) # 4.5 * 3.3/5
+
+    differential_pressure_sensor:
+        # 10INCH-D-4V sensor used for pitto tube ±0.25% accuracy
+        name_english: "Differential Pressure Sensor"
+        analog_subtype: Voltage
+        points:
+            - (0.25, -10)
+            - (4.25, 10)
         
     brake_temp_sensor:
         # INFKL 800°C IR brake temperature sensor
