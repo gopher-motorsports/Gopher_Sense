@@ -169,8 +169,8 @@ sensors:
         name_english: "Differential Pressure Sensor"
         analog_subtype: Voltage
         points:
-            - (0.25, -10)
-            - (4.25, 10)
+            - (0.165, -10) # 0.25 * 3.3/5
+            - (2.805, 10) # 4.25 * 3.3/5
         
     brake_temp_sensor:
         # INFKL 800°C IR brake temperature sensor
