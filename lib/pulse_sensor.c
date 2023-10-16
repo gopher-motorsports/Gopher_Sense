@@ -45,7 +45,7 @@ static U32 lastTime = 0;
  * minSamples - Minimum amount of samples to take if using variable speed sampling
  * maxSamples - Maxium amount of samples to take - 64 recommended high, max of 100 (will not hit if there is duplicate values)
  */
-int setup_pulse_sensor_vss(
+int setup_pulse_sensor_vss_freq(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
 		float conversionRatio,
@@ -55,7 +55,8 @@ int setup_pulse_sensor_vss(
 		U16 lowPulsesPerSecond,
 		U16 highPulsesPerSecond,
 		U16 minSamples,
-		U16 maxSamples
+		U16 maxSamples,
+		float* frequencyStoreLocation
 		)
 {
 	PulseSensor* newSensor = &pulseSensor[numSensors];
@@ -79,6 +80,7 @@ int setup_pulse_sensor_vss(
 	newSensor->highPulsesPerSecond = highPulsesPerSecond;
 	newSensor->minSamples = minSamples;
 	newSensor->maxSamples = maxSamples;
+	newSensor->frequencyStoreLocation = frequencyStoreLocation;
 
 	U32 clockFrequency = HAL_RCC_GetSysClockFreq() * 0.5; // Multiply by 0.5 as timers are 1/2 the clock frequency
 
@@ -140,7 +142,7 @@ int setup_pulse_sensor(
 		U16 numSamples
 		)
 {
-	return setup_pulse_sensor_vss(
+	return setup_pulse_sensor_vss_freq(
 		htim,
 		channel,
 		conversionRatio,
@@ -150,7 +152,37 @@ int setup_pulse_sensor(
 		0,	// Low RPM Value
 		0,	// High RPM Value
 		0, 	// Min samples
-		numSamples
+		numSamples,
+		0
+		);
+}
+
+// Function for setting up timer with variable speed sampling (vss), specified differently for backwards compatibility.
+int setup_pulse_sensor_vss(
+		TIM_HandleTypeDef* htim,
+		U32 channel,
+		float conversionRatio,
+		float* resultStoreLocation,
+		U16 dmaStoppedTimeoutMS,
+		bool useVariableSpeedSampling,
+		U16 lowPulsesPerSecond,
+		U16 highPulsesPerSecond,
+		U16 minSamples,
+		U16 maxSamples
+		)
+{
+	return setup_pulse_sensor_vss_freq(
+		htim,
+		channel,
+		conversionRatio,
+		resultStoreLocation,
+		dmaStoppedTimeoutMS,
+		useVariableSpeedSampling,
+		lowPulsesPerSecond,	// Low RPM Value
+		highPulsesPerSecond,	// High RPM Value
+		minSamples, 	// Min samples
+		maxSamples,
+		0
 		);
 }
 
@@ -356,12 +388,17 @@ int evaluate_pulse_sensor(int sensorNumber) {
 	float resultingAverageDelta = deltaTotal / (float)numDeltas;
 
 	// Calculate result from average delta
-	float result = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds) * pulseSensor[sensorNumber].conversionRatio;
+	float result_frequency = convert_delta_time_to_frequency(resultingAverageDelta, pulseSensor[sensorNumber].timerPeriodSeconds);
+	float result = result_frequency * pulseSensor[sensorNumber].conversionRatio;
 
 	// Check if the calculation is inf or nan for any reason
 	if(isinf(result) || isnan(result)) {
 		*pulseSensor[sensorNumber].resultStoreLocation = 0;
 		return INF_OR_NAN_RESULT;
+	}
+
+	if (*pulseSensor[sensorNumber].frequencyStoreLocation != 0) {
+		*pulseSensor[sensorNumber].frequencyStoreLocation = result_frequency;
 	}
 
 	// Send result to store location

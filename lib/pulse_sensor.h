@@ -52,6 +52,7 @@ typedef struct
 	U16 highPulsesPerSecond;		// Value at which the max number of deltas from the buffer will sampled to get the resulting speed value
 	U16 minSamples;					// Minimum amount of samples to take if using variable speed sampling
 	U16 maxSamples;					// Maxium amount of samples to take - 64 recommended high, max of 100 (will not hit if there is duplicate values)
+	float* frequencyStoreLocation;		// Float pointer to a location you want to store the frequency of sensor (very optional)
 
 	U32 buffer[IC_BUF_SIZE];
 
@@ -75,6 +76,19 @@ typedef struct
 
 } PulseSensor;
 
+int setup_pulse_sensor_vss_freq(
+		TIM_HandleTypeDef* htim,
+		U32 channel,
+		float conversionRatio,
+		float* resultStoreLocation,
+		U16 dmaStoppedTimeoutMS,
+		bool useVariableSpeedSampling,
+		U16 lowPulsesPerSecond,
+		U16 highPulsesPerSecond,
+		U16 minSamples,
+		U16 maxSamples,
+		float* frequencyStoreLocation
+		);
 int setup_pulse_sensor_vss(
 		TIM_HandleTypeDef* htim,
 		U32 channel,
