@@ -317,4 +317,12 @@ sensors:
             - (0.0, 0)
             - (3.3, 1)
             
+    suspension_load_cell:
+        # Sensor that just maps the input from 0-1
+        name_english: "Suspension Load Cell"
+        analog_subtype: Voltage
+        points:
+            - (.4115, -1000)
+            - (1.77, 0)
+            - (3.0228, 1000)
             
