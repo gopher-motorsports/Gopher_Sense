@@ -6,7 +6,6 @@
  */
 
 #include "pulse_sensor.h"
-#include "base_types.h"
 #include "main.h"
 #include <stdbool.h>
 #include <stdio.h>

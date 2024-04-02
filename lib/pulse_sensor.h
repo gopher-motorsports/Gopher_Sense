@@ -1,7 +1,7 @@
 #include "main.h"
-#include "base_types.h"
 #include <stdbool.h>
 #include <math.h>
+#include "GopherCAN.h"
 
 // Header guard
 #ifndef PULSE_SENSOR_H

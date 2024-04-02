@@ -7,7 +7,6 @@
 #include "adc_lib.h"
 #include "module_hw_config.h"
 #include "gsense_structs.h"
-#include "base_types.h"
 #include "GopherCAN.h"
 
 typedef enum

@@ -6,7 +6,6 @@
 #define GSENSE_STRUCTS_H
 
 #include "GopherCAN.h"
-#include "base_types.h"
 
 #ifndef NULL
 #define NULL ((void*)0)

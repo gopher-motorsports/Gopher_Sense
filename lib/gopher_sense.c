@@ -125,7 +125,7 @@ GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, GPIO_TypeDef* stat_led_
     	if (!stat_led_GPIOx) return INITIALIZATION_ERROR;
 
     	// add the CAN command for the heartbeat from the logger
-    	add_custom_can_func(LOG_COMPLETE, &log_complete, TRUE, NULL);
+//    	add_custom_can_func(LOG_COMPLETE, &log_complete, TRUE, NULL);
 
     	// create the main task. This wont start until things are initialized
     	// but the LED will be run
@@ -474,7 +474,7 @@ static void handle_param_sending(void)
 			// try to send, if it fails it is most likely due to bus saturation, meaning it is fine
 			// to return out of the function and wait for the next osTick to try
 			// and send parameters again
-			while (send_parameter(gsense_param->can_param) != CAN_SUCCESS)
+			while (send_parameter(gsense_param->can_param->ID) != CAN_SUCCESS)
 			{
 				if (++err_count > PARAM_SEND_MAX_ATTEMPTS)
 				{
