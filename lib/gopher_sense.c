@@ -122,7 +122,7 @@ GSENSE_ERROR_STATE gsense_init (CAN_HandleTypeDef* gcan, GPIO_TypeDef* stat_led_
     	status_led_pin = stat_led_Pin;
 
     	// we need the LED to do anything
-    	if (!stat_led_GPIOx) return INITIALIZATION_ERROR;
+//    	if (!stat_led_GPIOx) return INITIALIZATION_ERROR;
 
     	// add the CAN command for the heartbeat from the logger
 //    	add_custom_can_func(LOG_COMPLETE, &log_complete, TRUE, NULL);
@@ -512,7 +512,7 @@ static void handle_gsense_led(void)
     		// long delay and reset
     		if (HAL_GetTick() - last_blink_time >= LED_ERROR_OFF_TIME)
     		{
-    			HAL_GPIO_WritePin(status_led_port, status_led_pin, RESET);
+    			if (status_led_port) HAL_GPIO_WritePin(status_led_port, status_led_pin, RESET);
     			last_blink_time = HAL_GetTick();
     			num_led_blinks = (U8)critical_error_state << 1; // double so there is an on and off for each blink number
     		}
@@ -521,7 +521,7 @@ static void handle_gsense_led(void)
     	{
     		if (HAL_GetTick() - last_blink_time >= LED_ERROR_BLINK_TIME)
     		{
-    			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
+    			if (status_led_port) HAL_GPIO_TogglePin(status_led_port, status_led_pin);
     			last_blink_time = HAL_GetTick();
     			num_led_blinks--;
     		}
@@ -536,7 +536,7 @@ static void handle_gsense_led(void)
     	// Data is being collected and response are being received, blink the LED
     	if ((HAL_GetTick() - last_blink_time) >= LED_NO_ERROR_BLINK_TIME)
 		{
-			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
+    		if (status_led_port) HAL_GPIO_TogglePin(status_led_port, status_led_pin);
 			last_blink_time = HAL_GetTick();
 		}
     }
@@ -545,7 +545,7 @@ static void handle_gsense_led(void)
     	// No CAN comms, something is wrong
 		if ((HAL_GetTick() - last_blink_time) >= LED_NO_LOGGER_COMMS_BLINK_TIME)
 		{
-			HAL_GPIO_TogglePin(status_led_port, status_led_pin);
+			if (status_led_port) HAL_GPIO_TogglePin(status_led_port, status_led_pin);
 			last_blink_time = HAL_GetTick();
 		}
     }
