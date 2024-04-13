@@ -333,11 +333,12 @@ sensors:
             - (1.77, 0)
             - (3.0228, 1000)
     
-    tcm_shift_loadcell:
-        #sensor that maps out loadcell shift force from -220.462 to 220.462
-        name_english: "Suspension Load Cell"
+    shifting_loadcell:
+        #sensor that maps out loadcell shift force from -220.462 to 220.462 lbs
+        name_english: "TCM Shifting Load Cell"
         analog_subtype: Voltage
         points:
-            - (0, -220.462)
-            - (1.65, 0)
-            - (3.3, 220.462)
+            - (.20328, -220.462) # 220 lbs of compression
+            - (1.65, 0) #0 lb center
+            - (3.12, 220.462) # 220 lbs of pushing force
+    
