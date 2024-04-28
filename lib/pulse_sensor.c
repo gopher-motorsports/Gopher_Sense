@@ -292,7 +292,7 @@ int evaluate_pulse_sensor(int sensorNumber) {
 			// Check if the difference is so small it can be considered a duplicate of the last
 			if (abs(value2 - value1) > DUPLICATE_VALUE_TICK_DIFFERENCE) {
 				if (value1 < value2) {
-					delta = ((1 << pulseSensor[sensorNumber].timerSize) | value1) - value2; // Buffer roll-over (timer resets to 0) protection
+					delta = (29999 + value1) - value2; // Buffer roll-over (timer resets to 0) protection
 				} else {
 					delta = value1 - value2; // Buffer roll-over (timer resets to 0) protection
 				}
