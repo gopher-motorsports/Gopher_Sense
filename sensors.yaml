@@ -148,6 +148,23 @@ sensors:
             - (0.891467, 7.45)
             - (0.511194, 0)
 
+    rear_right_shock_pos:
+        # 50mm pots with a poor cal curve
+        name_english: "Rear Right Shock Position"
+        analog_subtype: Voltage
+        points:
+            - (0.03, 0.0)
+            - (2.83, 45.0)
+            - (3.2, 45.2)
+
+    rear_left_shock_pos:
+        # 50mm pots with a poor cal curve
+        name_english: "Rear Right Shock Position"
+        analog_subtype: Voltage
+        points:
+            - (0.03, 0.0)
+            - (2.84, 45.0)
+
     brake_pressure_sensor:
         # MLH03KPSB06A. special sensor for the brake pressure
         name_english: "Honeywell Brake Pressure Sensor"
