@@ -358,8 +358,7 @@ sensors:
             # - (1.620, 0)
             # - (2.918, 350)
             # - (3.117, 403.509)
-            # - (3.3, 500)
-            
+            # - (3.3, 500)        
     vbat_channel_current:
         # PLM VBat Channels
         name_english: "PLM VBat Channel"
@@ -375,7 +374,23 @@ sensors:
         points:
             - (0.0, 0)
             - (3.3, 8.032)
-            
+
+    fvc_efuse12V_SNS_current_reading:
+        # PLM 5V Channels
+        name_english: "FVC Efuse 12V Sensor Current Reading"
+        analog_subtype: Voltage
+        points:
+            - (0.0, 0)
+            - (3.3, 0.67) # Vilm / (Gimon * Rilm)  = Iilm --> 3.3/([655*10^-6]*7.5k) = 0.67 A
+
+    fvc_efuse12V_Disp_current_reading:
+        # PLM 5V Channels
+        name_english: "FVC Efuse 12V Display Current Reading"
+        analog_subtype: Voltage
+        points:
+            - (0.0, 0)
+            - (3.3, 2.52)  # Vilm / (Gimon * Rilm)  = Iilm --> 3.3/([655*10^-6]*2k) = 2.52 A    
+
     vbat_voltage_reading:
         # PLM Battery voltage measurement
         name_english: "PLM VBat Voltage"
