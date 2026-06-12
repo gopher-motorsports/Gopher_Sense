@@ -291,7 +291,7 @@ sensors:
             
     steering_angle_sensor_26:
         # **2026 CAL**: Electronic D8 Rotary Pos Sensor - RLS RM08VA0010B02L2G00
-        name_english: "Steering Angle Sensor"
+        name_english: "Steering Angle Sensor 2026"
         analog_subtype: Voltage
         points:
             - (0.14, -105.4)
