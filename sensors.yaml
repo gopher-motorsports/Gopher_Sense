@@ -288,7 +288,15 @@ sensors:
             - (2.71541, 105)
             # -105, 60.29 -> 0.1674722 -> 0.77213V
             # 105, 325.283203 -> 2.715410V
-        
+            
+    steering_angle_sensor_26:
+        # **2026 CAL**: Electronic D8 Rotary Pos Sensor - RLS RM08VA0010B02L2G00
+        name_english: "Steering Angle Sensor"
+        analog_subtype: Voltage
+        points:
+            - (0.14, -105.4)
+            - (2.51, 105.4)
+    
     exhaust_temp_sensor:
         # Sensata HTS_0630_330
         name_english: "Exhaust Gas Temp Sensor"
