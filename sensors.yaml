@@ -294,8 +294,8 @@ sensors:
         name_english: "Steering Angle Sensor 2026"
         analog_subtype: Voltage
         points:
-            - (0.14, -105.4)
-            - (2.51, 105.4)
+            - (0.173, -105.4)
+            - (2.04, 105.4)
     
     exhaust_temp_sensor:
         # Sensata HTS_0630_330
@@ -398,7 +398,7 @@ sensors:
             - (3.3, 5.038)  # Vilm / (Gimon * Rilm)  = Iilm --> 3.3/([655*10^-6]*1k) = 5.038 A    
     
     rvc_efuse12V_LightPanel_current_reading:
-        name_english: "FVC Efuse 12V Display Current Reading"
+        name_english: "RVC Efuse 12V Light Panel and Buzzer Current Reading"
         analog_subtype: Voltage
         points:
             - (0.0, 0)
