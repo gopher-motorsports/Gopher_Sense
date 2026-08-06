@@ -110,87 +110,39 @@ sensors:
             
     front_right_shock_pos:
         # 50mm pots with a cal curve
+        # last calibrated 08/04/26
         name_english: "Front Right Shock Position"
         analog_subtype: Voltage
         points:
-            #scaled 10/9/25
-            - (0.00, 56.616)
-            - (0.3174, 50.0)
-            - (0.9772, 40.0)
-            - (1.701, 30.0)
-            - (2.257, 20.0)
-            - (2.897, 10.0)
-            - (0.0, 0.0)
-            # - (2.023425, 45.95)
-            # - (1.996435, 45.13)
-            # - (1.914257, 42.21)
-            # - (1.780517, 37.65)
-            # - (1.624218, 32.55)
-            # - (1.572656, 31.22)
-            # - (1.469531, 28.24)
-            # - (1.345458, 25.01)
-            # - (1.150488, 20.09)
-            # - (1.044946, 17.52)
-            # - (0.951489, 15.30)
-            # - (0.779077, 11.44)
-            # - (0.582495, 7.45)
-            # - (0.202221, 0)
+            - (1.76359863, 112.8522)
+            - (1.90942383, 108.7882)
             
     front_left_shock_pos:
         # 50mm pots with a cal curve
+        # last calibrated 08/04/26
         name_english: "Front Left Shock Position"
         analog_subtype: Voltage
         points:
-            - (0.00, 56.616)
-            - (0.3174, 50.0)
-            - (0.9772, 40.0)
-            - (1.701, 30.0)
-            - (2.257, 20.0)
-            - (2.897, 10.0)
-            - (0.0, 0.0)
-            # - (2.332397, 45.95)
-            # - (2.305407, 45.13)
-            # - (2.223229, 42.21)
-            # - (2.089489, 37.65)
-            # - (1.933190, 32.55)
-            # - (1.881628, 31.22)
-            # - (1.778503, 28.24)
-            # - (1.654431, 25.01)
-            # - (1.459460, 20.09)
-            # - (1.353918, 17.52)
-            # - (1.260461, 15.30)
-            # - (1.088049, 11.44)
-            # - (0.891467, 7.45)
-            # - (0.511194, 0)
+            - (0.72106934, 112.8522)
+            - (0.92490234, 106.0196)
 
     rear_right_shock_pos:
         # 50mm pots with a poor cal curve
+        # last calibrated 08/06/26
         name_english: "Rear Right Shock Position"
         analog_subtype: Voltage
         points:
-            - (3.299, 56.604)
-            - (3.026, 50.0)
-            - (2.373, 40.0)
-            - (1.744, 30.0)
-            - (0.9232, 20.0)
-            - (0.4318, 10.0)
-            - (0.001611, 0.0)
-            - (0.0, 0.0)
+            - (1.62985840, 95.68)   # ADC 2023, compressed
+            - (2.74731445, 112.34)  # ADC 3410, uncompressed
 
     rear_left_shock_pos:
         # 50mm pots with a poor cal curve
-        name_english: "Rear Right Shock Position"
+        # last calibrated 08/04/26
+        name_english: "Rear Left Shock Position"
         analog_subtype: Voltage
         points: 
-            #scaled 10/9/25
-            - (3.299, 56.604)
-            - (3.026, 50.0)
-            - (2.373, 40.0)
-            - (1.744, 30.0)
-            - (0.9232, 20.0)
-            - (0.4318, 10.0)
-            - (0.001611, 0.0)
-            - (0.0, 0.0)
+            - (2.84560547, 98.50)   # ADC 3532, compressed
+            - (2.92053223, 108.47)  # ADC 3625, uncompressed
 
     brake_pressure_sensor:
         # MLH03KPSB06A. special sensor for the brake pressure
@@ -284,8 +236,9 @@ sensors:
         name_english: "Steering Angle Sensor"
         analog_subtype: Voltage
         points:
-            - (0.77213, -105)
-            - (2.71541, 105)
+            - (0.42377930, 105.4)   # Full left
+            - (1.39943848, 0.0)     # Center
+            - (2.39765625, -105.4)  # Full right
             # -105, 60.29 -> 0.1674722 -> 0.77213V
             # 105, 325.283203 -> 2.715410V
             
