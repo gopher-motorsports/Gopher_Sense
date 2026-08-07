@@ -132,8 +132,8 @@ sensors:
         name_english: "Rear Right Shock Position"
         analog_subtype: Voltage
         points:
-        - (1.88813187, 95.68)
-        - (3.01794872, 112.34)
+        - (1.81665366, 98.70)
+        - (2.35911494, 106.72)
 
     rear_left_shock_pos:
         # 50mm pots with a poor cal curve
@@ -141,8 +141,8 @@ sensors:
         name_english: "Rear Left Shock Position"
         analog_subtype: Voltage
         points:
-        - (3.11787546, 98.50)
-        - (3.19362637, 108.47)
+        - (3.06469786, 96.51)
+        - (3.16303729, 105.20)
         
     brake_pressure_sensor:
         # MLH03KPSB06A. special sensor for the brake pressure
