@@ -132,18 +132,18 @@ sensors:
         name_english: "Rear Right Shock Position"
         analog_subtype: Voltage
         points:
-            - (1.62985840, 95.68)   # ADC 2023, compressed
-            - (2.74731445, 112.34)  # ADC 3410, uncompressed
+        - (1.88813187, 95.68)
+        - (3.01794872, 112.34)
 
     rear_left_shock_pos:
         # 50mm pots with a poor cal curve
         # last calibrated 08/04/26
         name_english: "Rear Left Shock Position"
         analog_subtype: Voltage
-        points: 
-            - (2.84560547, 98.50)   # ADC 3532, compressed
-            - (2.92053223, 108.47)  # ADC 3625, uncompressed
-
+        points:
+        - (3.11787546, 98.50)
+        - (3.19362637, 108.47)
+        
     brake_pressure_sensor:
         # MLH03KPSB06A. special sensor for the brake pressure
         name_english: "Honeywell Brake Pressure Sensor"
