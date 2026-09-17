@@ -16,7 +16,8 @@
 static PulseSensor pulseSensor[TIMER_COUNT] = {0};
 static U8 numSensors = 0;
 
-static void clear_buffer_and_reset_dma(U8 sensorNumber);
+// No longer called now that TIM2_CH1 / TIM2_CH2_CH4 DMA is DMA_CIRCULAR - left in case we need to revert.
+// static void clear_buffer_and_reset_dma(U8 sensorNumber);
 static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds);
 
 // Most useful debug variables
@@ -213,6 +214,23 @@ int evaluate_pulse_sensor(int sensorNumber) {
 
 	U32 valueInQuestion = pulseSensor[sensorNumber].buffer[lastBufferPosition];
 
+	// DMA is now DMA_CIRCULAR so it never halts on its own and the
+	// buffer is always live - a new value can be trusted immediately
+	if (pulseSensor[sensorNumber].stopped) {
+		if (valueInQuestion != pulseSensor[sensorNumber].DMALastReadValue) {
+			// A new capture cam
+			pulseSensor[sensorNumber].stopped = false;
+#ifdef DEBUG_PS
+			printf("*** UN-STOPPED ***\n");
+#endif
+		} else {
+			*(pulseSensor[sensorNumber].resultStoreLocation) = 0; // Otherwise make sure the store location value is 0 and leave.
+			return NO_NEW_VALUE;
+		}
+	}
+
+	/* ===== OLD STOPPED-HANDLING LOGIC (pre circular-DMA fix) =====
+	 * Should not need anymore since its in circular mode now
 	if (pulseSensor[sensorNumber].stopped) {	// If we already know we're stopped, check if we should end early
 		if (valueInQuestion != 0) {	// If we were previously stopped but may be moving again.
 			// Check if this is just really a slow and occasional value
@@ -230,9 +248,7 @@ int evaluate_pulse_sensor(int sensorNumber) {
 					// The value is new, it didn't get wiped, and the last wasn't 0 so we're good again
 					pulseSensor[sensorNumber].stopped = false; // Declare we are no longer stopped and move on.
 
-#ifdef DEBUG_PS
 			printf("*** UN-STOPPED ***\n");
-#endif
 				} else {
 					// A new unwiped value but it's just the first after 0. Log it and go again.
 					pulseSensor[sensorNumber].DMALastReadValue = valueInQuestion;
@@ -245,15 +261,17 @@ int evaluate_pulse_sensor(int sensorNumber) {
 			return NO_NEW_VALUE;
 		}
 	}
+	===== END OLD STOPPED-HANDLING LOGIC ===== */
 
 	if (pulseSensor[sensorNumber].DMALastReadValue == valueInQuestion) {	// Check if the last read value is the same as the current
 		if (currentTick - pulseSensor[sensorNumber].lastDMAReadValueTimeMs >= pulseSensor[sensorNumber].dmaStoppedTimeoutMS){	// Check if we haven't changed values in a while which might mean we're stopped
 			pulseSensor[sensorNumber].stopped = true;
 
-			// Clear buffer so any non-zero values will be quickly identified that the car is moving again. This will also reset the DMA position.
-			clear_buffer_and_reset_dma(sensorNumber);
+			// Buffer wipe / DMA restart no longer needed now that DMA is circular - the buffer stays live on its own.
+			// clear_buffer_and_reset_dma(sensorNumber);
 
-			pulseSensor[sensorNumber].DMALastReadValue = 0;
+			//Dont need to set to 0 we want to compare always to the last value it intook now that it is circular
+			//pulseSensor[sensorNumber].DMAlastReadValue = 0;
 			pulseSensor[sensorNumber].lastDMAReadValueTimeMs = currentTick;
 			*(pulseSensor[sensorNumber].resultStoreLocation) = 0;
 
@@ -413,11 +431,14 @@ int evaluate_pulse_sensor(int sensorNumber) {
 }
 
 // Function exactly as name implies
+// No longer called now that DMA is circular and never halts on its own - left in case we need to revert.
+/*
 static void clear_buffer_and_reset_dma(U8 sensorNumber) {
 	HAL_TIM_IC_Stop_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel);
 	memset(pulseSensor[sensorNumber].buffer, 0, sizeof(U32)*IC_BUF_SIZE);	// Use memset function to set all memory in buffer to 0 with the byte size of 64 U32 values.
 	HAL_TIM_IC_Start_DMA(pulseSensor[sensorNumber].htim, pulseSensor[sensorNumber].channel, (U32*)(pulseSensor[sensorNumber].buffer), IC_BUF_SIZE);
 }
+*/
 
 // Also as name implies
 static float convert_delta_time_to_frequency(float deltaTime, float timerPeriodSeconds) {
