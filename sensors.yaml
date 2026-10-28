@@ -236,9 +236,9 @@ sensors:
         name_english: "Steering Angle Sensor"
         analog_subtype: Voltage
         points:
-            - (0.42377930, 105.4)   # Full left
-            - (1.39943848, 0.0)     # Center
-            - (2.39765625, -105.4)  # Full right
+            - (0.3960000, 105.4)   # Full left
+            - (1.38700000, 0.0)     # Center
+            - (2.3780000, -105.4)  # Full right
             # -105, 60.29 -> 0.1674722 -> 0.77213V
             # 105, 325.283203 -> 2.715410V
             
